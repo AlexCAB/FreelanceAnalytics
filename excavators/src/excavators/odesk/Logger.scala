@@ -2,8 +2,10 @@ package excavators.odesk
 
 import java.util.Date
 
+trait Logger{
+  def log(msg:String)}
 
-object Logger {
+object Logger extends Logger{
   //Methods
   def log(msg:String) = {
     //Date

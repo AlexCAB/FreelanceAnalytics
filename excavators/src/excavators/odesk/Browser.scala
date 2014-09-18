@@ -28,6 +28,9 @@ object Browser extends JWebBrowser {
     var info:Option[String] = None
     def run(){info = Some("type = " + getBrowserType + ", version = " + getBrowserVersion)}}
   //Methods
+  def openURL(url:String) = getHTMLbyURLNavigateRunnable.synchronized{
+    getHTMLbyURLNavigateRunnable.url = url
+    SwingUtilities.invokeLater(getHTMLbyURLNavigateRunnable)}
   def getHTMLbyURL(url:String):Option[String] = getHTMLbyURLResultRunnable.synchronized{
     //Three load try
     getHTMLbyURLResultRunnable.content = None

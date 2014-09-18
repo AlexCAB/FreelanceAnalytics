@@ -5,7 +5,10 @@ import scala.collection.mutable.Queue
 object Worker extends Thread{
   //Parameters
   val checkTimeout = 1000 //In seconds
+  val mainPageURL = "https://www.odesk.com"
   val jobSearchURL = "https://www.odesk.com/jobs/?q="
+  //Components
+  val htmlParser = new HTMLParsers(Logger)
   //Variables
   private val urlQueue = Queue[String]()
   //Fields
@@ -17,29 +20,38 @@ object Worker extends Thread{
   def halt() = {
     live = false; synchronized{notify()}
     join(600000)}
+  def goToMain() = {
+    if(! work){
+      Browser.openURL(mainPageURL)}
+    else{
+      Logger.log("[Worker.goToMain] Can't go to main page when work.")}}
   def setWork(s:Boolean) = {
     work = s
     if(s){
       synchronized{notify()}
-      Logger.log("Worker run.")}
+      Logger.log("[Worker.setWork] Run.")}
     else{
-      Logger.log("Worker paused.")}}
+      Logger.log("[Worker.setWork] Paused.")}}
   //Run method
   override def run():Unit = {
     synchronized{wait()}
     while(live){
       //Search new works
       val lw = Browser.getHTMLbyURL(jobSearchURL) match {
-        case Some(html) => HTMLParsers.parseWorkSearchResult(html)   //!!! Если парсер венул пустой список, поторобувать перезагрузить страницу( всего 3 попытки)
+        case Some(html) => htmlParser.parseWorkSearchResult(html)   //!!! Если парсер венул пустой список, поторобувать перезагрузить страницу( всего 3 попытки)
         case None => {                                               //Повыносить это всё в отдельные функции.
-          Logger.log("Error: Can't get search works html")
+          Logger.log("[Worker.run] Error: Can't get search works html")           //Приоретитеты задачь.
           List()}}
-      //Add new works to db
-      lw.foreach(w => {
-        println(w.url)
-        println(w.skills)
 
-      })
+      //
+      println(Browser.getHTMLbyURL(mainPageURL + lw(0).url))
+
+      //Add new works to db
+//      lw.foreach(w => {
+//        println(w.url)
+//        println(w.skills)
+//
+//      })
 
       //Build check URL queue
 

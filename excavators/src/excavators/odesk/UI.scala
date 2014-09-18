@@ -31,6 +31,10 @@ object UI extends Frame {
     import BorderPanel.Position._
     import FlowPanel.Alignment._
     layout(new FlowPanel(Left)(){
+      contents += new Button("To main"){
+        preferredSize = new Dimension(100,20)
+        reactions += {case ButtonClicked(_) =>
+          Worker.goToMain()}}
       contents += new Button("RUN"){
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
