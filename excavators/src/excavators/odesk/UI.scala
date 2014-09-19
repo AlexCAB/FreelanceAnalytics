@@ -35,6 +35,10 @@ object UI extends Frame {
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
           Worker.goToMain()}}
+      contents += new Button("Get HTML"){
+        preferredSize = new Dimension(100,20)
+        reactions += {case ButtonClicked(_) =>
+          Worker.saveHtml()}}
       contents += new Button("RUN"){
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>

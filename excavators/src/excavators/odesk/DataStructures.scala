@@ -2,6 +2,12 @@ package excavators.odesk
 import java.util.Date
 import java.awt.Image
 
+/**
+ * Contain set of data structures
+ * Created by CAB on 18.09.14.
+ */
+
+
 
 trait FoundBy
 object FoundBy{
@@ -15,9 +21,16 @@ object Payment{
   case object Hourly extends Payment
   case object Budget extends Payment}
 
+trait PaymentMethod
+object PaymentMethod{
+  case object Unknown extends PaymentMethod
+  case object Verified extends PaymentMethod
+  case object No extends PaymentMethod}
+
 trait Employment
 object Employment{
   case object Unknown extends Employment
+  case object AsNeeded extends Employment
   case object Full extends Employment
   case object Part extends Employment}
 
@@ -40,48 +53,50 @@ object WorkerType{
   case object Freelancer extends WorkerType
   case object Manager extends WorkerType}
 
+trait JobState
+object JobState{
+  case object Unknown extends JobState
+  case object InProcess extends JobState
+  case object End extends JobState}
+
 //Record from search result
 case class FoundWork(
   url:String,
   skills:List[String],
   nFreelancers:Option[Int])
 
+//Search results parsing data
+case class ParsedSearchResults(
+  works:List[FoundWork],
+  nFound:Option[Int],
+  nextUrl:Option[String])
+
 //Job page data
 case class Job(
-  id:Long,
-  oUrl:String,
-  foundBy:FoundBy,
+  date:Date,
   postDate:Option[Date],
   deadline:Option[Date],
-  daeDate:Option[Date],
-  deleteDate:Option[Date],
-  nextCheckDate:Option[Date],
+  daeDate:Option[Date],   //Current date if find "Job closed"
   jobTitle:Option[String],
-  jobTypeTags:List[String],
+  jobType:Option[String],
   jobPaymentType:Payment,
   jobPrice:Option[Double],
   jobEmployment:Employment,
-  jobLength:Option[Int],
+  jobLength:Option[String],
   jobRequiredLevel:SkillLevel,
-  jobSkills:List[String],
-  jobDescription:Option[String],
-  changes:List[JobChanges],
-  applicans:List[JobApplicant],
-  hireds:List[JobHired],
-  works:List[ClientWork])
+  jobDescription:Option[String])
 
 //Job changes data
 case class JobChanges(
-  id:Long,
-  jobId:Long,
-  date:Option[Date],
+  date:Date,
   lastViewed:Option[Date],
-  nApplicants:Option[Double],
+  nApplicants:Option[Int],
   rateMin:Option[Double],
   rateAvg:Option[Double],
   rateMax:Option[Double],
   interviewing:Option[Int],
   clientDescription:Option[String],
+  clientPaymentMethod:PaymentMethod,
   clientRating:Option[Double],
   clientNReviews:Option[Int],
   clientLocation:Option[String],
@@ -97,28 +112,24 @@ case class JobChanges(
 
 //Job applicant data
 case class JobApplicant(
-  id:Long,
-  jobId:Long,
-  date:Option[Date],
+  date:Date,
+  upDate:Option[Date],
   name:Option[String],
   initiatedBy:InitiatedBy,
-  freelancerId:Option[Long])
+  url:Option[String])  //Url to freelancer profile if public
 
 //Job hired data
 case class JobHired(
-  id:Long,
-  jobId:Long,
   date:Option[Date],
   name:Option[String],
   freelancerId:Option[Long])
 
-//Clients work data
+//Clients fool work data
 case class ClientWork(
-  id:Long,
-  jobId:Long,
-  jobsTableId:Option[Long],
+  date:Date,
   oUrl:Option[String],
   title:Option[String],
+  inProgress:JobState,
   startDate:Option[Date],
   endDate:Option[Date],
   paymentType:Payment,
@@ -128,31 +139,26 @@ case class ClientWork(
   freelancerFeedbackText:Option[String],
   freelancerFeedback:Option[Double],
   freelancerName:Option[String],
-  freelancerId:Option[Long],
+  freelancerUrl:Option[String],
   clientFeedback:Option[Double])
+
+//Result of job page parsing
+case class ParsedJob(
+  job:Job,
+  changes:JobChanges,
+  applicants:List[JobApplicant],
+  hires:List[JobHired],
+  clientWorks:List[ClientWork])
 
 //Freelancer data
 case class Freelancer(
-  id:Long,
-  oUrl:String,
   findDate:Option[Date],
   deleteDate:Option[Date],
-  nextCheckDate:Option[Date],
   name:Option[String],
-  registrationDate:Option[Double],
-  applications:List[FreelancerApplication],
-  changes:List[FreelancerChanges],
-  works:List[FreelancerWork],
-  portfolios:List[FreelancerPortfolio],
-  tests:List[FreelancerTest],
-  employments:List[FreelancerEmployment],
-  educations:List[FreelancerEducation],
-  experiences:List[FreelancerOtherExperience])
+  registrationDate:Option[Double])
 
 //Freelancer application data
 case class FreelancerApplication(
-  id:Long,
-  freelancerId:Long,
   date:Option[Date],
   initiatedBy:InitiatedBy,
   title:Option[String],
@@ -160,8 +166,6 @@ case class FreelancerApplication(
 
 //Freelancer changes data
 case class FreelancerChanges(
-  id:Long,
-  freelancerId:Long,
   date:Option[Date],
   location:Option[String],
   timeZone:Option[Int],
@@ -179,8 +183,6 @@ case class FreelancerChanges(
 
 //Freelancer work data
 case class FreelancerWork(
-  id:Long,
-  freelancerId:Long,
   title:Option[String],
   jobId:Option[Long],
   startDate:Option[Date],
@@ -202,8 +204,6 @@ case class FreelancerWork(
 
 //Freelancer portfolio data
 case class FreelancerPortfolio(
-  id:Long,
-  freelancerId:Long,
   oUrl:String,
   date:Option[Date],
   title:Option[String],
@@ -216,8 +216,6 @@ case class FreelancerPortfolio(
 
 //Freelancer test data
 case class FreelancerTest(
-  id:Long,
-  freelancerId:Long,
   oUrl:String,
   title:Option[String],
   date:Option[Date],
@@ -231,8 +229,6 @@ case class FreelancerTest(
 
 //Freelancer employment data
 case class FreelancerEmployment(
-  id:Long,
-  freelancerId:Long,
   title:Option[String],
   company:Option[String],
   dateFrom:Option[Date],
@@ -241,8 +237,6 @@ case class FreelancerEmployment(
 
 //Freelancer education data
 case class FreelancerEducation(
-  id:Long,
-  freelancerId:Long,
   title:Option[String],
   school:Option[String],
   dateFrom:Option[Date],
@@ -251,16 +245,12 @@ case class FreelancerEducation(
 
 //Freelancer other experience data
 case class FreelancerOtherExperience(
-  id:Long,
-  freelancerId:Long,
   title:Option[String],
   date:Option[Date],
   description:Option[String])
 
 //Company data
 case class Company(
-  id:Long,
-  oUrl:String,
   findDate:Option[Date],
   deleteDate:Option[Date],
   lastCheckDate:Option[Date],
@@ -268,17 +258,11 @@ case class Company(
   title:Option[String],
   logo:Option[Image],
   location:Option[String],
-  registrationDate:Option[Date],
-  changes:List[CompanyChanges],
-  works:List[CompanyWork],
-  workers:List[CompanyWorker])
+  registrationDate:Option[Date])
 
 //Company changes data
 case class CompanyChanges(
-  id:Long,
-  companyId:Long,
   date:Option[Date],
-  nextCheckDate:Option[Date],
   title:Option[String],
   url:Option[String],
   rate:Option[Double],
@@ -288,8 +272,6 @@ case class CompanyChanges(
 
 //Company work data
 case class CompanyWork(
-  id:Long,
-  company_id:Long,
   title:Option[String],
   jobId:Option[Long],
   freelancerName:Option[String],
@@ -313,8 +295,6 @@ case class CompanyWork(
 
 //Company worker data
 case class CompanyWorker(
-  id:Long,
-  companyId:Long,
   findDate:Option[Date],
   deleteDate:Option[Date],
   workerType:Option[WorkerType],
@@ -325,19 +305,13 @@ case class CompanyWorker(
 
 //Group data
 case class Group(
-  id:Long,
-  oUrl:String,
   findDate:Option[Date],
   deleteDate:Option[Date],
-  nextCheckDate:Option[Date],
   title:Option[String],
-  logo:Option[Image],
-  changes:List[GroupChanges])
+  logo:Option[Image])
 
 //Group changes data
 case class GroupChanges(
-  id:Long,
-  groupId:Long,
   date:Option[Date],
   nMembers:Option[Int],
   nOpenJobs:Option[Int],

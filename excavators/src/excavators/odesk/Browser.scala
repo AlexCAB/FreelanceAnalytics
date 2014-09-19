@@ -31,6 +31,13 @@ object Browser extends JWebBrowser {
   def openURL(url:String) = getHTMLbyURLNavigateRunnable.synchronized{
     getHTMLbyURLNavigateRunnable.url = url
     SwingUtilities.invokeLater(getHTMLbyURLNavigateRunnable)}
+  def getCurrentHTML:Option[String] = getHTMLbyURLResultRunnable.synchronized{
+    getHTMLbyURLResultRunnable.content = None
+    if(SwingUtilities.isEventDispatchThread){
+      getHTMLbyURLResultRunnable.run()}
+    else{
+      SwingUtilities.invokeAndWait(getHTMLbyURLResultRunnable)}
+    getHTMLbyURLResultRunnable.content}
   def getHTMLbyURL(url:String):Option[String] = getHTMLbyURLResultRunnable.synchronized{
     //Three load try
     getHTMLbyURLResultRunnable.content = None
@@ -38,18 +45,27 @@ object Browser extends JWebBrowser {
     while(ltc > 0 && getHTMLbyURLResultRunnable.content.isEmpty){
       //Start load
       getHTMLbyURLNavigateRunnable.url = url
-      SwingUtilities.invokeAndWait(getHTMLbyURLNavigateRunnable)
+      if(SwingUtilities.isEventDispatchThread){
+        getHTMLbyURLNavigateRunnable.run()}
+      else{
+        SwingUtilities.invokeAndWait(getHTMLbyURLNavigateRunnable)}
       //Time out
       Thread.sleep(loadPageTimeOut)
       //Wait load
       var ni = loadTryMaxTime / 50
       while(ni > 0){
         getHTMLbyURLStatusRunnable.status = false
-        SwingUtilities.invokeAndWait(getHTMLbyURLStatusRunnable)
+        if(SwingUtilities.isEventDispatchThread){
+          getHTMLbyURLStatusRunnable.run()}
+        else{
+          SwingUtilities.invokeAndWait(getHTMLbyURLStatusRunnable)}
         if(getHTMLbyURLStatusRunnable.status){
           Thread.sleep(loadPageTimeOut)
           getHTMLbyURLStatusRunnable.status = false
-          SwingUtilities.invokeAndWait(getHTMLbyURLStatusRunnable)}
+          if(SwingUtilities.isEventDispatchThread){
+            getHTMLbyURLStatusRunnable.run()}
+          else{
+            SwingUtilities.invokeAndWait(getHTMLbyURLStatusRunnable)}}
         if(getHTMLbyURLStatusRunnable.status){
           ni = -1}
         else{
@@ -57,12 +73,18 @@ object Browser extends JWebBrowser {
         ni -= 1}
       //Return or retry
       if(ni < 0){
-        SwingUtilities.invokeAndWait(getHTMLbyURLResultRunnable)}
+        if(SwingUtilities.isEventDispatchThread){
+          getHTMLbyURLResultRunnable.run()}
+        else{
+          SwingUtilities.invokeAndWait(getHTMLbyURLResultRunnable)}}
       //Next try
         ltc -= 1}
     //Return
     getHTMLbyURLResultRunnable.content}
   def getBrowserInfo():String = getBrowserInfoRunnable.synchronized{
     getBrowserInfoRunnable.info = None
-    SwingUtilities.invokeAndWait(getBrowserInfoRunnable)
+    if(SwingUtilities.isEventDispatchThread){
+      getBrowserInfoRunnable.run()}
+    else{
+      SwingUtilities.invokeAndWait(getBrowserInfoRunnable)}
     getBrowserInfoRunnable.info.get}}

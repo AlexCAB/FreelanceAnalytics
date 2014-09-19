@@ -7,8 +7,9 @@ object Worker extends Thread{
   val checkTimeout = 1000 //In seconds
   val mainPageURL = "https://www.odesk.com"
   val jobSearchURL = "https://www.odesk.com/jobs/?q="
+  val desktopFolder = System.getProperty("user.home") + "/Desktop"
   //Components
-  val htmlParser = new HTMLParsers(Logger)
+  val htmlParser = new HTMLParsers
   //Variables
   private val urlQueue = Queue[String]()
   //Fields
@@ -25,6 +26,16 @@ object Worker extends Thread{
       Browser.openURL(mainPageURL)}
     else{
       Logger.log("[Worker.goToMain] Can't go to main page when work.")}}
+  def saveHtml() = {
+    Browser.getCurrentHTML match{
+      case Some(t) => {
+        val p = desktopFolder + "\\" + System.currentTimeMillis() + ".html"
+        try{
+          tools.nsc.io.File(p).writeAll(t)
+          Logger.log("[Worker.saveHtml] File save to: " + p)}
+        catch{case e:Exception => {
+          Logger.log("[Worker.saveHtml] Exception when save: " + e)}}}
+      case None => Logger.log("[Worker.saveHtml] Not save, empty.")}}
   def setWork(s:Boolean) = {
     work = s
     if(s){
@@ -37,16 +48,16 @@ object Worker extends Thread{
     synchronized{wait()}
     while(live){
       //Search new works
-      val lw = Browser.getHTMLbyURL(jobSearchURL) match {
-        case Some(html) => htmlParser.parseWorkSearchResult(html)   //!!! Если парсер венул пустой список, поторобувать перезагрузить страницу( всего 3 попытки)
-        case None => {                                               //Повыносить это всё в отдельные функции.
-          Logger.log("[Worker.run] Error: Can't get search works html")           //Приоретитеты задачь.
-          List()}}
-
-      //
-      println(Browser.getHTMLbyURL(mainPageURL + lw(0).url))
-
-      //Add new works to db
+//      val lw = Browser.getHTMLbyURL(jobSearchURL) match {
+//        case Some(html) => htmlParser.parseWorkSearchResult(html)   //!!! Если парсер венул пустой список, поторобувать перезагрузить страницу( всего 3 попытки)
+//        case None => {                                               //Повыносить это всё в отдельные функции.
+//          Logger.log("[Worker.run] Error: Can't get search works html")           //Приоретитеты задачь.
+//          List()}}
+//
+//      //
+//      println(Browser.getHTMLbyURL(mainPageURL + lw(0).url))
+//
+//      //Add new works to db
 //      lw.foreach(w => {
 //        println(w.url)
 //        println(w.skills)
