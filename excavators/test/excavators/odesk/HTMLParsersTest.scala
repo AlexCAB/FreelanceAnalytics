@@ -38,7 +38,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     val htmlParser = new HTMLParsers
     val uri = getClass.getResource("html\\JobHourly.html").toURI //https://www.odesk.com/jobs/WordPress-Plugin-Developer-Possible-Long-Term-Contract_~0116a80a41a3bd221a
     val html = io.Source.fromFile(uri).mkString
-    val df = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.ENGLISH)
+    val df = new SimpleDateFormat("yyyy.MMM.dd HH:mm:ss", Locale.ENGLISH)
     //
     val tr = htmlParser.parseJob(html).get
     //
@@ -56,6 +56,10 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     assert(tr.job.jobEmployment == Employment.AsNeeded)
     assert(tr.job.jobLength == Some("Less than 1 month"))
     assert(tr.job.jobRequiredLevel == SkillLevel.Expert)
+    assert(tr.job.jobQualifications == Map(
+      "Feedback Score:" -> "At least 4.50 ",
+      "English Level:" -> "Fluent - Has complete command of this language with perfect grammar ",
+      "oDesk Hours:" -> "At least 100 hours "))
     assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
     //changes:JobChanges
     val fd2 = tr.changes.date.getTime
@@ -66,11 +70,15 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     assert(tr.changes.rateAvg == None)
     assert(tr.changes.rateMax == None)
     assert(tr.changes.interviewing == Some(1))
+    assert(tr.changes.nHires == None)
+    assert(tr.changes.clientName == None)
+    assert(tr.changes.clientLogoUrl == None)
+    assert(tr.changes.clientUrl == None)
     assert(tr.changes.clientDescription == None)
     assert(tr.changes.clientPaymentMethod == PaymentMethod.Verified)
     assert(tr.changes.clientRating == Some(5.0))
     assert(tr.changes.clientNReviews == Some(1))
-    assert(tr.changes.clientLocation == Some("United Kingdom"))
+    assert(tr.changes.clientLocation == Some("United Kingdom London"))
     assert(tr.changes.clientNJobs == Some(7))
     assert(tr.changes.clientHireRate == Some(58))
     assert(tr.changes.clientNOpenJobs == Some(1))
@@ -81,15 +89,15 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     assert(tr.changes.clientHours == Some(23))
     assert(tr.changes.clientRegistrationDate == Some(df.parse("2012.Mar.21 00:00:00")))
     //applicants:List[JobApplicant]
-    assert(tr.applicants.size == 46)
+    assert(tr.applicants.size == 47)
     val a1 = tr.applicants(0)
     val fd3 = a1.date.getTime
     assert((fd3 < ct &&  fd3 > (ct - 1000)) == true)
-    val ud = a1.upDate.get.getTime + (1000 * 60 * 8) //8 minutes ago
+    val ud = a1.upDate.get.getTime + (1000 * 60 * 5) //8 minutes ago
     assert((ud < ct &&  ud > (ct - 1000)) == true)
     assert(a1.name == Some("James C."))
     assert(a1.initiatedBy == InitiatedBy.Freelancer)
-    assert(a1.url == Some("https://www.odesk.com/users/Wordpress-Woocommerce-Magento-Expert_~01121e98f92f9ed89d"))
+    assert(a1.url == Some("/users/Wordpress-Woocommerce-Magento-Expert_%7E01121e98f92f9ed89d"))
     val a2 = tr.applicants(1)
     assert(a2.name == Some("Kavish Rathore"))
     assert(a2.initiatedBy == InitiatedBy.Freelancer)
@@ -113,7 +121,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     assert(w0.freelancerFeedbackText == None)
     assert(w0.freelancerFeedback == None)
     assert(w0.freelancerName == Some("Vasile G."))
-    assert(w0.freelancerUrl == Some("https://www.odesk.com/users/Senior-Web-Developer-PHP-MySQL-JavaScript_~01d91426ff617b810c"))
+    assert(w0.freelancerUrl == Some("/users/Senior-Web-Developer-PHP-MySQL-JavaScript_%7E01d91426ff617b810c"))
     assert(w0.clientFeedback == None)
     val w2 = tr.clientWorks(2)
     assert(w2.oUrl == None)
@@ -125,10 +133,10 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
     assert(w2.billed == Some(111.11))
     assert(w2.hours == None)
     assert(w2.rate == None)
-    assert(w2.freelancerFeedbackText.get.split(" ").take(4).mkString(" ") == Some("I've had a great"))
+    assert(w2.freelancerFeedbackText.get.split(" ").take(4).mkString(" ") == "I've had a great")
     assert(w2.freelancerFeedback == Some(5.0))
     assert(w2.freelancerName == Some("Aurel Canciu"))
-    assert(w2.freelancerUrl == Some("https://www.odesk.com/users/Full-stack-web-developer-Ruby-Rails_~0164f7e0113dd91b16"))
+    assert(w2.freelancerUrl == Some("/users/Full-stack-web-developer-Ruby-Rails_%7E0164f7e0113dd91b16"))
     assert(w2.clientFeedback == Some(5.0))}
 
 //    "parse budget job" in {
@@ -180,11 +188,22 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
 //
 //    }
 
-    "parse closed job" in {
+    "parse applicants rich info and hired info" in {
 
-         //https://www.odesk.com/jobs/~019ba335f65a0f5ace
+         //https://www.odesk.com/jobs/FACEBOOK-AUTO-POSTER-SCRIPT_~011464d760e8e4eeff
 
     }
+    "parse closed job" in {
+
+      //https://www.odesk.com/jobs/~019ba335f65a0f5ace
+
+    }
+    "parse client rich info" in {
+
+      //https://www.odesk.com/jobs/ONLINE-TRAVEL-SENIOR-NET-DEVELOPER-OPPORTUNITY_~0158366e7af6340216
+
+    }
+
 
   }
 

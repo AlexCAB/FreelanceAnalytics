@@ -84,6 +84,7 @@ case class Job(
   jobEmployment:Employment,
   jobLength:Option[String],
   jobRequiredLevel:SkillLevel,
+  jobQualifications:Map[String,String],
   jobDescription:Option[String])
 
 //Job changes data
@@ -91,10 +92,16 @@ case class JobChanges(
   date:Date,
   lastViewed:Option[Date],
   nApplicants:Option[Int],
+  applicantsAvg:Option[Double],
   rateMin:Option[Double],
   rateAvg:Option[Double],
   rateMax:Option[Double],
   interviewing:Option[Int],
+  interviewingAvg:Option[Double],
+  nHires:Option[Int],
+  clientName:Option[String],
+  clientLogoUrl:Option[String],
+  clientUrl:Option[String],
   clientDescription:Option[String],
   clientPaymentMethod:PaymentMethod,
   clientRating:Option[Double],
@@ -120,9 +127,9 @@ case class JobApplicant(
 
 //Job hired data
 case class JobHired(
-  date:Option[Date],
+  date:Date,
   name:Option[String],
-  freelancerId:Option[Long])
+  freelancerUrl:Option[String])
 
 //Clients fool work data
 case class ClientWork(
