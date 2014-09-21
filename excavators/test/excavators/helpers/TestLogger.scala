@@ -1,6 +1,6 @@
 package excavators.helpers
 
-import excavators.odesk.Logger
+import excavators.odesk.logging.Logger
 
 /**
  * Dummy logger for test

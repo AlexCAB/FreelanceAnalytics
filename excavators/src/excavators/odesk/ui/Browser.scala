@@ -1,10 +1,10 @@
-package excavators.odesk
+package excavators.odesk.ui
 
 import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser
 import javax.swing.SwingUtilities
 
 
-object Browser extends JWebBrowser {
+class Browser extends JWebBrowser {
   //Parameters(time in milli sec)
   val loadPageMaxTime = 60000
   val loadPageTimeOut = 3000

@@ -1,8 +1,13 @@
-package excavators.odesk
+package excavators.odesk.ex_jods
 
 import scala.collection.mutable.Queue
+import excavators.odesk.parsers.HTMLParsers
+import excavators.odesk.ui.{ManagedWorker, Browser}
+import excavators.odesk.logging.Logger
 
-object Worker extends Thread{
+
+
+class Worker(browser:Browser, logger:Logger) extends Thread with ManagedWorker{
   //Parameters
   val checkTimeout = 1000 //In seconds
   val mainPageURL = "https://www.odesk.com"
@@ -13,8 +18,8 @@ object Worker extends Thread{
   //Variables
   private val urlQueue = Queue[String]()
   //Fields
-  var live = true
-  var work = false
+  private var live = true
+  private var work = false
   //Methods
   def init() = {
     start()}
@@ -23,26 +28,27 @@ object Worker extends Thread{
     join(600000)}
   def goToMain() = {
     if(! work){
-      Browser.openURL(mainPageURL)}
+      browser.openURL(mainPageURL)}
     else{
-      Logger.log("[Worker.goToMain] Can't go to main page when work.")}}
+      logger.log("[Worker.goToMain] Can't go to main page when work.")}}
   def saveHtml() = {
-    Browser.getCurrentHTML match{
+    browser.getCurrentHTML match{
       case Some(t) => {
         val p = desktopFolder + "\\" + System.currentTimeMillis() + ".html"
         try{
           tools.nsc.io.File(p).writeAll(t)
-          Logger.log("[Worker.saveHtml] File save to: " + p)}
+          logger.log("[Worker.saveHtml] File save to: " + p)}
         catch{case e:Exception => {
-          Logger.log("[Worker.saveHtml] Exception when save: " + e)}}}
-      case None => Logger.log("[Worker.saveHtml] Not save, empty.")}}
+          logger.log("[Worker.saveHtml] Exception when save: " + e)}}}
+      case None => logger.log("[Worker.saveHtml] Not save, empty.")}}
   def setWork(s:Boolean) = {
     work = s
     if(s){
       synchronized{notify()}
-      Logger.log("[Worker.setWork] Run.")}
+      logger.log("[Worker.setWork] Run.")}
     else{
-      Logger.log("[Worker.setWork] Paused.")}}
+      logger.log("[Worker.setWork] Paused.")}}
+  def isWork:Boolean = work
   //Run method
   override def run():Unit = {
     synchronized{wait()}

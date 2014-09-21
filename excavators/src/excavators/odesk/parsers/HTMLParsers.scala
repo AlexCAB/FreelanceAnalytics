@@ -1,11 +1,25 @@
-package excavators.odesk
+package excavators.odesk.parsers
+
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, ListBuffer => MutList}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
-import java.awt.Image
+import excavators.odesk._
+import scala.Some
+import excavators.odesk.structures._
+import scala.Some
+import scala.Some
+import scala.Some
+import excavators.odesk.structures.JobChanges
+import excavators.odesk.structures.ClientWork
+import excavators.odesk.structures.JobApplicant
+import excavators.odesk.structures.FoundWork
+import excavators.odesk.structures.ParsedSearchResults
+import excavators.odesk.structures.ParsedJob
+import excavators.odesk.structures.Job
+import excavators.odesk.structures.JobHired
 
 /**
  * Set of HTML parsers for oDesk site
@@ -64,7 +78,7 @@ class HTMLParsers{
   val tdTeg = "td"
   val iTag = "i"
   val jobQualificationsId = "jobQualificationsSection"
-  val applicantsParamP = List("jobApplicantListSection","oH2 oHToggle","oRight applicantListBidRangeBlock")
+  val applicantsParamP = List("oH2 oHToggle","oRight applicantListBidRangeBlock")
   val applicantsW = "Applicants:"
   val interviewingW = "Interviewing:"
   val strongTeg = "strong"
@@ -75,7 +89,7 @@ class HTMLParsers{
   val liTeg = "li"
   val dataContentTeg = "data-content"
   val pTag = "p"
-  val sepW = "|"
+  val sepW = "[|]"
   val lastW = "Last"
   val lowW = "Low"
   val avgW = "Avg"
@@ -96,14 +110,14 @@ class HTMLParsers{
   val jobApplicantId = "jobApplicantListSection"
   val clientW = "Client"
   val freelancerW = "Freelancer"
-
-
-  //...Далее исправить сплиты, убрать сомы
-
+  val applicantListId = "applicantList"
+  val applicantListBidRangeId = "applicantListBidRange"
   //Helpers
   private val oDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
   private val oShortDateFormat = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
+  private val oFullDateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH)
   private implicit class ElsHelper(es:Elements){
+    def toListOpt:List[Option[Element]] = (for(i <- 0 until es.size())yield es.get(i)).toList.map(Some(_))
     def toList:List[Element] = (for(i <- 0 until es.size())yield es.get(i)).toList}
   private implicit class ElHelper(oe:Option[Element]){
     private def getElemsRec(pl:List[String], e:Element, fl:(Element,String) => List[Element]):List[Element] = {
@@ -121,18 +135,25 @@ class HTMLParsers{
                     case Nil => l(et)
                     case lf => lf}}}
               l(el)}}}}}
-    def getChildList:List[Element] = oe match{
+    def getChildList:List[Option[Element]] = oe match{
       case Some(e) => {
          val es = e.children()
-        (for(i <- 0 until es.size())yield es.get(i)).toList}
+        (for(i <- 0 until es.size()) yield Some(es.get(i))).toList}
       case None => List()}
-    def getElemsByClassPath(pl:List[String]):List[Element] = oe match{
-      case Some(e) => getElemsRec(pl,e, (e,n) => Some(e).getChildList.filter(_.className() == n))
+    def getElemsByClassPath(pl:List[String]):List[Option[Element]] = oe match{
+      case Some(e) => {
+        val r = getElemsRec(pl, e, (e,n) => {
+          val c = Some(e).getChildList.filter{
+            case Some(e) => {e.className() == n}
+            case _ => false}
+          c.map(_.get)})
+        r.map(Some(_))}
       case None => List()}
-    def getElemsByTagPath(pl:List[String]):List[Element] = oe match{
-      case Some(e) => getElemsRec(pl,e, (e,n) => e.children().select(n).toList)
+    def getElemsByTagPath(pl:List[String]):List[Option[Element]] = oe match{
+      case Some(e) => getElemsRec(pl, e, (e,n) => e.children().select(n).toList).map(Some(_))
       case None => List()}
-    def getElemTextByClassPath(p:List[String]):Option[String] = oe.getElemsByClassPath(p).headOption.map(_.text())
+    def getElemTextByClassPath(p:List[String]):Option[String] = {
+      oe.getElemsByClassPath(p).headOption.flatMap(_.map(_.text()))}
     def getTableMap:Map[String,String] = oe match {
       case Some(e) => {
         e.children().select(tableTeg).first().children().select(trTeg).toList match{
@@ -142,24 +163,35 @@ class HTMLParsers{
     def getElementByIdOpt(id:String):Option[Element] = oe.flatMap(_.getElementById(id) match{
       case e:Element => Some(e)
       case _ => None})
-    def getElemsByTeg(t:String):List[Element] = oe match {
-      case Some(e) => e.children().select(t).toList
+    def getElemsByTeg(t:String):List[Option[Element]] = oe match {
+      case Some(e) => e.children().select(t).toListOpt
       case None => List()}
-    def getText:Option[String] = oe.flatMap(_.text() match{case "" => None; case s => Some(s)})
+    def getElemsByClass(cn:String):List[Option[Element]] = oe match {
+      case Some(e) => e.children().toList.filter(e => {e.className() == cn}).map(Some(_))
+      case None => List()}
+    def getAllElemsByClass(cn:String):List[Option[Element]] = oe match {
+      case Some(e) => e.getAllElements.toList.filter(e => {e.className() == cn}).map(Some(_))
+      case None => List()}
+    def findElementByIdOpt(id:String):Option[Element] = oe.flatMap(e => {
+      e.getAllElements.toList.find(e => {e.id() == id})})
+   def getText:Option[String] = oe.flatMap(_.text() match{case "" => None; case s => Some(s)})
     def getAttr(n:String):Option[String] = oe.flatMap(_.attr(n) match{case "" => None; case s => Some(s)})}
   private implicit class StringHelper(os:Option[String]){
     private def getNum(s:String):String = s.filter(c => List('0','1','2','3','4','5','6','7','8','9','.').contains(c))
     def pSplit:List[String] = os match{
       case Some(s) => s.replaceAll("\\s+"," ").split("[ ]+").filter(_ != "").toList
       case None => List()}
-    def parseTimeAgo:Option[Int] = { //Return in min
+    def sepSplit(sp:String):List[String] = os.pSplit.mkString(" ").split(sp).toList
+    def parseTimeAgo(cd:Date):Option[Date] = { //Return past date
       def pi(t:String):Option[Int] = try{Some(t.toInt)}catch{case _:Exception => None}
+      def nd(om:Option[Int]):Option[Date] = om.flatMap(m => Some(new Date(cd.getTime - (1000 * 60 * m))))
       os.pSplit match{
-        case ws if(ws.contains("minute")) => Some(1)
-        case n :: f :: _ if(f == "minutes") => pi(n)
-        case ws if(ws.contains("hour")) => Some(60)
-        case n :: f :: _ if(f == "hours") => pi(n).map(_ * 60)
-        case n :: f :: _ if(f == "day") => pi(n).map(_ * 60 * 24)
+        case ws if(ws.contains("minute")) => nd(Some(1))
+        case n :: f :: _ if(f == "minutes") => nd(pi(n))
+        case ws if(ws.contains("hour")) => nd(Some(60))
+        case n :: f :: _ if(f == "hours") => nd(pi(n).map(_ * 60))
+        case n :: f :: _ if(f == "day") => nd(pi(n).map(_ * 60 * 24))
+        case s :: _ if(s.contains('/')) => try{Some(oFullDateFormat.parse(s))}catch{case _:Exception => None}
         case _ => None}}
     def parseDate:Option[Date] = os match{
       case s:Some[String] => try{Some(oDateFormat.parse(s.pSplit.mkString(" ")))}catch{case _:Exception => None}
@@ -177,135 +209,128 @@ class HTMLParsers{
   private implicit class MapHelper(m:Map[String,String]){
     def findByKeyPart(kp:String):Option[String] = {
       m.find{case (k,_) => Some(k).pSplit.contains(kp)}.map{case (_,v) => v}}}
+  private implicit class ElemListHelper(el:List[Option[Element]]){
+    def getHead:Option[Element] = el.headOption.flatMap(e => e)}
   //Methods
   def parseWorkSearchResult(html:String):ParsedSearchResults = {
     //Parsing
     val d = Jsoup.parse(html)
     //Extract jobs data
-    val ael = d.body.getAllElements.toList
-    val rl = ael.filter(e => {e.className() == jobClassName}).map(j => {
+    val b = Some(d.body)//.getAllElements.toListOpt
+    val rl = b.getAllElemsByClass(jobClassName).map(j => {
       //Ger values
-      val ds = Some(j).getChildList.flatMap(e => e.className() match {
-        case `titleClassName` => {
-          Some(e).getChildList.find(_.className() == linkClassName).map(e => e.attr(hrefAttr)) match{
-            case Some("") | None => List()
-            case Some(u) => List(titleClassName -> u)}}
-        case `hiresNumClassName` => {
-          val as = e.text().split(" ")
-          val r = try{Some(as(3).toInt)}catch{case _:Exception => None}
-          List(hiresNumClassName -> r)}
-        case `infoClassName` => {
-          Some(e).getChildList.find(_.className() == skillsClassName).map(se => {
-            Some(se).getChildList.filter(_.className() == skillClassName).map(e => e.attr(skillAttr))}) match{
-              case Some(List()) | None => List()
-              case Some(s) => List(infoClassName -> s)}}
-        case _ => List()})
+      val ds = j.getChildList.flatMap{
+        case e:Some[Element] => e.get.className() match{
+          case `titleClassName` => List(titleClassName -> e.getElemsByClass(linkClassName).getHead.getAttr(hrefAttr))
+          case `hiresNumClassName` => {
+            val as = e.getText.pSplit
+            val r = try{Some(as(3).toInt)}catch{case _:Exception => None}
+            List(hiresNumClassName -> r)}
+          case `infoClassName` => {
+            e.getElemsByClass(skillsClassName).getHead match{
+              case e:Some[Element] => e.getElemsByTeg(aTeg).map(_.getAttr(skillAttr))  match{
+                case l:List[Option[String]]=> List(infoClassName -> l.filter(_.nonEmpty).map(_.get))
+                case _ => List()}
+              case None => List()}}
+          case _ => List()}
+        case None => List()}
       //Build FoundWork structure
       ds match{
-        case List((`titleClassName`,u:String)) =>
+        case List((`titleClassName`,Some(u:String))) =>
           FoundWork(u,List(),None)
-        case List((`titleClassName`,u:String), (`infoClassName`, s:List[String])) =>
+        case List((`titleClassName`,Some(u:String)), (`infoClassName`, s:List[String])) =>
           FoundWork(u,s,None)
-        case List((`titleClassName`,u:String),(`hiresNumClassName`, r:Option[Int])) =>
+        case List((`titleClassName`,Some(u:String)),(`hiresNumClassName`, r:Option[Int])) =>
           FoundWork(u,List(),r)
-        case List((`titleClassName`,u:String),(`hiresNumClassName`, r:Option[Int]), (`infoClassName`, s:List[String])) =>
+        case List((`titleClassName`,Some(u:String)),(`hiresNumClassName`, r:Option[Int]), (`infoClassName`, s:List[String])) =>
           FoundWork(u,s,r)
         case _ =>
           FoundWork("",List(),None)}})
     //Extract extra data
-    val (nf,nu) = ael.find(_.className() == mainClassName) match{
+    val (nf,nu) = b.getAllElemsByClass(mainClassName).getHead match{
       case m:Some[Element] => {
-        val f = m.getElemsByClassPath(numFindPath).map(e => {
-          try{
-            Some(e.children().select(h4Tag).first().text().split(" ")(0).filter(_ != ',').toInt)}
-          catch{
-            case _:Exception => None}})
-        val n = m.getElemsByClassPath(nextFindPath).find(_.text == nextText).map(_.attr(hrefAttr))
-        ((if(f.isEmpty) None else f.head),n)}
+        val f = m.getElemsByClassPath(numFindPath).map(_.getElemsByTeg(h4Tag).getHead.getText.pSplit.headOption.parseInt).headOption.flatMap(e => e) //Number of found
+        val n = m.getElemsByClassPath(nextFindPath).find(_.getText == Some(nextText)).flatMap(_.getAttr(hrefAttr))
+        (f,n)}
       case None => (None,None)}
     //Return result
     ParsedSearchResults(rl,nf,nu)}
   def parseJob(html:String):Option[ParsedJob] = {
     //Parsing
-    val d = Jsoup.parse(html).body().getAllElements.toList
+    val b = Some(Jsoup.parse(html).body())
     //Get parts
-    d.find(_.className() == mainCN).map(fm => { //Job data
+    b.getAllElemsByClass(mainCN).headOption.map(m => { //Job data
       //General preparing
-      val m = Some(fm)
       val cd = new Date
-      val wd = m.getElemsByClassPath(workDataP).headOption
+     // val wd = m.getElemsByClassPath(workDataP).getHead
       //Extract job data
       val j = {
         //Prepare job data
-        val ja = d.filter(_.className() == errorCN).exists(e =>{ //Job available?
-          val ws = e.text().split(" ")
-          ws.contains(availableW) &&  ws.contains(noW)})
-        val jpt = m.getElemTextByClassPath(jobPaymentP) match{ //Job payment type
-          case Some(s) if(s.split(" ").contains(hourlyW)) => Payment.Hourly
-          case Some(s) if(s.split(" ").contains(fixedW))=> Payment.Budget
+        val jpt = m.getElemTextByClassPath(jobPaymentP).pSplit match{ //Job payment type
+          case lw if(lw.contains(hourlyW)) => Payment.Hourly
+          case lw if(lw.contains(fixedW))=> Payment.Budget
           case _ => Payment.Unknown}
-        val eal = m.getElemTextByClassPath(employmentAndLengthP).map(_.split(" "))
+        val eal = m.getElemTextByClassPath(employmentAndLengthP).pSplit
           //Build job data
           Job(
           date = cd,
-          postDate = m.getElemsByClassPath(postedP).headOption match{
-            case e:Some[Element] => e.getElementByIdOpt(postedId).map(_.text()).parseTimeAgo match{
-              case Some(x) => Some(new Date(cd.getTime - (x * 60 * 1000)))
-              case None => None}
+          postDate = m.getElemsByClassPath(postedP).getHead match{
+            case e:Some[Element] => e.getElementByIdOpt(postedId).map(_.text()).parseTimeAgo(cd)
             case None => None},
-          deadline = m.getElemTextByClassPath(deadlineP).map(s => s.split(" ").reverse.take(3).reverse.mkString(" ")).parseDate,
-          daeDate = (if(ja) Some(cd) else None),
+          deadline = Some(m.getElemTextByClassPath(deadlineP).pSplit.reverse.take(3).reverse.mkString(" ")).parseDate,
           jobTitle = m.getElemTextByClassPath(titleP),
           jobType = m.getElemTextByClassPath(jobTypeP),
           jobPaymentType = jpt,
           jobPrice = m.getElemTextByClassPath(jobPriceP).parseDouble,
           jobEmployment = jpt match{
             case Payment.Hourly => eal match {
-              case Some(sa) if(sa.size >= 2) => sa.take(2) match{
-                case ws if(ws.contains(neededW)) => Employment.AsNeeded
-                case ws if(ws.contains(fullW)) => Employment.Full
-                case ws if(ws.contains(partW)) => Employment.Part
-                case b => Employment.Unknown}
+              case ws if(ws.contains(neededW)) => Employment.AsNeeded
+              case ws if(ws.contains(fullW)) => Employment.Full
+              case ws if(ws.contains(partW)) => Employment.Part
               case _ => Employment.Unknown}
             case _ => Employment.Unknown},
           jobLength = jpt match{
             case Payment.Hourly =>  eal match {
-              case Some(sa) if(sa.size >= 2) => Some(sa.drop(2).mkString(" "))
-              case _ => None}},
-          jobRequiredLevel = m.getElemTextByClassPath(jobSkillP).map(_.split(" ")) match{
-            case Some(ws) if(ws.contains(entryW)) => SkillLevel.Entry
-            case Some(ws) if(ws.contains(intermediateW)) => SkillLevel.Intermediate
-            case Some(ws) if(ws.contains(expertW)) => SkillLevel.Expert
+              case sa if(sa.size >= 2) => Some(sa.drop(2).mkString(" "))
+              case _ => None}
+            case _ => None},
+          jobRequiredLevel = m.getElemTextByClassPath(jobSkillP).pSplit match{
+            case ws if(ws.contains(entryW)) => SkillLevel.Entry
+            case ws if(ws.contains(intermediateW)) => SkillLevel.Intermediate
+            case ws if(ws.contains(expertW)) => SkillLevel.Expert
             case _ => SkillLevel.Unknown},
-          jobQualifications = wd match{
-            case e:Some[Element] => e.getElementByIdOpt(jobQualificationsId).getTableMap
-            case None => Map()},
+          jobQualifications = m.findElementByIdOpt(jobQualificationsId).getTableMap,
           jobDescription = m.getElementByIdOpt(jobDescriptionId) match{
             case Some(e) if(e.children().size() != 0) => Some(e.toString)
             case _ => None})}
       //Extract changes data
       val c = {
         //Prepare changes data
-        val wda = wd.getElementByIdOpt(jobActivityId) match{case e:Some[Element] => e.getTableMap; case _ => Map[String, String]()}
+        val ja = ! b.getAllElemsByClass(errorCN).exists(e => { //Job available?
+          val ws = e.getText.pSplit
+          ws.contains(availableW) &&  ws.contains(noW)})
+        val wda = m.findElementByIdOpt(jobActivityId) match{case e:Some[Element] => e.getTableMap; case _ => Map[String, String]()}
         val ap = wda.findByKeyPart(applicantsW)
         val in = wda.findByKeyPart(interviewingW)
         val hr = wda.findByKeyPart(hiresW)
-        val app = m.getElemsByClassPath(applicantsParamP).headOption match{
-          case Some(e) => e.children().select(strongTeg).text().split(sepW).map(_.split(" ").toList match{
-            case f :: s :: _ => (f,s)
-            case _ => ("","")}).toMap
+        val app = m.getElementByIdOpt(jobApplicantId).getElementByIdOpt(applicantListId).getElementByIdOpt(applicantListBidRangeId) match{
+          case e:Some[Element] => {
+            e.getElemsByTeg(strongTeg).getHead.getText.sepSplit("[|]").toList.map(e => {
+              Some(e).pSplit match{
+                case f :: s :: _ => (f,s)
+                case _ =>  ("","")}}).toMap}
           case None => Map[String,String]()}
-        val (ci,cr,cs) = d.find(_.className() == sideCN) match{ //Client data (client info, client rating, client specialty)
+        val (ci,cr,cs) = b.getAllElemsByClass(sideCN).getHead match{ //Client data (client info, client rating, client specialty)
           case Some(e) => {
             val ae = e.getAllElements
             (ae.toList.find(_.className() == companyCN),
              ae.toList.find(_.className() == feedbackCN),
              ae.toList.find(_.className() == detailsCN))}
           case None => (None,None,None)}
-        val crs = cr.map(_.children().select(divTag).select(spanTag).text().split(" ")) //Client rating string
+        val crs = cr.getElemsByTagPath(List(divTag,spanTag)).getHead.getText.pSplit //Client rating string
         val csm = cs match{ //Client specialty map
-          case Some(e) => e.children().toList.map(e => {
-            val wa = e.text().split(" ")
+          case e:Some[Element] => e.getChildList.map(e => {
+            val wa = e.getText.pSplit
             clientDetailsWM.find{case (_,lw) => wa.exists(w => lw.contains(w))} match{
               case Some((k,_)) => (k, wa.toList)
               case None => ("",List())}}).toMap
@@ -313,30 +338,35 @@ class HTMLParsers{
         //Build changes data
         JobChanges(
           date = cd,
+          jobAvailable = (if(ja) JobAvailable.Yes else JobAvailable.No),
           lastViewed = wda.findByKeyPart(lastW) match{
-            case Some(s) => Some(s).parseTimeAgo.map(x => {
-              new Date(cd.getTime - (x * 60 * 1000))})
+            case Some(s) => Some(s).parseTimeAgo(cd)
             case _ => None},
-          nApplicants = ap.flatMap(_.split(" ").headOption.parseInt),
-          applicantsAvg = ap.flatMap(_.split(" ").lastOption.parseDouble),
+          nApplicants = ap.pSplit.headOption.parseInt,
+          applicantsAvg = ap.pSplit.lastOption.parseDouble,
           rateMin = app.findByKeyPart(lowW).parseDouble,
           rateAvg = app.findByKeyPart(avgW).parseDouble,
           rateMax = app.findByKeyPart(highW).parseDouble,
-          interviewing = in.flatMap(_.split(" ").headOption.parseInt),
-          interviewingAvg = in.flatMap(_.split(" ").lastOption.parseDouble),
-          nHires = hr.flatMap(_.split(" ").headOption.parseInt),
+          interviewing = in.pSplit.headOption.parseInt,
+          interviewingAvg = in.pSplit match{
+            case _ :: s :: _ => Some(s).parseDouble
+            case _ => None},
+          nHires = hr.pSplit.headOption.parseInt,
           clientName = ci.map(_.children().select(h4Tag).text()),
           clientLogoUrl = ci.flatMap(_.children().select(imgTag).attr(srcAttr) match{case "" => None; case s => Some(s)}),
           clientUrl = ci.map(_.children().select(divTag).select(aTeg).text()),
-          clientDescription = ci.map(_.children().select(divTag).text()),
+          clientDescription = ci.getText,
           clientPaymentMethod = cr match{
-            case Some(e) => e.text().split(" ") match{
+            case e:Some[Element] => e.getText.pSplit match{
               case lw if(lw.contains(notW) && lw.contains(verifiedW)) =>  PaymentMethod.No
               case _ => PaymentMethod.Verified}
             case None => PaymentMethod.Unknown},
-          clientRating = crs.flatMap(_.headOption.parseDouble),
-          clientNReviews = crs.flatMap(_.drop(1).headOption.parseInt),
+          clientRating = crs.headOption.parseDouble,
+          clientNReviews = crs.drop(1).headOption.parseInt,
           clientLocation = csm.getOrElse("l",List()).dropRight(2) match{
+            case Nil => None
+            case l => Some(l.mkString(" "))},
+          clientTime = csm.getOrElse("l",List()).takeRight(2) match{
             case Nil => None
             case l => Some(l.mkString(" "))},
           clientNJobs = csm.getOrElse("h",List()).headOption.parseInt,
@@ -354,64 +384,53 @@ class HTMLParsers{
         val el = m.getElementByIdOpt(jobApplicantId).getElemsByTagPath(List(sectionTeg, tableTeg, tbodyTeg, trTeg))
         //Build applicants data
         el.map(e => {
-          val cl = e.children().select(tdTeg).toList
+          val cl = e.getElemsByTeg(tdTeg)
           JobApplicant(
             date = cd,
             upDate = cl match{
-              case _ :: se :: _ => Some(se.text()).parseTimeAgo.map(x => {new Date(cd.getTime - (x * 60 * 1000))})
+              case _ :: se :: _ => se.getText.parseTimeAgo(cd)
               case _ => None},
-            name = cl match{case fe :: _ => Some(fe.text()); case _ => None},
+            name = cl match{case fe :: _ => fe.getText; case _ => None},
             initiatedBy = cl match{
-              case _ :: _ :: te :: _ => te.text().split(" ") match{
+              case _ :: _ :: te :: _ => te.getText.pSplit match{
                 case lw if(lw.contains(clientW)) => InitiatedBy.Client
                 case lw if(lw.contains(freelancerW)) => InitiatedBy.Freelancer
                 case _ => InitiatedBy.Unknown}
               case _ => InitiatedBy.Unknown},
             url = cl match{
-              case fe :: _ => {
-                fe.children().select(aTeg).attr(hrefAttr) match{
-                  case "" => None
-                  case s => Some(s)}}
+              case fe :: _ => fe.getElemsByTeg(aTeg).getHead.getAttr(hrefAttr)
               case _ => None})})}
-
       //Extract hired data
       val hl = {
         //Preparing hired data
-        val t = wd.getElementByIdOpt(jobActivityId).getElemsByTagPath(List(tableTeg, tbodyTeg, trTeg))
-        val al = t.find(_.children().select(thTeg).text().split(" ").contains(hiredW)).getElemsByTagPath(List(tdTeg, ulTeg, liTeg, aTeg))
+        val t =  m.findElementByIdOpt(jobActivityId).getElemsByTagPath(List(tableTeg, tbodyTeg, trTeg))
+        val al = t.find(_.getElemsByTeg(thTeg).getHead.getText.pSplit.contains(hiredW)).flatMap(e => e).getElemsByTagPath(List(tdTeg, ulTeg, liTeg, aTeg))
         //Build hired data
         al.map(e => {
           JobHired(
             date = cd,
-            name = e.text() match{case "" => None; case s => Some(s)},
-            freelancerUrl = e.attr(hrefAttr) match{case "" => None; case s => Some(s)})})}
+            name = e.getText,
+            freelancerUrl = e.getAttr(hrefAttr))})}
       //Extract works data
       val wl = {
         //Preparing works data
         val es = m.getElementByIdOpt("jobHistorySection").getElemsByTeg(articleTeg)
         //Build works data
-        es.map(fe => {
-          val e = Some(fe)
-          val t = e.getElemsByClassPath(List("col col4of5","oRowTitle")).headOption
-          val d = e.getElemsByClassPath(List("col col4of5")).headOption
-          val f = d.getElemsByTeg(divTag).headOption
-          val wd = e.getElemsByClassPath(List("col col1of5 txtRight oSupportInfo")).headOption.getElemsByTeg(divTag)
-          val ds = wd match{case e :: _ => e.text().split("-").toList; case _ => List()}
-          val p = (wd match{case _ :: e :: _ => Some(e).getText; case _ => None})
-          val b = wd match{case _ :: _ :: e :: _ => Some(e).getText; case _ => None}
-          val pm = p match{
-            case Some(s) if(s.split(" ").contains("@")) => Payment.Hourly
-            case Some(s) if(s.split(" ").contains("Fixed")) => Payment.Budget
+        es.map(e => {
+          val t = e.getElemsByClassPath(List("col col4of5","oRowTitle")).getHead
+          val d = e.getElemsByClassPath(List("col col4of5")).getHead
+          val f = d.getElemsByTeg(divTag).getHead
+          val wd = e.getElemsByClassPath(List("col col1of5 txtRight oSupportInfo")).getHead.getElemsByTeg(divTag)
+          val ds = wd match{case e :: _ => e.getText.sepSplit("-"); case _ => List()}
+          val p = (wd match{case _ :: e :: _ => e.getText; case _ => None})
+          val b = wd match{case _ :: _ :: e :: _ => e.getText; case _ => None}
+          val pm = p.pSplit match{
+            case lw if(lw.contains("@")) => Payment.Hourly
+            case lw if(lw.contains("Fixed")) => Payment.Budget
             case _ => Payment.Unknown}
-
-
-println(ds)
-
           ClientWork(
             date = cd,
-            oUrl = t.getElemsByTeg(aTeg).headOption.map(_.attr(hrefAttr)) match{
-              case Some("") => None
-              case os => os},
+            oUrl = t.getElemsByTeg(aTeg).getHead.getAttr(hrefAttr),
             title = t.getText,
             inProgress = d match{
               case e:Some[Element] if(e.getElemsByTeg(iTag).nonEmpty) => JobState.InProcess
@@ -421,26 +440,26 @@ println(ds)
               case s :: _ => Some(s.split(" ").take(2).mkString(" ")).parseShortDate
               case _ => None},
             endDate = ds match{
-              case _ :: s :: _ if(! s.split(" ").contains("Present")) => {println(s); Some(s).parseShortDate}
+              case _ :: s :: _ if(! s.split(" ").contains("Present")) => Some(s).parseShortDate
               case _ => None},
             paymentType = pm,
             billed = pm match{
-              case Payment.Hourly => b.flatMap(_.split(" ").drop(1).headOption.parseDouble)
-              case Payment.Budget => p.flatMap(_.split(" ").drop(2).headOption.parseDouble)
+              case Payment.Hourly => b.pSplit.drop(1).headOption.parseDouble
+              case Payment.Budget => p.pSplit.drop(2).headOption.parseDouble
               case _ => None},
             hours =  pm match{
-              case Payment.Hourly => p.flatMap(_.split("@").headOption.parseInt)
+              case Payment.Hourly => p.sepSplit("@").headOption.parseInt
               case _ => None},
             rate = pm match{
-              case Payment.Hourly => p.flatMap(_.split("@").lastOption.parseDouble)
+              case Payment.Hourly => p.sepSplit("@").lastOption.parseDouble
               case _ => None},
-            freelancerFeedbackText = d.getElemsByTeg(pTag).headOption.getText,
-            freelancerFeedback = d.getElemsByTagPath(List(pTag,spanTag)).headOption.getAttr(dataContentTeg).parseDouble,
-            freelancerName = f.getElemsByTeg(aTeg).headOption.getText match{
+            freelancerFeedbackText = d.getElemsByTeg(pTag).getHead.getText,
+            freelancerFeedback = d.getElemsByTagPath(List(pTag,spanTag)).getHead.getAttr(dataContentTeg).parseDouble,
+            freelancerName = f.getElemsByTeg(aTeg).getHead.getText match{
               case Some(s) => Some(s)
-              case None => f.getElemsByTeg(strongTeg).headOption.getText},
-            freelancerUrl =f.getElemsByTeg(aTeg).headOption.getAttr(hrefAttr),
-            clientFeedback = f.getElemsByTeg(spanTag).headOption.getAttr(dataContentTeg).parseDouble)})}
+              case None => f.getElemsByTeg(strongTeg).getHead.getText},
+            freelancerUrl =f.getElemsByTeg(aTeg).getHead.getAttr(hrefAttr),
+            clientFeedback = f.getElemsByTeg(spanTag).getHead.getAttr(dataContentTeg).parseDouble)})}
       //Return result
       ParsedJob(
         job = j,
@@ -448,7 +467,7 @@ println(ds)
         applicants = al,
         hires = hl,
         clientWorks = wl)})}
-  //////////////
+
 
 
 

@@ -1,12 +1,12 @@
-package excavators.odesk
+package excavators.odesk.structures
+
 import java.util.Date
 import java.awt.Image
 
 /**
- * Contain set of data structures
+ * Contain set of data structures for parsing results
  * Created by CAB on 18.09.14.
  */
-
 
 
 trait FoundBy
@@ -59,6 +59,13 @@ object JobState{
   case object InProcess extends JobState
   case object End extends JobState}
 
+trait JobAvailable
+object JobAvailable{
+  case object Unknown extends JobAvailable
+  case object Yes extends JobAvailable
+  case object No extends JobAvailable}
+
+
 //Record from search result
 case class FoundWork(
   url:String,
@@ -76,7 +83,6 @@ case class Job(
   date:Date,
   postDate:Option[Date],
   deadline:Option[Date],
-  daeDate:Option[Date],   //Current date if find "Job closed"
   jobTitle:Option[String],
   jobType:Option[String],
   jobPaymentType:Payment,
@@ -90,6 +96,7 @@ case class Job(
 //Job changes data
 case class JobChanges(
   date:Date,
+  jobAvailable:JobAvailable, //No if found "This job is no longer available "
   lastViewed:Option[Date],
   nApplicants:Option[Int],
   applicantsAvg:Option[Double],
@@ -107,6 +114,7 @@ case class JobChanges(
   clientRating:Option[Double],
   clientNReviews:Option[Int],
   clientLocation:Option[String],
+  clientTime:Option[String],
   clientNJobs:Option[Int],
   clientHireRate:Option[Int],
   clientNOpenJobs:Option[Int],
