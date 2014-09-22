@@ -1,0 +1,63 @@
+package excavators.odesk.structures
+
+/**
+ * Set of enums
+ * Created by CAB on 22.09.14.
+ */
+
+trait FoundBy
+object FoundBy{
+  case object Unknown extends FoundBy
+  case object Search extends FoundBy
+  case object Analyse extends FoundBy}
+
+trait Payment
+object Payment{
+  case object Unknown extends Payment
+  case object Hourly extends Payment
+  case object Budget extends Payment}
+
+trait PaymentMethod
+object PaymentMethod{
+  case object Unknown extends PaymentMethod
+  case object Verified extends PaymentMethod
+  case object No extends PaymentMethod}
+
+trait Employment
+object Employment{
+  case object Unknown extends Employment
+  case object AsNeeded extends Employment
+  case object Full extends Employment
+  case object Part extends Employment}
+
+trait InitiatedBy
+object InitiatedBy{
+  case object Unknown extends InitiatedBy
+  case object Freelancer extends InitiatedBy
+  case object Client extends InitiatedBy}
+
+trait SkillLevel
+object SkillLevel{
+  case object Unknown extends SkillLevel
+  case object Entry extends SkillLevel
+  case object Intermediate extends SkillLevel
+  case object Expert extends SkillLevel}
+
+trait WorkerType
+object WorkerType{
+  case object Unknown extends WorkerType
+  case object Freelancer extends WorkerType
+  case object Manager extends WorkerType}
+
+trait JobState
+object JobState{
+  case object Unknown extends JobState
+  case object InProcess extends JobState
+  case object End extends JobState}
+
+trait JobAvailable
+object JobAvailable{
+  case object Unknown extends JobAvailable
+  case object Yes extends JobAvailable
+  case object No extends JobAvailable}
+

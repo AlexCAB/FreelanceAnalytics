@@ -4,7 +4,7 @@ import org.scalatest._
 import java.util.Locale
 import java.text.SimpleDateFormat
 import excavators.odesk.structures._
-import scala.Some
+
 
 /**
  * Test for HTMLParsers object
@@ -48,7 +48,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //
       val ct = System.currentTimeMillis()
       //job:Job
-      val fd1 = tr.job.date.getTime
+      val fd1 = tr.job.createDate.getTime
       assert((fd1 < ct && fd1 > (ct - 1000)) == true)
       val pd = tr.job.postDate.get.getTime + (1000 * 60 * 29) //Posted  29 minutes ago
       assert((pd < ct && pd > (ct - 1000)) == true)
@@ -65,7 +65,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
         "oDesk Hours:" -> "At least 100 hours "))
       assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
       //changes:JobChanges
-      val fd2 = tr.changes.date.getTime
+      val fd2 = tr.changes.createDate.getTime
       assert((fd2 < ct &&  fd2 > (ct - 1000)) == true)
       assert(tr.changes.lastViewed == None)
       assert(tr.changes.jobAvailable == JobAvailable.Yes)
@@ -73,7 +73,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.changes.rateMin == None)
       assert(tr.changes.rateAvg == None)
       assert(tr.changes.rateMax == None)
-      assert(tr.changes.interviewing == Some(1))
+      assert(tr.changes.nInterviewing == Some(1))
       assert(tr.changes.nHires == None)
       assert(tr.changes.clientName == None)
       assert(tr.changes.clientLogoUrl == None)
@@ -95,7 +95,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //applicants:List[JobApplicant]
       assert(tr.applicants.size == 47)
       val a1 = tr.applicants(0)
-      val fd3 = a1.date.getTime
+      val fd3 = a1.createDate.getTime
       assert((fd3 < ct &&  fd3 > (ct - 1000)) == true)
       val ud = a1.upDate.get.getTime + (1000 * 60 * 5) //8 minutes ago
       assert((ud < ct &&  ud > (ct - 1000)) == true)
@@ -111,7 +111,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //clientWorks:List[ClientWork]
       assert(tr.clientWorks.size == 3)
       val w0 = tr.clientWorks(0)
-      val fd4 = w0.date.getTime
+      val fd4 = w0.createDate.getTime
       assert((fd4 < ct &&  fd4 > (ct - 1000)) == true)
       assert(w0.oUrl == None)
       assert(w0.title == Some("WordPress Plugin/Theme Development - Long Term"))
@@ -167,7 +167,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.changes.rateMin == None)
       assert(tr.changes.rateAvg == None)
       assert(tr.changes.rateMax == None)
-      assert(tr.changes.interviewing == Some(0))
+      assert(tr.changes.nInterviewing == Some(0))
       assert(tr.changes.interviewingAvg == None)
       assert(tr.changes.nHires == None)
       assert(tr.changes.clientName == None)
@@ -235,7 +235,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.changes.rateMin == None)
       assert(tr.changes.rateAvg == None)
       assert(tr.changes.rateMax == None)
-      assert(tr.changes.interviewing == Some(1))
+      assert(tr.changes.nInterviewing == Some(1))
       assert(tr.changes.nHires == None)
       assert(tr.changes.clientName == Some("Crush Design"))
       assert(tr.changes.clientLogoUrl == Some(
@@ -262,7 +262,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //hires:List[JobHired]
       assert(tr.hires.size == 1)
       val h = tr.hires(0)
-      val fd2 = h.date.getTime
+      val fd2 = h.createDate.getTime
       assert((fd2 < ct &&  fd2 > (ct - 1000)) == true)
       assert(h.name == Some("Rolando Salazar"))
       assert(h.freelancerUrl == Some("/users/%7E013f14399977ee965e"))

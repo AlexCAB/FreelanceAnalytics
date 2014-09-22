@@ -1,25 +1,12 @@
 package excavators.odesk.parsers
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, ListBuffer => MutList}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
-import java.util.{Locale, Date}
+import java.util.Locale
+import java.sql.Date
 import java.text.SimpleDateFormat
-import excavators.odesk._
-import scala.Some
 import excavators.odesk.structures._
-import scala.Some
-import scala.Some
-import scala.Some
-import excavators.odesk.structures.JobChanges
-import excavators.odesk.structures.ClientWork
-import excavators.odesk.structures.JobApplicant
-import excavators.odesk.structures.FoundWork
-import excavators.odesk.structures.ParsedSearchResults
-import excavators.odesk.structures.ParsedJob
-import excavators.odesk.structures.Job
-import excavators.odesk.structures.JobHired
 
 /**
  * Set of HTML parsers for oDesk site
@@ -191,14 +178,14 @@ class HTMLParsers{
         case ws if(ws.contains("hour")) => nd(Some(60))
         case n :: f :: _ if(f == "hours") => nd(pi(n).map(_ * 60))
         case n :: f :: _ if(f == "day") => nd(pi(n).map(_ * 60 * 24))
-        case s :: _ if(s.contains('/')) => try{Some(oFullDateFormat.parse(s))}catch{case _:Exception => None}
+        case s :: _ if(s.contains('/')) => try{Some(new Date(oFullDateFormat.parse(s).getTime))}catch{case _:Exception => None}
         case _ => None}}
     def parseDate:Option[Date] = os match{
-      case s:Some[String] => try{Some(oDateFormat.parse(s.pSplit.mkString(" ")))}catch{case _:Exception => None}
+      case s:Some[String] => try{Some(new Date(oDateFormat.parse(s.pSplit.mkString(" ")).getTime))}catch{case _:Exception => None}
       case None => None}
     def parseShortDate:Option[Date] = os match{
       case s:Some[String] => try{
-        Some(oShortDateFormat.parse(s.pSplit.mkString(" ")))}catch{case e:Exception => None}
+        Some(new Date(oShortDateFormat.parse(s.pSplit.mkString(" ")).getTime))}catch{case e:Exception => None}
       case None => None}
     def parseInt:Option[Int] = os match{
       case Some(s) => try{Some(getNum(s).toInt)}catch{case _:Exception => None}
@@ -261,7 +248,7 @@ class HTMLParsers{
     //Get parts
     b.getAllElemsByClass(mainCN).headOption.map(m => { //Job data
       //General preparing
-      val cd = new Date
+      val cd = new Date(System.currentTimeMillis())
      // val wd = m.getElemsByClassPath(workDataP).getHead
       //Extract job data
       val j = {
@@ -273,7 +260,7 @@ class HTMLParsers{
         val eal = m.getElemTextByClassPath(employmentAndLengthP).pSplit
           //Build job data
           Job(
-          date = cd,
+          createDate = cd,
           postDate = m.getElemsByClassPath(postedP).getHead match{
             case e:Some[Element] => e.getElementByIdOpt(postedId).map(_.text()).parseTimeAgo(cd)
             case None => None},
@@ -337,7 +324,7 @@ class HTMLParsers{
           case None => Map[String,List[String]]()}
         //Build changes data
         JobChanges(
-          date = cd,
+          createDate = cd,
           jobAvailable = (if(ja) JobAvailable.Yes else JobAvailable.No),
           lastViewed = wda.findByKeyPart(lastW) match{
             case Some(s) => Some(s).parseTimeAgo(cd)
@@ -347,7 +334,7 @@ class HTMLParsers{
           rateMin = app.findByKeyPart(lowW).parseDouble,
           rateAvg = app.findByKeyPart(avgW).parseDouble,
           rateMax = app.findByKeyPart(highW).parseDouble,
-          interviewing = in.pSplit.headOption.parseInt,
+          nInterviewing = in.pSplit.headOption.parseInt,
           interviewingAvg = in.pSplit match{
             case _ :: s :: _ => Some(s).parseDouble
             case _ => None},
@@ -386,7 +373,7 @@ class HTMLParsers{
         el.map(e => {
           val cl = e.getElemsByTeg(tdTeg)
           JobApplicant(
-            date = cd,
+            createDate = cd,
             upDate = cl match{
               case _ :: se :: _ => se.getText.parseTimeAgo(cd)
               case _ => None},
@@ -408,7 +395,7 @@ class HTMLParsers{
         //Build hired data
         al.map(e => {
           JobHired(
-            date = cd,
+            createDate = cd,
             name = e.getText,
             freelancerUrl = e.getAttr(hrefAttr))})}
       //Extract works data
@@ -429,7 +416,7 @@ class HTMLParsers{
             case lw if(lw.contains("Fixed")) => Payment.Budget
             case _ => Payment.Unknown}
           ClientWork(
-            date = cd,
+            createDate = cd,
             oUrl = t.getElemsByTeg(aTeg).getHead.getAttr(hrefAttr),
             title = t.getText,
             inProgress = d match{

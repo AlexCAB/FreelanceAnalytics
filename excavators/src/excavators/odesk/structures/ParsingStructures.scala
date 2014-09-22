@@ -1,70 +1,12 @@
 package excavators.odesk.structures
 
-import java.util.Date
+import java.sql.Date
 import java.awt.Image
 
 /**
  * Contain set of data structures for parsing results
  * Created by CAB on 18.09.14.
  */
-
-
-trait FoundBy
-object FoundBy{
-   case object Unknown extends FoundBy
-   case object Search extends FoundBy
-   case object Analyse extends FoundBy}
-
-trait Payment
-object Payment{
-  case object Unknown extends Payment
-  case object Hourly extends Payment
-  case object Budget extends Payment}
-
-trait PaymentMethod
-object PaymentMethod{
-  case object Unknown extends PaymentMethod
-  case object Verified extends PaymentMethod
-  case object No extends PaymentMethod}
-
-trait Employment
-object Employment{
-  case object Unknown extends Employment
-  case object AsNeeded extends Employment
-  case object Full extends Employment
-  case object Part extends Employment}
-
-trait InitiatedBy
-object InitiatedBy{
-  case object Unknown extends InitiatedBy
-  case object Freelancer extends InitiatedBy
-  case object Client extends InitiatedBy}
-
-trait SkillLevel
-object SkillLevel{
-  case object Unknown extends SkillLevel
-  case object Entry extends SkillLevel
-  case object Intermediate extends SkillLevel
-  case object Expert extends SkillLevel}
-
-trait WorkerType
-object WorkerType{
-  case object Unknown extends WorkerType
-  case object Freelancer extends WorkerType
-  case object Manager extends WorkerType}
-
-trait JobState
-object JobState{
-  case object Unknown extends JobState
-  case object InProcess extends JobState
-  case object End extends JobState}
-
-trait JobAvailable
-object JobAvailable{
-  case object Unknown extends JobAvailable
-  case object Yes extends JobAvailable
-  case object No extends JobAvailable}
-
 
 //Record from search result
 case class FoundWork(
@@ -80,7 +22,7 @@ case class ParsedSearchResults(
 
 //Job page data
 case class Job(
-  date:Date,
+  createDate:Date,
   postDate:Option[Date],
   deadline:Option[Date],
   jobTitle:Option[String],
@@ -95,7 +37,7 @@ case class Job(
 
 //Job changes data
 case class JobChanges(
-  date:Date,
+  createDate:Date,
   jobAvailable:JobAvailable, //No if found "This job is no longer available "
   lastViewed:Option[Date],
   nApplicants:Option[Int],
@@ -103,7 +45,7 @@ case class JobChanges(
   rateMin:Option[Double],
   rateAvg:Option[Double],
   rateMax:Option[Double],
-  interviewing:Option[Int],
+  nInterviewing:Option[Int],
   interviewingAvg:Option[Double],
   nHires:Option[Int],
   clientName:Option[String],
@@ -127,7 +69,7 @@ case class JobChanges(
 
 //Job applicant data
 case class JobApplicant(
-  date:Date,
+  createDate:Date,
   upDate:Option[Date],
   name:Option[String],
   initiatedBy:InitiatedBy,
@@ -135,13 +77,13 @@ case class JobApplicant(
 
 //Job hired data
 case class JobHired(
-  date:Date,
+  createDate:Date,
   name:Option[String],
   freelancerUrl:Option[String])
 
 //Clients fool work data
 case class ClientWork(
-  date:Date,
+  createDate:Date,
   oUrl:Option[String],
   title:Option[String],
   inProgress:JobState,
@@ -174,14 +116,14 @@ case class Freelancer(
 
 //Freelancer application data
 case class FreelancerApplication(
-  date:Option[Date],
+  createDate:Option[Date],
   initiatedBy:InitiatedBy,
   title:Option[String],
   jobsId:Option[Long])
 
 //Freelancer changes data
 case class FreelancerChanges(
-  date:Option[Date],
+  createDate:Option[Date],
   location:Option[String],
   timeZone:Option[Int],
   languages:List[String],
@@ -220,7 +162,7 @@ case class FreelancerWork(
 //Freelancer portfolio data
 case class FreelancerPortfolio(
   oUrl:String,
-  date:Option[Date],
+  createDate:Option[Date],
   title:Option[String],
   description:Option[String],
   img:Option[Image],
@@ -233,7 +175,7 @@ case class FreelancerPortfolio(
 case class FreelancerTest(
   oUrl:String,
   title:Option[String],
-  date:Option[Date],
+  createDate:Option[Date],
   scoreSize:Option[Double],
   score:Option[Double],
   time:Option[Int],
@@ -261,7 +203,7 @@ case class FreelancerEducation(
 //Freelancer other experience data
 case class FreelancerOtherExperience(
   title:Option[String],
-  date:Option[Date],
+  createDate:Option[Date],
   description:Option[String])
 
 //Company data
@@ -277,7 +219,7 @@ case class Company(
 
 //Company changes data
 case class CompanyChanges(
-  date:Option[Date],
+  createDate:Option[Date],
   title:Option[String],
   url:Option[String],
   rate:Option[Double],
@@ -327,7 +269,7 @@ case class Group(
 
 //Group changes data
 case class GroupChanges(
-  date:Option[Date],
+  createDate:Option[Date],
   nMembers:Option[Int],
   nOpenJobs:Option[Int],
   avgRate:Option[Double],
