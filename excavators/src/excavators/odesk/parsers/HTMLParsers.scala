@@ -291,7 +291,7 @@ class HTMLParsers{
             case Some(e) if(e.children().size() != 0) => Some(e.toString)
             case _ => None})}
       //Extract changes data
-      val c = {
+      val (jc,cc) = {
         //Prepare changes data
         val ja = ! b.getAllElemsByClass(errorCN).exists(e => { //Job available?
           val ws = e.getText.pSplit
@@ -323,7 +323,7 @@ class HTMLParsers{
               case None => ("",List())}}).toMap
           case None => Map[String,List[String]]()}
         //Build changes data
-        JobChanges(
+        (JobChanges(
           createDate = cd,
           jobAvailable = (if(ja) JobAvailable.Yes else JobAvailable.No),
           lastViewed = wda.findByKeyPart(lastW) match{
@@ -338,33 +338,35 @@ class HTMLParsers{
           interviewingAvg = in.pSplit match{
             case _ :: s :: _ => Some(s).parseDouble
             case _ => None},
-          nHires = hr.pSplit.headOption.parseInt,
-          clientName = ci.map(_.children().select(h4Tag).text()),
-          clientLogoUrl = ci.flatMap(_.children().select(imgTag).attr(srcAttr) match{case "" => None; case s => Some(s)}),
-          clientUrl = ci.map(_.children().select(divTag).select(aTeg).text()),
-          clientDescription = ci.getText,
-          clientPaymentMethod = cr match{
+          nHires = hr.pSplit.headOption.parseInt),
+        ClientChanges(
+          createDate = cd,
+          name = ci.map(_.children().select(h4Tag).text()),
+          logoUrl = ci.flatMap(_.children().select(imgTag).attr(srcAttr) match{case "" => None; case s => Some(s)}),
+          url = ci.map(_.children().select(divTag).select(aTeg).text()),
+          description = ci.getText,
+          paymentMethod = cr match{
             case e:Some[Element] => e.getText.pSplit match{
               case lw if(lw.contains(notW) && lw.contains(verifiedW)) =>  PaymentMethod.No
               case _ => PaymentMethod.Verified}
             case None => PaymentMethod.Unknown},
-          clientRating = crs.headOption.parseDouble,
-          clientNReviews = crs.drop(1).headOption.parseInt,
-          clientLocation = csm.getOrElse("l",List()).dropRight(2) match{
+          rating = crs.headOption.parseDouble,
+          nReviews = crs.drop(1).headOption.parseInt,
+          location = csm.getOrElse("l",List()).dropRight(2) match{
             case Nil => None
             case l => Some(l.mkString(" "))},
-          clientTime = csm.getOrElse("l",List()).takeRight(2) match{
+          time = csm.getOrElse("l",List()).takeRight(2) match{
             case Nil => None
             case l => Some(l.mkString(" "))},
-          clientNJobs = csm.getOrElse("h",List()).headOption.parseInt,
-          clientHireRate = csm.getOrElse("h",List()).drop(3).headOption.parseInt,
-          clientNOpenJobs = csm.getOrElse("h",List()).drop(6).headOption.parseInt,
-          clientTotalSpend = Some(csm.getOrElse("s",List()).take(2).mkString("")).parseDouble,
-          clientNHires = csm.getOrElse("s",List()).reverse.drop(3).headOption.parseInt,
-          clientNActive = csm.getOrElse("s",List()).reverse.drop(1).headOption.parseInt,
-          clientAvgRate = csm.getOrElse("a",List()).headOption.parseDouble,
-          clientHours = csm.getOrElse("a",List()).reverse.drop(1).headOption.parseInt,
-          clientRegistrationDate = Some(csm.getOrElse("m",List()).drop(2).mkString(" ")).parseDate)}
+          nJobs = csm.getOrElse("h",List()).headOption.parseInt,
+          hireRate = csm.getOrElse("h",List()).drop(3).headOption.parseInt,
+          nOpenJobs = csm.getOrElse("h",List()).drop(6).headOption.parseInt,
+          totalSpend = Some(csm.getOrElse("s",List()).take(2).mkString("")).parseDouble,
+          nHires = csm.getOrElse("s",List()).reverse.drop(3).headOption.parseInt,
+          nActive = csm.getOrElse("s",List()).reverse.drop(1).headOption.parseInt,
+          avgRate = csm.getOrElse("a",List()).headOption.parseDouble,
+          hours = csm.getOrElse("a",List()).reverse.drop(1).headOption.parseInt,
+          registrationDate = Some(csm.getOrElse("m",List()).drop(2).mkString(" ")).parseDate))}
       //Extract applicants data
       val al = {
         //Prepare applicants data
@@ -450,15 +452,11 @@ class HTMLParsers{
       //Return result
       ParsedJob(
         job = j,
-        changes = c,
+        jobChanges = jc,
+        clientChanges = cc,
         applicants = al,
         hires = hl,
-        clientWorks = wl)})}
-
-
-
-
-}
+        clientWorks = wl)})}}
 
 
 

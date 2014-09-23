@@ -7,9 +7,9 @@ import excavators.odesk.structures._
 
 
 /**
- * Test for HTMLParsers object
- * Created by CAB on 16.09.14.
- */
+* Test for HTMLParsers object
+* Created by CAB on 16.09.14.
+*/
 
 class HTMLParsersTest extends WordSpecLike with Matchers {
   //Helpers
@@ -65,33 +65,36 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
         "oDesk Hours:" -> "At least 100 hours "))
       assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
       //changes:JobChanges
-      val fd2 = tr.changes.createDate.getTime
+      val fd2 = tr.jobChanges.createDate.getTime
       assert((fd2 < ct &&  fd2 > (ct - 1000)) == true)
-      assert(tr.changes.lastViewed == None)
-      assert(tr.changes.jobAvailable == JobAvailable.Yes)
-      assert(tr.changes.nApplicants == Some(46))
-      assert(tr.changes.rateMin == None)
-      assert(tr.changes.rateAvg == None)
-      assert(tr.changes.rateMax == None)
-      assert(tr.changes.nInterviewing == Some(1))
-      assert(tr.changes.nHires == None)
-      assert(tr.changes.clientName == None)
-      assert(tr.changes.clientLogoUrl == None)
-      assert(tr.changes.clientUrl == None)
-      assert(tr.changes.clientDescription == None)
-      assert(tr.changes.clientPaymentMethod == PaymentMethod.Verified)
-      assert(tr.changes.clientRating == Some(5.0))
-      assert(tr.changes.clientNReviews == Some(1))
-      assert(tr.changes.clientLocation == Some("United Kingdom London"))
-      assert(tr.changes.clientNJobs == Some(7))
-      assert(tr.changes.clientHireRate == Some(58))
-      assert(tr.changes.clientNOpenJobs == Some(1))
-      assert(tr.changes.clientTotalSpend == Some(686.0))
-      assert(tr.changes.clientNHires == Some(3))
-      assert(tr.changes.clientNActive == Some(0))
-      assert(tr.changes.clientAvgRate == Some(25.0))
-      assert(tr.changes.clientHours == Some(23))
-      assert(tr.changes.clientRegistrationDate == Some(dateFormater.parse("2012.Mar.21 00:00:00")))
+      assert(tr.jobChanges.lastViewed == None)
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
+      assert(tr.jobChanges.nApplicants == Some(46))
+      assert(tr.jobChanges.rateMin == None)
+      assert(tr.jobChanges.rateAvg == None)
+      assert(tr.jobChanges.rateMax == None)
+      assert(tr.jobChanges.nInterviewing == Some(1))
+      assert(tr.jobChanges.nHires == None)
+      //changes:ClientChanges
+      val fd21 = tr.clientChanges.createDate.getTime
+      assert((fd21 < ct &&  fd21 > (ct - 1000)) == true)
+      assert(tr.clientChanges.name == None)
+      assert(tr.clientChanges.logoUrl == None)
+      assert(tr.clientChanges.url == None)
+      assert(tr.clientChanges.description == None)
+      assert(tr.clientChanges.paymentMethod == PaymentMethod.Verified)
+      assert(tr.clientChanges.rating == Some(5.0))
+      assert(tr.clientChanges.nReviews == Some(1))
+      assert(tr.clientChanges.location == Some("United Kingdom London"))
+      assert(tr.clientChanges.nJobs == Some(7))
+      assert(tr.clientChanges.hireRate == Some(58))
+      assert(tr.clientChanges.nOpenJobs == Some(1))
+      assert(tr.clientChanges.totalSpend == Some(686.0))
+      assert(tr.clientChanges.nHires == Some(3))
+      assert(tr.clientChanges.nActive == Some(0))
+      assert(tr.clientChanges.avgRate == Some(25.0))
+      assert(tr.clientChanges.hours == Some(23))
+      assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2012.Mar.21 00:00:00")))
       //applicants:List[JobApplicant]
       assert(tr.applicants.size == 47)
       val a1 = tr.applicants(0)
@@ -159,34 +162,35 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.job.jobQualifications == Map())
       assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
       //changes:JobChanges
-      val lw = tr.changes.lastViewed.get.getTime + (1000 * 60 * 60 * 10) //10 hours ago
+      val lw = tr.jobChanges.lastViewed.get.getTime + (1000 * 60 * 60 * 10) //10 hours ago
       assert((lw < ct && lw > (ct - 1000)) == true)
-      assert(tr.changes.nApplicants == Some(4))
-      assert(tr.changes.jobAvailable == JobAvailable.Yes)
-      assert(tr.changes.applicantsAvg == Some(156.67))
-      assert(tr.changes.rateMin == None)
-      assert(tr.changes.rateAvg == None)
-      assert(tr.changes.rateMax == None)
-      assert(tr.changes.nInterviewing == Some(0))
-      assert(tr.changes.interviewingAvg == None)
-      assert(tr.changes.nHires == None)
-      assert(tr.changes.clientName == None)
-      assert(tr.changes.clientLogoUrl == None)
-      assert(tr.changes.clientUrl == None)
-      assert(tr.changes.clientDescription == None)
-      assert(tr.changes.clientPaymentMethod == PaymentMethod.No)
-      assert(tr.changes.clientRating == None)
-      assert(tr.changes.clientNReviews == None)
-      assert(tr.changes.clientLocation == Some("India Mumbai"))
-      assert(tr.changes.clientNJobs == Some(3))
-      assert(tr.changes.clientHireRate == Some(0))
-      assert(tr.changes.clientNOpenJobs == Some(1))
-      assert(tr.changes.clientTotalSpend == None)
-      assert(tr.changes.clientNHires == None)
-      assert(tr.changes.clientNActive == None)
-      assert(tr.changes.clientAvgRate == None)
-      assert(tr.changes.clientHours == None)
-      assert(tr.changes.clientRegistrationDate == Some(dateFormater.parse("2013.Jun.23 00:00:00")))
+      assert(tr.jobChanges.nApplicants == Some(4))
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
+      assert(tr.jobChanges.applicantsAvg == Some(156.67))
+      assert(tr.jobChanges.rateMin == None)
+      assert(tr.jobChanges.rateAvg == None)
+      assert(tr.jobChanges.rateMax == None)
+      assert(tr.jobChanges.nInterviewing == Some(0))
+      assert(tr.jobChanges.interviewingAvg == None)
+      assert(tr.jobChanges.nHires == None)
+      //changes:ClientChanges
+      assert(tr.clientChanges.name == None)
+      assert(tr.clientChanges.logoUrl == None)
+      assert(tr.clientChanges.url == None)
+      assert(tr.clientChanges.description == None)
+      assert(tr.clientChanges.paymentMethod == PaymentMethod.No)
+      assert(tr.clientChanges.rating == None)
+      assert(tr.clientChanges.nReviews == None)
+      assert(tr.clientChanges.location == Some("India Mumbai"))
+      assert(tr.clientChanges.nJobs == Some(3))
+      assert(tr.clientChanges.hireRate == Some(0))
+      assert(tr.clientChanges.nOpenJobs == Some(1))
+      assert(tr.clientChanges.totalSpend == None)
+      assert(tr.clientChanges.nHires == None)
+      assert(tr.clientChanges.nActive == None)
+      assert(tr.clientChanges.avgRate == None)
+      assert(tr.clientChanges.hours == None)
+      assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2013.Jun.23 00:00:00")))
       //applicants:List[JobApplicant]
       assert(tr.applicants.size == 4)
       val a1 = tr.applicants(0)
@@ -209,10 +213,10 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       val pd = tr.job.postDate.get.getTime + (1000 * 60 * 60 * 24) //Posted  1 day ago
       assert((pd < ct && pd > (ct - 1000)) == true)
       //changes:JobChanges
-      assert(tr.changes.rateMin == Some(30.00))
-      assert(tr.changes.rateAvg == Some(109.32))
-      assert(tr.changes.rateMax == Some(333.33))
-      assert(tr.changes.clientTime == Some("05:41 PM"))
+      assert(tr.jobChanges.rateMin == Some(30.00))
+      assert(tr.jobChanges.rateAvg == Some(109.32))
+      assert(tr.jobChanges.rateMax == Some(333.33))
+      assert(tr.clientChanges.time == Some("05:41 PM"))
       //applicants:List[JobApplicant]
       assert(tr.applicants.size == 10)
       //hires:List[JobHired]
@@ -229,34 +233,35 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.job.postDate == Some(dateFormater.parse("2013.Jan.11 00:00:00")))
       assert(tr.job.jobType == Some("Video Production"))
       //changes:JobChanges
-      assert(tr.changes.jobAvailable == JobAvailable.No)
-      assert(tr.changes.lastViewed == Some(dateFormater.parse("2013.Jan.28 00:00:00")))
-      assert(tr.changes.nApplicants == Some(55))
-      assert(tr.changes.rateMin == None)
-      assert(tr.changes.rateAvg == None)
-      assert(tr.changes.rateMax == None)
-      assert(tr.changes.nInterviewing == Some(1))
-      assert(tr.changes.nHires == None)
-      assert(tr.changes.clientName == Some("Crush Design"))
-      assert(tr.changes.clientLogoUrl == Some(
+      assert(tr.jobChanges.jobAvailable == JobAvailable.No)
+      assert(tr.jobChanges.lastViewed == Some(dateFormater.parse("2013.Jan.28 00:00:00")))
+      assert(tr.jobChanges.nApplicants == Some(55))
+      assert(tr.jobChanges.rateMin == None)
+      assert(tr.jobChanges.rateAvg == None)
+      assert(tr.jobChanges.rateMax == None)
+      assert(tr.jobChanges.nInterviewing == Some(1))
+      assert(tr.jobChanges.nHires == None)
+      //changes:ClientChanges
+      assert(tr.clientChanges.name == Some("Crush Design"))
+      assert(tr.clientChanges.logoUrl == Some(
         "https://odesk-prod-portraits.s3.amazonaws.com/Companies:462279:CompanyLogoURL?" +
         "AWSAccessKeyId=1XVAX3FNQZAFC9GJCFR2&Expires=2147483647&Signature=McU0zrMt5ydaHpmBFHEPlliTzQk%3D"))
-      assert(tr.changes.clientUrl == Some("http://www.crush-design.co.uk"))
-      assert(tr.changes.clientDescription == Some("Crush Design http://www.crush-design.co.uk Design and Marketing Agency"))
-      assert(tr.changes.clientPaymentMethod == PaymentMethod.Verified)
-      assert(tr.changes.clientRating == Some(4.92))
-      assert(tr.changes.clientNReviews == Some(9))
-      assert(tr.changes.clientLocation == Some("United Kingdom Chesterfield"))
-      assert(tr.changes.clientTime == Some("10:33 AM"))
-      assert(tr.changes.clientNJobs == Some(25))
-      assert(tr.changes.clientHireRate == Some(44))
-      assert(tr.changes.clientNOpenJobs == Some(1))
-      assert(tr.changes.clientTotalSpend == Some(10000.0))
-      assert(tr.changes.clientNHires == Some(9))
-      assert(tr.changes.clientNActive == Some(0))
-      assert(tr.changes.clientAvgRate == Some(8.62))
-      assert(tr.changes.clientHours == Some(1554))
-      assert(tr.changes.clientRegistrationDate == Some(dateFormater.parse("2011.Dec.07 00:00:00")))
+      assert(tr.clientChanges.url == Some("http://www.crush-design.co.uk"))
+      assert(tr.clientChanges.description == Some("Crush Design http://www.crush-design.co.uk Design and Marketing Agency"))
+      assert(tr.clientChanges.paymentMethod == PaymentMethod.Verified)
+      assert(tr.clientChanges.rating == Some(4.92))
+      assert(tr.clientChanges.nReviews == Some(9))
+      assert(tr.clientChanges.location == Some("United Kingdom Chesterfield"))
+      assert(tr.clientChanges.time == Some("10:33 AM"))
+      assert(tr.clientChanges.nJobs == Some(25))
+      assert(tr.clientChanges.hireRate == Some(44))
+      assert(tr.clientChanges.nOpenJobs == Some(1))
+      assert(tr.clientChanges.totalSpend == Some(10000.0))
+      assert(tr.clientChanges.nHires == Some(9))
+      assert(tr.clientChanges.nActive == Some(0))
+      assert(tr.clientChanges.avgRate == Some(8.62))
+      assert(tr.clientChanges.hours == Some(1554))
+      assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2011.Dec.07 00:00:00")))
       //applicants:List[JobApplicant]
       assert(tr.applicants.size == 56)
       //hires:List[JobHired]
@@ -270,25 +275,7 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientWorks.size == 9)
       val w0 = tr.clientWorks(0)
       assert(w0.oUrl == Some("/jobs/Front-End-Development-one-bespoke-landing-page-from-PSD_%7E01873a013776ffb0e2"))
-      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-}
+      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}}}
 
 
 

@@ -28,6 +28,11 @@ case class JobsChangesRow(
   jobId:Long,
   changeData:JobChanges)
 
+case class ClientsChangesRow(
+  id:Long,
+  jobId:Long,
+  changeData:ClientChanges)
+
 case class JobsApplicantsRow(
   id:Long,
   jobId:Long,
@@ -46,3 +51,8 @@ case class ClientsWorksHistoryRow(
   workData:ClientWork,
   freelancerId:Option[Long])
 
+case class FoundFreelancerRow(
+  id:Long,
+  oUrl:String,
+  date:Date,
+  priority:Int)

@@ -47,25 +47,29 @@ case class JobChanges(
   rateMax:Option[Double],
   nInterviewing:Option[Int],
   interviewingAvg:Option[Double],
+  nHires:Option[Int])
+
+//Client changes data
+case class ClientChanges(
+  createDate:Date,
+  name:Option[String],
+  logoUrl:Option[String],
+  url:Option[String],
+  description:Option[String],
+  paymentMethod:PaymentMethod,
+  rating:Option[Double],
+  nReviews:Option[Int],
+  location:Option[String],
+  time:Option[String],
+  nJobs:Option[Int],
+  hireRate:Option[Int],
+  nOpenJobs:Option[Int],
+  totalSpend:Option[Double],
   nHires:Option[Int],
-  clientName:Option[String],
-  clientLogoUrl:Option[String],
-  clientUrl:Option[String],
-  clientDescription:Option[String],
-  clientPaymentMethod:PaymentMethod,
-  clientRating:Option[Double],
-  clientNReviews:Option[Int],
-  clientLocation:Option[String],
-  clientTime:Option[String],
-  clientNJobs:Option[Int],
-  clientHireRate:Option[Int],
-  clientNOpenJobs:Option[Int],
-  clientTotalSpend:Option[Double],
-  clientNHires:Option[Int],
-  clientNActive:Option[Int],
-  clientAvgRate:Option[Double],
-  clientHours:Option[Int],
-  clientRegistrationDate:Option[Date])
+  nActive:Option[Int],
+  avgRate:Option[Double],
+  hours:Option[Int],
+  registrationDate:Option[Date])
 
 //Job applicant data
 case class JobApplicant(
@@ -102,7 +106,8 @@ case class ClientWork(
 //Result of job page parsing
 case class ParsedJob(
   job:Job,
-  changes:JobChanges,
+  jobChanges:JobChanges,
+  clientChanges:ClientChanges,
   applicants:List[JobApplicant],
   hires:List[JobHired],
   clientWorks:List[ClientWork])
