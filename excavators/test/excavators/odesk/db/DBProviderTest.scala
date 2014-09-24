@@ -2,6 +2,7 @@ package excavators.odesk.db
 import org.scalatest._
 import java.sql.Date
 import excavators.odesk.structures._
+import java.awt.image.BufferedImage
 
 /**
  * Test for DBProvider class
@@ -74,7 +75,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
       nActive = Some(321),
       avgRate = Some(12.3),
       hours = Some(321),
-      registrationDate = Some(new Date(System.currentTimeMillis()))))
+      registrationDate = Some(new Date(System.currentTimeMillis()))),
+   logo = Some(new BufferedImage(10,10,1)))
   val jobsApplicantsRow = JobsApplicantsRow(
     id = 1004L,
     jobId = 1002L,
@@ -107,7 +109,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
       billed = Some(12.3),
       hours = Some(321),
       rate = Some(12.3),
-      freelancerFeedbackText = Some(""),
+      freelancerFeedbackText = Some("freelancerFeedbackText"),
       freelancerFeedback = Some(12.3),
       freelancerName = Some("freelancerName"),
       freelancerUrl = Some("freelancerUrl"),

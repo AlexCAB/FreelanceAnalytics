@@ -1,5 +1,6 @@
 package excavators.odesk.structures
-import java.sql.Date
+import java.util.Date
+import java.awt.image.BufferedImage
 
 /**
  * Structures using in for DB interaction
@@ -31,7 +32,8 @@ case class JobsChangesRow(
 case class ClientsChangesRow(
   id:Long,
   jobId:Long,
-  changeData:ClientChanges)
+  changeData:ClientChanges,
+  logo:Option[BufferedImage])
 
 case class JobsApplicantsRow(
   id:Long,

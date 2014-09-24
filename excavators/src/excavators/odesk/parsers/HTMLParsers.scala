@@ -4,7 +4,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.Locale
-import java.sql.Date
+import java.util.Date
 import java.text.SimpleDateFormat
 import excavators.odesk.structures._
 
@@ -248,7 +248,7 @@ class HTMLParsers{
     //Get parts
     b.getAllElemsByClass(mainCN).headOption.map(m => { //Job data
       //General preparing
-      val cd = new Date(System.currentTimeMillis())
+      val cd = new Date
      // val wd = m.getElemsByClassPath(workDataP).getHead
       //Extract job data
       val j = {

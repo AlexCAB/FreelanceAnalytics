@@ -1,6 +1,6 @@
 package excavators.odesk.structures
 
-import java.sql.Date
+import java.util.Date
 import java.awt.Image
 
 /**

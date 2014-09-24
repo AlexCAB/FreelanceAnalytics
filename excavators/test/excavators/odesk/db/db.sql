@@ -3,13 +3,14 @@
 -- open: cd test/excavators/odesk/db, mysql -u root -p
 -- run: source db.sql;
 
--- select * from excavators_log;
+-- select * from odesk_excavators_log;
 -- select * from odesk_found_jobs;
 -- select * from odesk_jobs;
 -- select * from odesk_jobs_changes;
 -- select * from odesk_jobs_applicants;
 -- select * from odesk_jobs_hired;
 -- select * from odesk_clients_works_history;
+-- select * from odesk_found_freelancers;
 
 -- drop database freelance_analytics;
 
@@ -19,7 +20,7 @@ use freelance_analytics;
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
-  create_date date not null,
+  create_date timestamp not null,
   name varchar(255) not null,
   msg varchar(6000));
 
@@ -27,7 +28,7 @@ create table odesk_found_jobs(
   id bigint primary key auto_increment,
   o_url varchar(1000) not null,
   found_by varchar(10) not null,
-  create_date date not null,
+  create_date timestamp not null,
   priority integer not null,
   job_skills varchar(4000) not null,
   n_freelancers integer);
@@ -36,30 +37,30 @@ create table odesk_jobs(
   id bigint primary key auto_increment,
   o_url varchar(1000) not null,
   found_by varchar(10) not null,
-  found_date date not null,
-  create_date date not null,
-  post_date date,
-  deadline date,
-  dae_date date,
-  delete_date date,
-  next_check_date date,
+  found_date timestamp not null,
+  create_date timestamp not null,
+  post_date timestamp,
+  deadline timestamp,
+  dae_date timestamp,
+  delete_date timestamp,
+  next_check_date timestamp,
   n_freelancers integer,
   job_title varchar(1000),
   job_type varchar(10),
-  job_payment_type varchar(10),
+  job_payment_type varchar(10) not null,
   job_price float(53),
-  job_employment varchar(10),
+  job_employment varchar(10) not null,
   job_length varchar(128),
-  job_required_level varchar(10),
-  job_skills varchar(10),
-  job_qualifications varchar(4000),
+  job_required_level varchar(10) not null,
+  job_skills varchar(10) not null,
+  job_qualifications varchar(4000) not null,
   job_description varchar(6000));
 
 create table odesk_jobs_changes(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  create_date date not null,
-  last_viewed date,
+  create_date timestamp not null,
+  last_viewed timestamp,
   n_applicants integer,
   applicants_avg float(53),
   rate_min float(53),
@@ -72,7 +73,7 @@ create table odesk_jobs_changes(
 create table odesk_clients_changes(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  create_date date not null,
+  create_date timestamp not null,
   name varchar(1000),
   logo blob,
   url varchar(1000),
@@ -90,13 +91,13 @@ create table odesk_clients_changes(
   n_active integer,
   avg_rate float(53),
   hours integer,
-  registration_date date);
+  registration_date timestamp);
 
 create table odesk_jobs_applicants(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  create_date date not null,
-  up_date date,
+  create_date timestamp not null,
+  up_date timestamp,
   name varchar(255),
   initiated_by varchar(10),
   freelancer_url varchar(1000),
@@ -105,7 +106,7 @@ create table odesk_jobs_applicants(
 create table odesk_jobs_hired(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  create_date date not null,
+  create_date timestamp not null,
   name varchar(255),
   freelancer_url varchar(1000),
   freelancer_id bigint);
@@ -113,12 +114,12 @@ create table odesk_jobs_hired(
 create table odesk_clients_works_history(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  create_date date not null,
+  create_date timestamp not null,
   o_url varchar(1000),
   title varchar(1000),
   in_progress varchar(10),
-  start_date date,
-  end_date date,
+  start_date timestamp,
+  end_date timestamp,
   payment_type varchar(10),
   billed float(53),
   hours integer,
@@ -133,7 +134,7 @@ create table odesk_clients_works_history(
 create table odesk_found_freelancers(
   id bigint primary key auto_increment,
   o_url varchar(1000) not null,
-  create_date date not null,
+  create_date timestamp not null,
   priority integer);
 
 
