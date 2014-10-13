@@ -47,6 +47,10 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
           worker.saveHtml()}}
+      contents += new Button("Screenshot"){
+        preferredSize = new Dimension(100,20)
+        reactions += {case ButtonClicked(_) =>
+          worker.saveScreenshot()}}
       contents += new Button("RUN"){
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
@@ -62,7 +66,7 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
     //Set browser
     import java.awt.BorderLayout
     mainPanel.peer.add(browser, BorderLayout.CENTER)
-    logger.log("Browser: "  + browser.getBrowserInfo())
+    logger.log("Browser: "  + browser.getBrowserInfo)
     //Show
     visible = true
     ready = true}

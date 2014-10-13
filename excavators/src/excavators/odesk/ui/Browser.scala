@@ -1,7 +1,11 @@
 package excavators.odesk.ui
 
+import java.awt.{Image, Dialog, Frame, Dimension, Point}
+import java.awt.image.BufferedImage
+
+
 import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser
-import javax.swing.SwingUtilities
+import javax.swing.{JLabel, ImageIcon, JDialog, SwingUtilities}
 
 
 class Browser extends JWebBrowser {
@@ -11,12 +15,24 @@ class Browser extends JWebBrowser {
   val loadTryMaxTime = 10000
   val confirmTimeOut = 2000
   val retryTimeOut = 1000
+  //Data
+  val webBrowser = this
   //Construction
   setMenuBarVisible(false)
   //Function
   private val getHTMLbyURLNavigateRunnable = new Runnable(){
     var url = ""
     def run(){navigate(url)}}
+  private val captureImageRunnable = new Runnable(){
+    var coordinates = new Point(0,0)
+    var size = new Dimension(100,100)
+    var result:Image = _
+    def run() = {
+      val nc = getNativeComponent
+      val os = nc.getSize
+      val img = new BufferedImage(os.width, os.height, BufferedImage.TYPE_INT_RGB)
+      nc.paintComponent(img)
+      result = img.getSubimage(coordinates.x, coordinates.y, size.width, size.width)}}
   private val getHTMLbyURLStatusRunnable = new Runnable(){
     var status = false
     def run(){
@@ -81,10 +97,18 @@ class Browser extends JWebBrowser {
         ltc -= 1}
     //Return
     getHTMLbyURLResultRunnable.content}
-  def getBrowserInfo():String = getBrowserInfoRunnable.synchronized{
+  def getBrowserInfo:String = getBrowserInfoRunnable.synchronized{
     getBrowserInfoRunnable.info = None
     if(SwingUtilities.isEventDispatchThread){
       getBrowserInfoRunnable.run()}
     else{
       SwingUtilities.invokeAndWait(getBrowserInfoRunnable)}
-    getBrowserInfoRunnable.info.get}}
+    getBrowserInfoRunnable.info.get}
+  def captureImage(x:Int,y:Int,w:Int,h:Int):Image = captureImageRunnable.synchronized{
+    captureImageRunnable.coordinates = new Point(x,y)
+    captureImageRunnable.size = new Dimension(w,h)
+    if(SwingUtilities.isEventDispatchThread){
+      captureImageRunnable.run()}
+    else{
+      SwingUtilities.invokeAndWait(captureImageRunnable)}
+    captureImageRunnable.result}}

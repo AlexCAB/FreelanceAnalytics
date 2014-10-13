@@ -7,5 +7,6 @@ package excavators.odesk.ui
 trait ManagedWorker {
   def goToMain()
   def saveHtml()
+  def saveScreenshot()
   def setWork(s:Boolean):Unit
   def isWork:Boolean}

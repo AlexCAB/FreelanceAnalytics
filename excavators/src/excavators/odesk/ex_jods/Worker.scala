@@ -41,6 +41,7 @@ class Worker(browser:Browser, logger:Logger) extends Thread with ManagedWorker{
         catch{case e:Exception => {
           logger.log("[Worker.saveHtml] Exception when save: " + e)}}}
       case None => logger.log("[Worker.saveHtml] Not save, empty.")}}
+  def saveScreenshot() = {}
   def setWork(s:Boolean) = {
     work = s
     if(s){

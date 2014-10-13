@@ -7,6 +7,9 @@ import java.awt.image.BufferedImage
  * Created by CAB on 22.09.14.
  */
 
+
+
+
 case class FoundJobsRow(
   id:Long,
   oUrl:String,

@@ -3,7 +3,7 @@ import excavators.helpers.{TestLogger, TestWorker}
 import javafx.concurrent.Worker
 
 /**
- * Excavator UI test tool
+ * Excavator UI (+Browser) test tool
  * Created by CAB on 21.09.14.
  */
 
