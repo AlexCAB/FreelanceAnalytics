@@ -2,8 +2,8 @@ package excavators.util.tasks
 
 /**
  * Abstract task
- * Created by WORK on 13.10.2014.
+ * Created by CAB on 13.10.2014.
  */
 
-abstract case class Task (time:Long, priority:Int) {
+abstract class Task (val time:Long, val priority:Int) {
   def execute():Unit}

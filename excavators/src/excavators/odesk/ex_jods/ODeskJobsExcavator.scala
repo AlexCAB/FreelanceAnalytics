@@ -1,7 +1,8 @@
 package excavators.odesk.ex_jods
 
+import excavators.odesk.db.DBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
-import excavators.odesk.logging.SimpleLogger
+import excavators.util.logging.{DBConsoleLogger, SimpleLogger}
 
 /**
  * oDesk job excavator - collect new jobs from search
@@ -10,19 +11,24 @@ import excavators.odesk.logging.SimpleLogger
 
 object ODeskJobsExcavator {
   //Create components
+  val l = new DBConsoleLogger("ODeskJobsExcavator")
+  val db = new DBProvider
   val b = new Browser
-  val l = new SimpleLogger
-  val w = new Worker(b,l)
+  val w = new Worker(b,l,db)
   val ui = new ExcavatorUI(b, w, l, closing)
+  l.setConsole(ui)
+  l.setDB(db)
   //Methods
   def main(a:Array[String]):Unit = {
     //Run
+    db.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")
     ui.init()
     w.init()}
   def closing():Unit = {
     //Stop
     w.halt()
     ui.halt()
+    db.halt()
     //Exit
     System.exit(0)}}
 

@@ -128,8 +128,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
       dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
     "add to excavators_log table" in {
       val ct = System.currentTimeMillis()
-      dbProvider.addLogMessage(new Date(ct), "m1","Some message 1")
-      dbProvider.addLogMessage(new Date(ct), "m2","Some message 2")}
+      dbProvider.addLogMessage(new Date(ct), "error","m1","Some message 1")
+      dbProvider.addLogMessage(new Date(ct), "info","m2","Some message 2")}
     "add to odesk_found_jobs table" in {
       dbProvider.addFoundJobsRow(foundJobsRow)}
     "add to odesk_jobs table" in {

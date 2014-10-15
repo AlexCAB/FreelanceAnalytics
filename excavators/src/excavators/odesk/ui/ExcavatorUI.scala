@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, ListBuffer => Mut
 import chrriis.dj.nativeswing.swtimpl.NativeInterface
 import scala.swing._
 import scala.swing.event._
-import excavators.odesk.logging.Logger
+import excavators.util.logging.{LoggerConsole, Logger}
 import javax.swing.SwingUtilities
 
 /**
@@ -12,7 +12,7 @@ import javax.swing.SwingUtilities
  * Created by CAB on 21.09.14.
  */
 
-class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:()=>Unit) extends Frame with Console{
+class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:()=>Unit) extends Frame with LoggerConsole{
   //Parameters
   val maxLogSize = 100
   //Variables
@@ -51,11 +51,12 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
           worker.saveScreenshot()}}
-      contents += new Button("RUN"){
+      def wst(s:Boolean):String = if(s){"RUN"}else{"STOP"}
+      contents += new Button(wst(worker.isPaused)){
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
-          worker.setWork(! worker.isWork)
-          text = if(worker.isWork){"STOP"}else{"RUN"}}}}) = North
+          worker.setPaused(! worker.isPaused)
+          text = wst(worker.isPaused)}}}) = North
     layout(new ScrollPane(loggerPnl){preferredSize = new Dimension(0,80)}) = South}
   contents = mainPanel
   //Methods
@@ -66,7 +67,7 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
     //Set browser
     import java.awt.BorderLayout
     mainPanel.peer.add(browser, BorderLayout.CENTER)
-    logger.log("Browser: "  + browser.getBrowserInfo)
+    logger.info("Browser: "  + browser.getBrowserInfo)
     //Show
     visible = true
     ready = true}

@@ -3,7 +3,7 @@ import org.scalatest._
 
 /**
  * TaskExecutor test
- * Created by WORK on 13.10.2014.
+ * Created by CAB on 13.10.2014.
  */
 
 class TaskExecutorTest extends WordSpecLike with Matchers {

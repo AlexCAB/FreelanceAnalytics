@@ -3,12 +3,12 @@ import scala.collection.mutable.{Set => MutSet}
 
 /**
  * Execute task form task queue
- * Created by WORK on 13.10.2014.
+ * Created by CAB on 13.10.2014.
  */
 
 trait TaskExecutor{
   //Parameters
-  val checkTimeOut = 1000L
+  val checkTimeOut = 500L
   val endWorkTimeOut = 600000L
   //Variables
   private var work = false
@@ -26,11 +26,12 @@ trait TaskExecutor{
   def setPaused(f:Boolean) = {
     if(! f){executorThread.synchronized{executorThread.notify()}}
     paused = f}
+  def isPaused:Boolean = paused
   def addTask(t:Task) = {
     taskQueue.synchronized{taskQueue += t}
     executorThread.synchronized{executorThread.notify()}}
   //Thread
-  private val executorThread = new Thread{override def run() = {
+  private val executorThread:Thread = new Thread{override def run() = {
     while(work){
       if(! paused){
         //Search next ready task and run
@@ -53,5 +54,5 @@ trait TaskExecutor{
             synchronized{wait(tm)}}}} //If no ready task then wait
       else{
         //If paused then white
-        synchronized{wait(checkTimeOut)}}}}}
+        synchronized{executorThread.wait(checkTimeOut)}}}}}
   executorThread.setDaemon(true)}

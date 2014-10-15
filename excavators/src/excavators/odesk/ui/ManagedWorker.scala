@@ -8,5 +8,5 @@ trait ManagedWorker {
   def goToMain()
   def saveHtml()
   def saveScreenshot()
-  def setWork(s:Boolean):Unit
-  def isWork:Boolean}
+  def setPaused(s:Boolean):Unit
+  def isPaused:Boolean}

@@ -1,5 +1,7 @@
 package excavators.odesk.db
 import java.sql.Timestamp
+import excavators.util.logging.LoggerDBProvider
+
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.backend.DatabaseDef
 import scala.slick.jdbc.StaticQuery
@@ -13,15 +15,16 @@ import javax.imageio.ImageIO
 * Created by WORK on 22.09.14.
 */
 
-class DBProvider {
+class DBProvider extends LoggerDBProvider {
   //Schema
-  private type LogRowType = (Option[Long],Timestamp,String,String)
+  private type LogRowType = (Option[Long],Timestamp,String,String,String)
   private class ExcavatorsLog(tag: Tag) extends Table[LogRowType](tag, "odesk_excavators_log"){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
+    def mType = column[String]("type", O.NotNull)
     def name = column[String]("name", O.NotNull)
     def msg = column[String]("msg")
-    def * = (id,create_date, name, msg)}
+    def * = (id,create_date,mType, name, msg)}
   private val excavatorsLogTable = TableQuery[ExcavatorsLog]
   private type FoundJobsRowType = (Option[Long],String,String,Timestamp,Int,String,Option[Int])
   private class FoundJobs(tag: Tag) extends Table[FoundJobsRowType](tag, "odesk_found_jobs"){
@@ -176,9 +179,9 @@ class DBProvider {
   def halt() ={
     db = None}
   //Data methods
-  def addLogMessage(date:Date, name:String, msg:String):Long = {
+  def addLogMessage(date:Date, mType:String, name:String, msg:String) = {
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
-    db.get.withSession(implicit session => {excavatorsLogTable += (None, new Timestamp(date.getTime), name, msg)})}
+    db.get.withSession(implicit session => {excavatorsLogTable += (None, new Timestamp(date.getTime), mType, name, msg)})}
   def addFoundJobsRow(d:FoundJobsRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
     db.get.withSession(implicit session => {
@@ -304,14 +307,33 @@ class DBProvider {
         d.workData.freelancerName,                               // freelancer_url
         d.freelancerId,                                          // freelancer_id
         d.workData.clientFeedback)})}                            // client_feedback
- def addFoundFreelancerRow(d:FoundFreelancerRow) = {
+  def addFoundFreelancerRow(d:FoundFreelancerRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addFoundFreelancerRow] No created DB.")}
-   db.get.withSession(implicit session => {
-     foundFreelancersTable += (
-       None,                          // id
-       d.oUrl,                        // o_url
-       new Timestamp(d.date.getTime), // create_date
-       d.priority)})}}                // priority
+    db.get.withSession(implicit session => {
+       foundFreelancersTable += (
+        None,                          // id
+        d.oUrl,                        // o_url
+        new Timestamp(d.date.getTime), // create_date
+        d.priority)})}                 // priority
+  def getSetOfLastJobsURL(size:Int):Set[String] = {
+
+
+
+
+    Set()
+
+  }
+
+
+
+
+
+
+
+
+
+
+}
 
 
 

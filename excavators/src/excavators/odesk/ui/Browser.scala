@@ -24,15 +24,13 @@ class Browser extends JWebBrowser {
     var url = ""
     def run(){navigate(url)}}
   private val captureImageRunnable = new Runnable(){
-    var coordinates = new Point(0,0)
-    var size = new Dimension(100,100)
-    var result:Image = _
+    var result:BufferedImage = _
     def run() = {
       val nc = getNativeComponent
       val os = nc.getSize
       val img = new BufferedImage(os.width, os.height, BufferedImage.TYPE_INT_RGB)
       nc.paintComponent(img)
-      result = img.getSubimage(coordinates.x, coordinates.y, size.width, size.width)}}
+      result = img}}
   private val getHTMLbyURLStatusRunnable = new Runnable(){
     var status = false
     def run(){
@@ -104,9 +102,7 @@ class Browser extends JWebBrowser {
     else{
       SwingUtilities.invokeAndWait(getBrowserInfoRunnable)}
     getBrowserInfoRunnable.info.get}
-  def captureImage(x:Int,y:Int,w:Int,h:Int):Image = captureImageRunnable.synchronized{
-    captureImageRunnable.coordinates = new Point(x,y)
-    captureImageRunnable.size = new Dimension(w,h)
+  def captureImage:BufferedImage = captureImageRunnable.synchronized{
     if(SwingUtilities.isEventDispatchThread){
       captureImageRunnable.run()}
     else{

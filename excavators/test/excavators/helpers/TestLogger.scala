@@ -1,6 +1,6 @@
 package excavators.helpers
 
-import excavators.odesk.logging.Logger
+import excavators.util.logging.Logger
 
 /**
  * Dummy logger for test
@@ -8,5 +8,7 @@ import excavators.odesk.logging.Logger
  */
 
 class TestLogger extends Logger{
-  def log(msg:String) = {
-    println("[TestLogger]" + msg)}}
+  def info(msg:String) = println("[TestLogger|info]" + msg)
+  def debug(msg:String) = println("[TestLogger|debug]" + msg)
+  def worn(msg:String) = println("[TestLogger|worn]" + msg)
+  def error(msg:String) = println("[TestLogger|error]" + msg)}

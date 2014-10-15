@@ -13,11 +13,11 @@ class TestWorker(b:Browser) extends ManagedWorker {
   def goToMain() = {b.openURL("http://www.google.com")}
   def saveHtml() = {println(b.getCurrentHTML)}
   def saveScreenshot() = {
-    val img = b.captureImage(0,0,200,200)
+    val img = b.captureImage
     val d = new JDialog
     d.setTitle("Test screenshot")
     d.getContentPane.add(new JLabel(new ImageIcon(img)));
     d.pack()
     d.setVisible(true)}
-  def setWork(s:Boolean) = {println("TestWorker.setWork = " + s); w = s}
-  def isWork:Boolean = w}
+  def setPaused(s:Boolean) = {println("TestWorker.setWork = " + s); w = s}
+  def isPaused:Boolean = w}

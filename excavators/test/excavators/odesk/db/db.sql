@@ -21,6 +21,7 @@ use freelance_analytics;
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
   create_date timestamp not null,
+  type varchar(20) not null,
   name varchar(255) not null,
   msg varchar(6000));
 
