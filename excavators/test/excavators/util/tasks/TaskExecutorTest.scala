@@ -51,6 +51,15 @@ class TaskExecutorTest extends WordSpecLike with Matchers {
     executor.setPaused(false)
     Thread.sleep(10)
     assert(fl == true)}
+//  "should not add task if already exist" in {
+//    var i = 0
+//    class ExTask(val ct:Long, p:Int, s:String) extends Task(ct, 1, s){
+//      def execute() = {i += 1}}
+//    val ct = System.currentTimeMillis() + 100
+//    executor.addTask(new ExTask(ct, 1, "qq"))
+//    executor.addTask(new ExTask(ct, 2, "qq"))
+//    Thread.sleep(400)
+//    assert(i == 1)}
   "should stop only after end current task" in {
     var fl = false
     val ct = System.currentTimeMillis()
@@ -62,3 +71,51 @@ class TaskExecutorTest extends WordSpecLike with Matchers {
     executor.stop()
     assert(fl == true)
     assert(System.currentTimeMillis() > ct + 900)}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

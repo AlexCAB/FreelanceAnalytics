@@ -9,16 +9,27 @@ import excavators.odesk.structures._
 import java.util.Date
 import java.io.{ByteArrayOutputStream, FileInputStream}
 import javax.imageio.ImageIO
+import scala.slick.jdbc.{GetResult, StaticQuery => Q}
 
 /**
 * Provide DB access for another components
-* Created by WORK on 22.09.14.
+* Created by CAB on 22.09.14.
 */
 
 class DBProvider extends LoggerDBProvider {
+  //Tables names
+  private val odesk_excavators_log = "odesk_excavators_log"
+  private val odesk_found_jobs = "odesk_found_jobs"
+  private val odesk_jobs = "odesk_jobs"
+  private val odesk_jobs_changes = "odesk_jobs_changes"
+  private val odesk_jobs_hired = "odesk_jobs_hired"
+  private val odesk_jobs_applicants = "odesk_jobs_applicants"
+  private val odesk_clients_changes = "odesk_clients_changes"
+  private val odesk_clients_works_history = "odesk_clients_works_history"
+  private val odesk_found_freelancers = "odesk_found_freelancers"
   //Schema
   private type LogRowType = (Option[Long],Timestamp,String,String,String)
-  private class ExcavatorsLog(tag: Tag) extends Table[LogRowType](tag, "odesk_excavators_log"){
+  private class ExcavatorsLog(tag: Tag) extends Table[LogRowType](tag, odesk_excavators_log){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def mType = column[String]("type", O.NotNull)
@@ -27,7 +38,7 @@ class DBProvider extends LoggerDBProvider {
     def * = (id,create_date,mType, name, msg)}
   private val excavatorsLogTable = TableQuery[ExcavatorsLog]
   private type FoundJobsRowType = (Option[Long],String,String,Timestamp,Int,String,Option[Int])
-  private class FoundJobs(tag: Tag) extends Table[FoundJobsRowType](tag, "odesk_found_jobs"){
+  private class FoundJobs(tag: Tag) extends Table[FoundJobsRowType](tag, odesk_found_jobs){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def o_url = column[String]("o_url", O.NotNull)
     def found_by = column[String]("found_by", O.NotNull)
@@ -36,12 +47,12 @@ class DBProvider extends LoggerDBProvider {
     def job_skills = column[String]("job_skills", O.NotNull)
     def n_freelancers = column[Option[Int]]("n_freelancers")
     def * = (id,o_url,found_by,create_date,priority,job_skills,n_freelancers)}
-  private val foundJobsTableType = TableQuery[FoundJobs]
+  private val foundJobsTableTable = TableQuery[FoundJobs]
   private type JobRowType = (Option[Long],String,String,Timestamp,Timestamp,Option[Timestamp],
     Option[Timestamp],Option[Timestamp],Option[Timestamp],
     Option[Timestamp],Option[Int],Option[String],Option[String],String,Option[Double],String,
     Option[String],String,String,String,Option[String])
-  private class Jobs(tag: Tag) extends Table[JobRowType](tag, "odesk_jobs"){
+  private class Jobs(tag: Tag) extends Table[JobRowType](tag, odesk_jobs){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def o_url = column[String]("o_url", O.NotNull)
     def found_by = column[String]("found_by", O.NotNull)
@@ -69,7 +80,7 @@ class DBProvider extends LoggerDBProvider {
   private val jobTable = TableQuery[Jobs]
   private type JobsChangesRowType = (Option[Long],Long,Timestamp,Option[Timestamp],Option[Int],Option[Double],Option[Double],Option[Double],Option[Double],
     Option[Int],Option[Double],Option[Int])
-  private class JobsChanges(tag: Tag) extends Table[JobsChangesRowType](tag, "odesk_jobs_changes"){
+  private class JobsChanges(tag: Tag) extends Table[JobsChangesRowType](tag, odesk_jobs_changes){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -88,7 +99,7 @@ class DBProvider extends LoggerDBProvider {
   private type ClientsChangesRowType = (Option[Long],Long,Timestamp,Option[String],Option[Array[Byte]],Option[String],Option[String],
     String,Option[Double],Option[Int],Option[String],Option[String],Option[Int],Option[Int],Option[Int],
     Option[Double],Option[Int],Option[Int],Option[Double],Option[Int],Option[Timestamp])
-  private class ClientsChanges(tag: Tag) extends Table[ClientsChangesRowType](tag, "odesk_clients_changes"){
+  private class ClientsChanges(tag: Tag) extends Table[ClientsChangesRowType](tag, odesk_clients_changes){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -114,7 +125,7 @@ class DBProvider extends LoggerDBProvider {
       hire_rate,n_open_jobs,total_spend,n_hires,n_active,avg_rate,hours,registration_date)}
   private val clientsChangesTable = TableQuery[ClientsChanges]
   private type JobsApplicantsRowType = (Option[Long],Long,Timestamp,Option[Timestamp],Option[String],String,Option[String],Option[Long])
-  private class JobsApplicants(tag: Tag) extends Table[JobsApplicantsRowType](tag, "odesk_jobs_applicants"){
+  private class JobsApplicants(tag: Tag) extends Table[JobsApplicantsRowType](tag, odesk_jobs_applicants){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -126,7 +137,7 @@ class DBProvider extends LoggerDBProvider {
     def * = (id,job_id,create_date,up_date,name,initiated_by,freelancer_url,freelancer_id)}
   private val jobsApplicantsTable = TableQuery[JobsApplicants]
   private type JobsHiredRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],Option[Long])
-  private class JobsHired(tag: Tag) extends Table[JobsHiredRowType](tag, "odesk_jobs_hired"){
+  private class JobsHired(tag: Tag) extends Table[JobsHiredRowType](tag, odesk_jobs_hired){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -138,7 +149,7 @@ class DBProvider extends LoggerDBProvider {
   private type ClientsWorksHistoryRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],String,Option[Timestamp],Option[Timestamp],
     String,Option[Double],Option[Int],Option[Double],Option[String],Option[Double],
     Option[String],Option[String],Option[Long],Option[Double])
-  private class ClientsWorksHistor(tag: Tag) extends Table[ClientsWorksHistoryRowType](tag, "odesk_clients_works_history"){
+  private class ClientsWorksHistor(tag: Tag) extends Table[ClientsWorksHistoryRowType](tag, odesk_clients_works_history){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -161,7 +172,7 @@ class DBProvider extends LoggerDBProvider {
       freelancer_feedback_text,freelancer_feedback,freelancer_name,freelancer_url,freelancer_id,client_feedback)}
   private val clientsWorksHistoryTable = TableQuery[ClientsWorksHistor]
   private type FoundFreelancersRowType = (Option[Long],String,Timestamp,Int)
-  private class FoundFreelancers(tag: Tag) extends Table[FoundFreelancersRowType](tag, "odesk_found_freelancers"){
+  private class FoundFreelancers(tag: Tag) extends Table[FoundFreelancersRowType](tag, odesk_found_freelancers){
       def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
       def o_url = column[String]("o_url", O.NotNull)
       def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -170,12 +181,14 @@ class DBProvider extends LoggerDBProvider {
   private val foundFreelancersTable = TableQuery[FoundFreelancers]
   //Variables
   private var db:Option[DatabaseDef] = None
+  private var databaseName:Option[String] = None
   //Service methods
   def init(url:String, user:String, password:String, dbName:String) = {
     val b = Database.forURL(url + "/" + dbName, driver = "scala.slick.driver.MySQLDriver", user = user, password = password)
     b.withSession(implicit session => {
       StaticQuery.updateNA("SET GLOBAL SQL_MODE=ANSI_QUOTES;").execute})
-    db = Some(b)}
+    db = Some(b)
+    databaseName = Some(dbName)}
   def halt() ={
     db = None}
   //Data methods
@@ -185,17 +198,18 @@ class DBProvider extends LoggerDBProvider {
   def addFoundJobsRow(d:FoundJobsRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
     db.get.withSession(implicit session => {
-      foundJobsTableType += (
+      foundJobsTableTable += (
         None,                          // id
         d.oUrl,                        // o_url
         d.foundBy.toString,            // found_by
-        new Timestamp(d.date.getTime), //c reate_date
+        new Timestamp(d.date.getTime), // reate_date
         d.priority,                    // priority
         d.skills.mkString(","),        // job_skills
         d.nFreelancers)})}             //n_freelancers
-  def addJobsRow(d:JobsRow) = {
+  def addJobsRow(d:JobsRow):Long = { //Return ID of addad job row
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsRow] No created DB.")}
     db.get.withSession(implicit session => {
+      //Save row
       jobTable += (
         None,                                                   // id Option[Long]
         d.foundData.oUrl,                                       // o_url String
@@ -217,7 +231,9 @@ class DBProvider extends LoggerDBProvider {
         d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
         d.foundData.skills.mkString(","),                       // job_skills Option[String]
         d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
-        d.jabData.jobDescription)})}                            // job_description Option[String]
+        d.jabData.jobDescription)
+      //Get ID
+      jobTable.filter(_.o_url === d.foundData.oUrl).map(_.id).first.get})}                            // job_description Option[String]
   def addJobsChangesRow(d:JobsChangesRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsChangesRow] No created DB.")}
     db.get.withSession(implicit session => {
@@ -315,21 +331,47 @@ class DBProvider extends LoggerDBProvider {
         d.oUrl,                        // o_url
         new Timestamp(d.date.getTime), // create_date
         d.priority)})}                 // priority
-  def getSetOfLastJobsURL(size:Int):Set[String] = {
-
-
-
-
-    Set()
-
+  def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
+    if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
+    val r = db.get.withSession(implicit session => {
+      //Get auto inctement count and calc min id
+      val cq = Q.query[String, Int]("SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + databaseName.get + "' AND TABLE_NAME = ? ;")
+      def nln(n:Int):Int = {val t = n - size; if(t < 0){0}else{t}}
+      val mif = nln(cq("odesk_found_jobs").first)
+      val mij = nln(cq("odesk_jobs").first)
+      //Get last oURLs
+      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
+      val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
+      //Return set
+      dqf.toSet ++ dqj.toSet})
+    r}
+  def getNOfOldFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N older rows, and total rows in table
+    if(db.isEmpty){throw new Exception("[DBProvider.getNOfOldFoundJobs] No created DB.")}
+    db.get.withSession(implicit session => {
+      //Gen older rows
+      val nr = foundJobsTableTable.length.run
+      val rs = foundJobsTableTable.filter(_.found_by === fb.toString).sortBy(_.create_date).take(n).list.map{
+        case(id:Option[Long], url:String, fb:String, d:Timestamp, p:Int, sks:String, nf:Option[Int]) => {
+          FoundJobsRow(
+            id = id.get,
+            oUrl = url,
+            foundBy = FoundBy.formString(fb),
+            date = new Date(d.getTime),
+            priority = p,
+            skills = sks.split(",").toList,
+            nFreelancers = nf)}}
+      //Return result
+      (rs,nr)})}
+  def getFreelancerIdByURL(url:String):Option[Long] = { //Return row ID by freelancer page URL
+    //!!! Non implemented
+    None}
+  def isJobScraped(url:String):Boolean = { //Retyrn true if url in odesk_jobs
+    if(db.isEmpty){throw new Exception("[DBProvider.isJobScraped] No created DB.")}
+    db.get.withSession(implicit session => {
+      jobTable.filter(_.o_url === url).list.nonEmpty})}
+  def addJobToTrackingRow(d:ToTrackingJob) = {
+    //!!! Non implemented
   }
-
-
-
-
-
-
-
 
 
 

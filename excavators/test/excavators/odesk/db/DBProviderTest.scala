@@ -6,12 +6,13 @@ import java.awt.image.BufferedImage
 
 /**
  * Test for DBProvider class
- * Created by WORK on 22.09.14.
+ * (!)Test only on empty DB
+ * Created by CAB on 22.09.14.
  */
 
 class DBProviderTest extends WordSpecLike with Matchers {
   //Helpers
-  val foundJobsRow = FoundJobsRow(
+  val foundJobsRow1 = FoundJobsRow(
     id = 1001L,
     oUrl = "http//www.",
     foundBy = FoundBy.Analyse,
@@ -19,9 +20,17 @@ class DBProviderTest extends WordSpecLike with Matchers {
     priority = 5,
     skills = List("A","B","C"),
     nFreelancers = Some(12))
-  val jobsRow = JobsRow(
+  val foundJobsRow2 = FoundJobsRow(
+    id = 1001L,
+    oUrl = "http//www.",
+    foundBy = FoundBy.Search,
+    date = new Date(System.currentTimeMillis()),
+    priority = 5,
+    skills = List("A","B","C"),
+    nFreelancers = Some(12))
+  def jobsRow(fjr:FoundJobsRow):JobsRow = JobsRow(
     id = 1002L,
-    foundData = foundJobsRow,
+    foundData = fjr,
     daeDate = Some(new Date(System.currentTimeMillis())),
     deleteDate = Some(new Date(System.currentTimeMillis())),
     nextCheckDate = Some(new Date(System.currentTimeMillis())),
@@ -123,28 +132,96 @@ class DBProviderTest extends WordSpecLike with Matchers {
   //Provider
   val dbProvider = new DBProvider
   //Tests
-  "DBProvider must = " must{
-    "initialize" in {
-      dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
-    "add to excavators_log table" in {
-      val ct = System.currentTimeMillis()
-      dbProvider.addLogMessage(new Date(ct), "error","m1","Some message 1")
-      dbProvider.addLogMessage(new Date(ct), "info","m2","Some message 2")}
-    "add to odesk_found_jobs table" in {
-      dbProvider.addFoundJobsRow(foundJobsRow)}
-    "add to odesk_jobs table" in {
-      dbProvider.addJobsRow(jobsRow)}
-    "add to odesk_jobs_changes table" in {
-      dbProvider.addJobsChangesRow(jobsChangesRow)}
-    "add to odesk_client_changes table" in {
-      dbProvider.addClientsChangesRow(clientsChangesRow)}
-    "add to odesk_jobs_applicants table" in {
-      dbProvider.addJobsApplicantsRow(jobsApplicantsRow)}
-    "add to odesk_jobs_hired table" in {
-      dbProvider.addJobsHiredRow(jobsHiredRow)}
-    "add to odesk_clients_works_history table" in {
-      dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow)}
-    "add to odesk_found_freelancers table" in {
-      dbProvider.addFoundFreelancerRow(foundFreelancerRow)}
-    "stop" in {
-      dbProvider.halt()}}}
+  "initialize" in {
+    dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
+  "add to excavators_log table" in {
+    val ct = System.currentTimeMillis()
+    dbProvider.addLogMessage(new Date(ct), "error","m1","Some message 1")
+    dbProvider.addLogMessage(new Date(ct), "info","m2","Some message 2")}
+  "add to odesk_found_jobs table" in {
+    dbProvider.addFoundJobsRow(foundJobsRow1)
+    dbProvider.addFoundJobsRow(foundJobsRow2)}
+  "add to odesk_jobs table" in {
+    dbProvider.addJobsRow(jobsRow(foundJobsRow1))}
+  "add to odesk_jobs_changes table" in {
+    dbProvider.addJobsChangesRow(jobsChangesRow)}
+  "add to odesk_client_changes table" in {
+    dbProvider.addClientsChangesRow(clientsChangesRow)}
+  "add to odesk_jobs_applicants table" in {
+    dbProvider.addJobsApplicantsRow(jobsApplicantsRow)}
+  "add to odesk_jobs_hired table" in {
+    dbProvider.addJobsHiredRow(jobsHiredRow)}
+  "add to odesk_clients_works_history table" in {
+    dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow)}
+  "add to odesk_found_freelancers table" in {
+    dbProvider.addFoundFreelancerRow(foundFreelancerRow)}
+  "get set of last jobs URL" in {
+    val tr1 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Search)
+    assert(tr1.nonEmpty)
+    assert(tr1.contains("http//www."))
+    val tr2 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Analyse)
+    assert(tr2.nonEmpty)
+    assert(tr2.contains("http//www."))}
+  "get N of old found jobs" in {
+    val (tr, _) = dbProvider.getNOfOldFoundByJobs(10, FoundBy.Search)
+    assert(tr.nonEmpty)
+    assert(tr.map(_.oUrl).contains("http//www."))}
+  "check existence url" in {
+    assert(dbProvider.isJobScraped("http//www.") == true)
+    assert(dbProvider.isJobScraped("http//www.deewdew") == false)}
+  "stop" in {
+    dbProvider.halt()}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -9,7 +9,12 @@ trait FoundBy
 object FoundBy{
   case object Unknown extends FoundBy
   case object Search extends FoundBy
-  case object Analyse extends FoundBy}
+  case object Analyse extends FoundBy
+  def formString(s:String):FoundBy = s match{
+    case "Unknown" => Unknown
+    case "Search" => Search
+    case "Analyse" => Analyse
+    case _ => throw new Exception("Error on parse: " + s)}}
 
 trait Payment
 object Payment{

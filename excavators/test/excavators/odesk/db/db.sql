@@ -47,13 +47,13 @@ create table odesk_jobs(
   next_check_date timestamp,
   n_freelancers integer,
   job_title varchar(1000),
-  job_type varchar(10),
+  job_type varchar(510),
   job_payment_type varchar(10) not null,
   job_price float(53),
   job_employment varchar(10) not null,
   job_length varchar(128),
   job_required_level varchar(10) not null,
-  job_skills varchar(10) not null,
+  job_skills varchar(4000) not null,
   job_qualifications varchar(4000) not null,
   job_description varchar(6000));
 

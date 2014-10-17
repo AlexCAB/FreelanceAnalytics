@@ -7,9 +7,6 @@ import java.awt.image.BufferedImage
  * Created by CAB on 22.09.14.
  */
 
-
-
-
 case class FoundJobsRow(
   id:Long,
   oUrl:String,
@@ -57,6 +54,12 @@ case class ClientsWorksHistoryRow(
   freelancerId:Option[Long])
 
 case class FoundFreelancerRow(
+  id:Long,
+  oUrl:String,
+  date:Date,
+  priority:Int)
+
+case class ToTrackingJob(
   id:Long,
   oUrl:String,
   date:Date,
