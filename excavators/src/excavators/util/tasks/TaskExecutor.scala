@@ -49,7 +49,11 @@ trait TaskExecutor{
         nt match{
           case Some(t) => {
             taskQueue -= t
-            t.execute()}             //Execute task
+            try{
+              t.execute()} //Execute task
+            catch{
+              case e:Exception => e.printStackTrace()
+              case e:Error => e.printStackTrace()}}
           case None => {
             synchronized{wait(tm)}}}} //If no ready task then wait
       else{

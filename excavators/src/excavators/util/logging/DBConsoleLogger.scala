@@ -24,7 +24,7 @@ class DBConsoleLogger(name:String) extends Logger{
       case None => println(">> " + sd + ": " + msg)}
     db match{
       case Some(b) => try{
-        b.addLogMessage(d, tn, name, msg)}
+        b.addLogMessageRow(d, tn, name, msg)}
         catch{case e:Exception => {
           val t = "[SimpleLogger] Exception on save to DB: " + e
           console match{

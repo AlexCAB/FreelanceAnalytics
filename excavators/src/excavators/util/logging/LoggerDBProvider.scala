@@ -6,4 +6,4 @@ import java.util.Date
  * Created by CAB on 15.10.2014.
  */
 trait LoggerDBProvider {
-  def addLogMessage(date:Date, mType:String, name:String, msg:String)}
+  def addLogMessageRow(date:Date, mType:String, name:String, msg:String)}

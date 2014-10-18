@@ -1,6 +1,6 @@
 package excavators.odesk.db
 import org.scalatest._
-import java.sql.Date
+import java.util.Date
 import excavators.odesk.structures._
 import java.awt.image.BufferedImage
 
@@ -12,8 +12,14 @@ import java.awt.image.BufferedImage
 
 class DBProviderTest extends WordSpecLike with Matchers {
   //Helpers
+  val parseError = ParsingErrorRow(
+    id = 0,
+    createDate = new Date,
+    oUrl = "http//www.error",
+    msg = "pars error",
+    html = "httttml")
   val foundJobsRow1 = FoundJobsRow(
-    id = 1001L,
+    id = 0,
     oUrl = "http//www.",
     foundBy = FoundBy.Analyse,
     date = new Date(System.currentTimeMillis()),
@@ -21,7 +27,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     skills = List("A","B","C"),
     nFreelancers = Some(12))
   val foundJobsRow2 = FoundJobsRow(
-    id = 1001L,
+    id = 0,
     oUrl = "http//www.",
     foundBy = FoundBy.Search,
     date = new Date(System.currentTimeMillis()),
@@ -29,17 +35,17 @@ class DBProviderTest extends WordSpecLike with Matchers {
     skills = List("A","B","C"),
     nFreelancers = Some(12))
   def jobsRow(fjr:FoundJobsRow):JobsRow = JobsRow(
-    id = 1002L,
+    id = 0,
     foundData = fjr,
     daeDate = Some(new Date(System.currentTimeMillis())),
-    deleteDate = Some(new Date(System.currentTimeMillis())),
-    nextCheckDate = Some(new Date(System.currentTimeMillis())),
+    deleteDate = None,
+    nextCheckDate = None,
     jabData = Job(
       createDate = new Date(System.currentTimeMillis()),
-      postDate = Some(new Date(System.currentTimeMillis())),
+      postDate = None,
       deadline = Some(new Date(System.currentTimeMillis())),
       jobTitle = Some("Title"),
-      jobType = Some("type"),
+      jobType = None,
       jobPaymentType = Payment.Hourly,
       jobPrice = Some(12.3),
       jobEmployment = Employment.AsNeeded,
@@ -48,8 +54,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
       jobQualifications = Map("a" -> "1","b" -> "2"),
       jobDescription = Some("Some job")))
   val jobsChangesRow = JobsChangesRow(
-    id = 1003L,
-    jobId = 1002L,
+    id = 0,
+    jobId = 1L,
     changeData = JobChanges(
       createDate = new Date(System.currentTimeMillis()),
       jobAvailable = JobAvailable.No,
@@ -63,8 +69,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
       interviewingAvg = Some(12.3),
       nHires = Some(321)))
   val clientsChangesRow = ClientsChangesRow(
-    id = 10053L,
-    jobId = 1002L,
+    id = 0,
+    jobId = 1L,
     changeData = ClientChanges(
       createDate = new Date(System.currentTimeMillis()),
       name = Some("clientName"),
@@ -87,8 +93,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
       registrationDate = Some(new Date(System.currentTimeMillis()))),
    logo = Some(new BufferedImage(10,10,1)))
   val jobsApplicantsRow = JobsApplicantsRow(
-    id = 1004L,
-    jobId = 1002L,
+    id = 0,
+    jobId = 1L,
     applicantData = JobApplicant(
       createDate = new Date(System.currentTimeMillis()),
       upDate = Some(new Date(System.currentTimeMillis())),
@@ -97,16 +103,16 @@ class DBProviderTest extends WordSpecLike with Matchers {
       url = Some("url")),
     freelancerId = Some(1006L))
   val jobsHiredRow = JobsHiredRow(
-    id = 1005L,
-    jobId = 1002L,
+    id = 0,
+    jobId = 1L,
     hiredData = JobHired(
       createDate = new Date(System.currentTimeMillis()),
       name = Some("name"),
       freelancerUrl = Some("freelancerUrl")),
     freelancerId = None)
   val clientsWorksHistoryRow = ClientsWorksHistoryRow(
-    id = 1006L,
-    jobId = 1002L,
+    id = 0,
+    jobId = 1L,
     workData = ClientWork(
       createDate = new Date(System.currentTimeMillis()),
       oUrl = Some("oUrl"),
@@ -125,7 +131,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
       clientFeedback = Some(12.3)),
     freelancerId = None)
   val foundFreelancerRow = FoundFreelancerRow(
-    id = 1007L,
+    id = 0,
     oUrl = "FoundFreelancerRow",
     date = new Date(System.currentTimeMillis()),
     priority = 10)
@@ -136,8 +142,10 @@ class DBProviderTest extends WordSpecLike with Matchers {
     dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
   "add to excavators_log table" in {
     val ct = System.currentTimeMillis()
-    dbProvider.addLogMessage(new Date(ct), "error","m1","Some message 1")
-    dbProvider.addLogMessage(new Date(ct), "info","m2","Some message 2")}
+    dbProvider.addLogMessageRow(new Date(ct), "error", "m1", "Some message 1")
+    dbProvider.addLogMessageRow(new Date(ct), "info", "m2", "Some message 2")}
+  "add parsing error row" in{
+    dbProvider.addParsingErrorRow(parseError)}
   "add to odesk_found_jobs table" in {
     dbProvider.addFoundJobsRow(foundJobsRow1)
     dbProvider.addFoundJobsRow(foundJobsRow2)}
@@ -167,8 +175,10 @@ class DBProviderTest extends WordSpecLike with Matchers {
     assert(tr.nonEmpty)
     assert(tr.map(_.oUrl).contains("http//www."))}
   "check existence url" in {
-    assert(dbProvider.isJobScraped("http//www.") == true)
-    assert(dbProvider.isJobScraped("http//www.deewdew") == false)}
+    assert(dbProvider.isJobScraped("http//www.") == Some(1L))
+    assert(dbProvider.isJobScraped("http//www.deewdew") == None)}
+  "setNextJobCheckTime" in {
+    dbProvider.setNextJobCheckTime(1L, Some(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 48))))}
   "stop" in {
     dbProvider.halt()}}
 

@@ -7,6 +7,13 @@ import java.awt.image.BufferedImage
  * Created by CAB on 22.09.14.
  */
 
+case class ParsingErrorRow(
+  id:Long,
+  createDate:Date,
+  oUrl:String,
+  msg:String,
+  html:String)
+
 case class FoundJobsRow(
   id:Long,
   oUrl:String,
