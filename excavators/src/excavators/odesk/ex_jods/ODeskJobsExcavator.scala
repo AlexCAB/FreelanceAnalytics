@@ -13,8 +13,9 @@ object ODeskJobsExcavator {
   //Create components
   val l = new DBConsoleLogger("ODeskJobsExcavator")
   val db = new DBProvider
+  val s = new Saver(l,db)
   val b = new Browser
-  val w = new Worker(b,l,db)
+  val w = new Worker(b,l,s,db)
   val ui = new ExcavatorUI(b, w, l, closing)
   l.setConsole(ui)
   l.setDB(db)
@@ -22,12 +23,14 @@ object ODeskJobsExcavator {
   def main(a:Array[String]):Unit = {
     //Run
     db.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")
+    s.start()
     ui.init()
     w.init()}
   def closing():Unit = {
     //Stop
     w.halt()
     ui.halt()
+    s.stop()
     db.halt()
     //Exit
     System.exit(0)}}

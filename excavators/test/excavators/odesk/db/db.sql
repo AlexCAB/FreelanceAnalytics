@@ -5,6 +5,7 @@
 
 -- select * from odesk_excavators_log;
 -- select * from odesk_excavators_error_pages;
+-- select o_url,msg from odesk_excavators_error_pages;
 -- select * from odesk_found_jobs;
 -- select count(*) from odesk_found_jobs;
 -- select * from odesk_jobs;
@@ -35,7 +36,7 @@ create table odesk_excavators_error_pages(
   create_date datetime not null,
   o_url varchar(1000) not null,
   msg varchar(1000) not null,
-  html varchar(60000) not null);
+  html text(60000) not null);
 
 create table odesk_found_jobs(
   id bigint primary key auto_increment,

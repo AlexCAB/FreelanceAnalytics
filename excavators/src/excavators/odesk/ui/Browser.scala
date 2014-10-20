@@ -34,7 +34,7 @@ class Browser extends JWebBrowser {
   private val getHTMLbyURLStatusRunnable = new Runnable(){
     var status = false
     def run(){
-      status = (getStatusText == "Done" && getLoadingProgress == 100)}}
+      status = (getLoadingProgress == 100)}} //getStatusText == "Done" &&
   private val getHTMLbyURLResultRunnable = new Runnable(){
     var content:Option[String] = None
     def run(){val r = getHTMLContent; if(r != null){content = Some(r)}}}

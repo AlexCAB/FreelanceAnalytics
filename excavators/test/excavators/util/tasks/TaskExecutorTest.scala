@@ -2,120 +2,50 @@ package excavators.util.tasks
 import org.scalatest._
 
 /**
- * TaskExecutor test
- * Created by CAB on 13.10.2014.
+ * Test for TaskExecutor class
+ * Created by CAB on 20.10.2014.
  */
 
 class TaskExecutorTest extends WordSpecLike with Matchers {
-  //Task executor
-  val executor = new TaskExecutor{}
   //Test
-  "should start" in {
-    executor.start()}
+  "should start and end" in {
+    val ex = new TaskExecutor{}
+    ex.start()
+    ex.stop()}
   "should execute task" in {
+    val ex = new TaskExecutor{}
+    ex.start()
     var fl = false
-    val t1 = new Task(System.currentTimeMillis(), 1){def execute() = {fl = true}}
-    executor.addTask(t1)
+    val t1 = new Task(1){def execute() = {fl = true}}
+    ex.addTask(t1)
     Thread.sleep(100)
-    assert(fl == true)}
-  "should execute task with time out" in {
-    var fl = false
-    val t1 = new Task(System.currentTimeMillis() + 2000, 1){def execute() = {fl = true}}
-    executor.addTask(t1)
-    Thread.sleep(1000)
-    assert(fl == false)
-    Thread.sleep(1100)
-    assert(fl == true)}
+    assert(fl == true)
+    ex.stop()}
   "should execute task by priority" in {
+    val ex = new TaskExecutor{}
     var fl = false
-    val t = System.currentTimeMillis() + 100
-    val t1 = new Task(t, 1){def execute() = {fl = true}}
-    val t2 = new Task(t, 2){def execute() = {Thread.sleep(1000)}}
-    executor.addTask(t1)
-    executor.addTask(t2)
+    val t1 = new Task(1){def execute() = {fl = true}}
+    val t2 = new Task(2){def execute() = {Thread.sleep(1000)}}
+    ex.addTask(t1)
+    ex.addTask(t2)
+    ex.start()
     Thread.sleep(500)
     assert(fl == false)
     Thread.sleep(1100)
-    assert(fl == true)}
-  "should paused and should run after un pause" in{
-    var fl = false
-    val t = System.currentTimeMillis()
-    val t1 = new Task(t + 100, 2){def execute() = {Thread.sleep(500)}}
-    val t2 = new Task(t + 200, 1){def execute() = {fl = true}}
-    executor.addTask(t1)
-    executor.addTask(t2)
-    Thread.sleep(400)
-    executor.setPaused(true)
-    Thread.sleep(400)
-    assert(fl == false)
-    executor.setPaused(false)
-    Thread.sleep(10)
-    assert(fl == true)}
-//  "should not add task if already exist" in {
-//    var i = 0
-//    class ExTask(val ct:Long, p:Int, s:String) extends Task(ct, 1, s){
-//      def execute() = {i += 1}}
-//    val ct = System.currentTimeMillis() + 100
-//    executor.addTask(new ExTask(ct, 1, "qq"))
-//    executor.addTask(new ExTask(ct, 2, "qq"))
-//    Thread.sleep(400)
-//    assert(i == 1)}
+    assert(fl == true)
+    ex.stop()}
   "should stop only after end current task" in {
+    val ex = new TaskExecutor{}
+    ex.start()
     var fl = false
     val ct = System.currentTimeMillis()
-    val t1 = new Task(ct, 1){def execute() = {
+    val t1 = new Task(1){def execute() = {
       Thread.sleep(1000)
       fl = true}}
-    executor.addTask(t1)
+    ex.addTask(t1)
     Thread.sleep(100)
-    executor.stop()
+    ex.stop()
     assert(fl == true)
-    assert(System.currentTimeMillis() > ct + 900)}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    assert(System.currentTimeMillis() > ct + 900)
+    ex.stop()}}
 

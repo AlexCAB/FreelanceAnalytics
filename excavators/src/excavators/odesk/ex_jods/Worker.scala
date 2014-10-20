@@ -5,7 +5,7 @@ import java.util.Date
 import javax.imageio.ImageIO
 import excavators.odesk.db.DBProvider
 import excavators.odesk.structures._
-import excavators.util.tasks.{TaskExecutor,Task}
+import excavators.util.tasks.{TimedTaskExecutor,TimedTask}
 import java.io.File
 import excavators.odesk.parsers.HTMLParsers
 import excavators.odesk.ui.{ManagedWorker, Browser}
@@ -17,7 +17,7 @@ import scala.math.random
  * Created by CAB on 13.10.2014.
  */
 
-class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorker with TaskExecutor{
+class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends ManagedWorker with TimedTaskExecutor{
   //Parameters General
   val runAfterStart = false
   //Parameters URLS
@@ -176,10 +176,10 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
       if(r < 0.0){r = 0.0}
       r}
     case None => 0.0}
-  private def saveWrongParsedHtml(url:String, html:Option[String], pq:Double) = {
+  private def saveWrongParsedHtml(url:String, html:Option[String], pq:Double, cd:Date) = {
     val dr = ParsingErrorRow(
       id = 0,
-      createDate = new Date,
+      createDate = cd,
       oUrl = url,
       msg = "parsing quality = " + pq,
       html = html match{case Some(d) => d; case None => "No HTML."})
@@ -187,13 +187,14 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
       val id = db.addParsingErrorRow(dr)}
     catch{case e:Exception => {
       logger.error("[Worker.saveWrongParsedHtml] Exception on save parsing error html: " + e + ", url: " + url)}}}
-  private def saveMainJobData(j:FoundJobsRow, opj:Option[ParsedJob],pq:Double):Option[Long] = opj.flatMap(pj => {
+  private def saveMainJobData(j:FoundJobsRow, opj:Option[ParsedJob], pq:Double, cd:Date):Option[Long] = opj.flatMap(pj => {
+      val ncd = new Date(cd.getTime + nextJobCheckTimeout)
       val jr = JobsRow(
         id = 0,
         foundData = j,
-        daeDate = if(pj.jobChanges.jobAvailable == JobAvailable.No){Some(new Date)}else{None},
+        daeDate = if(pj.jobChanges.jobAvailable == JobAvailable.No){Some(cd)}else{None}, //If job not available set dae date
         deleteDate = None,
-        nextCheckDate = Some(new Date(System.currentTimeMillis() + nextJobCheckTimeout)),
+        nextCheckDate = if(pj.jobChanges.jobAvailable != JobAvailable.No){Some(ncd)}else{None}, //If job not available not add to tracking
         jabData = pj.job)
       try{
         val id = db.addJobsRow(jr)
@@ -202,7 +203,7 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
       catch{case e:Exception => {
         logger.error("[Worker.JobsScraping] Exception on save job: " + e + ", url=" + j.oUrl)
         None}}})
-  private def prepareJobDataToSave(pj:Option[ParsedJob], jid:Option[Long]):
+  private def prepareJobDataToSave(pj:Option[ParsedJob], jid:Option[Long], cd:Date):
   Option[(JobsChangesRow, ClientsChangesRow, List[JobsApplicantsRow], List[JobsHiredRow],
   List[ClientsWorksHistoryRow], Set[FoundFreelancerRow], Set[FoundJobsRow])] = (pj,jid) match{
     case (Some(pj), Some(id)) => {
@@ -245,7 +246,6 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
           pj.hires.flatMap(_.freelancerUrl).toSet ++
           pj.clientWorks.flatMap(_.freelancerUrl).toSet
         //Filter which already exist
-        val cd = new Date
         fus.map(url => {
           FoundFreelancerRow(
             id = 0,
@@ -257,7 +257,6 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
         //Get work urls
         val fus = pj.clientWorks.flatMap(_.oUrl).toSet
         //Filter which already exist
-        val cd = new Date
         fus.map(url => {
           FoundJobsRow(
             id = 0,
@@ -271,35 +270,8 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
       Some((jcr,ccr,ars,jhr,whr,ffr,fjr))}
     case _ =>
       None}
-  private def saveJobDataToDB(prs:Option[(JobsChangesRow, ClientsChangesRow, List[JobsApplicantsRow], List[JobsHiredRow],
-  List[ClientsWorksHistoryRow], Set[FoundFreelancerRow], Set[FoundJobsRow])]):Unit = prs match{
-    case Some((jcr,ccr,ars,jhr,whr,ffr,fjr)) => {
-      try{
-        db.addJobsChangesRow(jcr)
-        logger.info("[Worker.JobsScraping] Added job changes, job id = " + jcr.jobId)
-        db.addClientsChangesRow(ccr)
-        logger.info("[Worker.JobsScraping] Added client changes, job id = " + jcr.jobId)
-        ars.foreach(r => db.addJobsApplicantsRow(r))
-        logger.info("[Worker.JobsScraping] Added " + ars.size + " applicants, job id = " + jcr.jobId)
-        jhr.foreach(r => db.addJobsHiredRow(r))
-        logger.info("[Worker.JobsScraping] Added " + jhr.size + " jobs hired, job id = " + jcr.jobId)
-        whr.foreach(r => db.addClientsWorksHistoryRow(r))
-        logger.info("[Worker.JobsScraping] Added " + whr.size + " clients works history, job id = " + jcr.jobId)
-        ffr.foreach(r => db.addFoundFreelancerRow(r))
-        logger.info("[Worker.JobsScraping] Added " + ffr.size + " found freelancer, job id = " + jcr.jobId)
-        fjr.foreach(r => db.addFoundJobsRow(r))
-        logger.info("[Worker.JobsScraping] Added " + fjr.size + " found jobs, job id = " + jcr.jobId)}
-      catch{case e:Exception =>
-        logger.error("[Worker.JobsScraping] Exception on save job data: " + e)}}
-    case None =>}
-  private def delFromFoundJobs(j:FoundJobsRow) = {
-    try{
-      db.delFoundJobRow(j.id)}
-    catch{case e:Exception => {
-      logger.error("[Worker.JobsScraping] Exception on dell found job: " + e + ", url=" + j.oUrl)
-      None}}}
   //Tasks
-  case class CollectJobs(t:Long) extends Task(t, collectJobsTaskPriority){def execute() = {
+  case class CollectJobs(t:Long) extends TimedTask(t, collectJobsTaskPriority){def execute() = {
     //Log
     logger.info("[Worker.CollectJobs] Start collection of new jom.")
     //Get set of last jobs
@@ -315,7 +287,7 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
     logger.info("[Worker.CollectJobs] End collection of new job, next via " + (nt / 1000) +
       " sec., found " + nf + ", collected " + nc + " jobs.")
     addTask(new CollectJobs(nt + System.currentTimeMillis()))}}
-  case class BuildJobsScrapingTask(t:Long) extends Task(t, buildJobsScrapingTaskPriority){def execute() = {
+  case class BuildJobsScrapingTask(t:Long) extends TimedTask(t, buildJobsScrapingTaskPriority){def execute() = {
     //Get jobs
     val (sfj, n) = getFoundJobs(numberOfJobToScripInIteration, FoundBy.Search)
     if(n > overloadFoundJobTableRowNumber){
@@ -335,7 +307,7 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
     logger.info("[Worker.BuildJobsScrapingTask] Added " + js.size + " jobs to scraping.")
     //Add self to next run
     addTask(new BuildJobsScrapingTask(ct + buildJobsScrapingTaskTimeout))}}
-  case class JobsScraping(t:Long, p:Int, j:FoundJobsRow) extends Task(t, p){def execute() = {
+  case class JobsScraping(t:Long, p:Int, j:FoundJobsRow) extends TimedTask(t, p){def execute() = {
     logger.info("[Worker.BuildJobsScrapingTask] Start scrap url: " + j.oUrl)
     //Check if jib already scraped
     val cr = checkIfJojAlreadyScraped(j.oUrl) //(check successful, job is scraped)
@@ -344,11 +316,13 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
       case (true,Some(id:Long)) => { //(job is scraped, check successful)
         //Update next tracking time
         updateNextCheckTime(id)
-        delFromFoundJobs(j)
+        saver.addDelFoundJobTask(j)
         logger.error("[Worker.JobsScraping] Job alredy sctaped, added to check, url: " + j.oUrl)}
       case (true,None) => { //(job  not scraped, check successful)
         //Get ant parse HTML
         val (pj, html) = getAndParseJob(j.oUrl)
+        //Date to be use as 'created date'
+        val cd = pj match{case Some(j) => j.job.createDate; case None => new Date}
         //Estimate parsing quality
         val pq = estimateParsingQuality(pj)
         if(pq <= notSaveParsingQualityLevel){
@@ -359,20 +333,18 @@ class Worker(browser:Browser, logger:Logger, db:DBProvider) extends ManagedWorke
           logger.worn("[Worker.JobsScraping] Job parsing worn, url: " + j.oUrl)}
         //Save source HTML if parsing quality low
         if(errorParsingQualityLevel > pq || wornParsingQualityLevel > pq || notSaveParsingQualityLevel > pq){
-          saveWrongParsedHtml(j.oUrl, html, pq)}
+          saveWrongParsedHtml(j.oUrl, html, pq, cd)}
         //If job parsed good ennouf to save
         if(pj.nonEmpty && pq > notSaveParsingQualityLevel){
           //Save job row, get job ID
-          val jid = saveMainJobData(j,pj,pq)
+          val jid = saveMainJobData(j,pj,pq, cd)
+          //Remove from found if save successful
+          jid.foreach(_ => {
+            saver.addDelFoundJobTask(j)})
           //Prepare job data to save to DB
-          val prs = prepareJobDataToSave(pj,jid)
-          //Safe rows to DB
-          saveJobDataToDB(prs)
-          //If job save add to tracking, and remove from found
-          jid match{
-            case Some(_) => {
-              delFromFoundJobs(j)}
-            case None =>}}}
+          prepareJobDataToSave(pj,jid, cd).map(prs => {
+            //Safe rows to DB and and remove from found
+            saver.addSaveJobAdditionalDataAndDelFoundTask(prs)})}}
       case _ =>}}}
   //Methods
   def init() = {
