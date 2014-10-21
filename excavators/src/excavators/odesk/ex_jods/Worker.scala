@@ -43,7 +43,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   val overloadFoundJobTableRowNumber = 100000
   //Parameters Sizes
   val sizeOfSetLastJobs = 100
-  val logoImageCoordinates = (7,7,108,108) //x,y,w,h
+  val logoImageCoordinates = List(7,7,108,108) //x,y,w,h
   //Parameters Levels
   val wornParsingQualityLevel = 0.8
   val errorParsingQualityLevel = 0.5
@@ -81,11 +81,11 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
       catch{case e:Exception => {
         logger.error("[Worker.getFreelancerIdByUrl] Exception: " + e)
         None}}})}
-  private def getImageByUrl(oUrl:Option[String], cut:(Int,Int,Int,Int)):Option[BufferedImage] = {
+  private def getImageByUrl(oUrl:Option[String], cut:List[Int]):Option[BufferedImage] = {
     oUrl.flatMap(url => {
       browser.getHTMLbyURL(url) match{
         case Some(html) if(html != "") => {
-          Some(browser.captureImage.getSubimage(cut._1,cut._2,cut._3,cut._4))}
+          Some(browser.captureImage.getSubimage(cut(0),cut(1),cut(2),cut(3)))}
         case _ => {
           logger.worn("[Worker.getImageByUrl] Failure on get image: " + url)
           None}}})}
@@ -138,7 +138,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     catch{case e:Exception => {
       logger.error("[Worker.getFoundJobs] Exception on getNOfOldFoundJobs: " + e)
       (List[FoundJobsRow](),0)}}}
-  private def checkIfJojAlreadyScraped(url:String):(Boolean,Option[Long]) = { //(check successful, job is scraped id)
+  private def checkIfJojAlreadyScraped(url:String):(Boolean,Option[(Long,JobAvailable)]) = { //(check successful, job is scraped id)
     try{
       (true, db.isJobScraped(url))}
     catch{case e:Exception => {
@@ -310,14 +310,15 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   case class JobsScraping(t:Long, p:Int, j:FoundJobsRow) extends TimedTask(t, p){def execute() = {
     logger.info("[Worker.BuildJobsScrapingTask] Start scrap url: " + j.oUrl)
     //Check if jib already scraped
-    val cr = checkIfJojAlreadyScraped(j.oUrl) //(check successful, job is scraped)
+    val cr = checkIfJojAlreadyScraped(j.oUrl) //(check successful, Option(scraped job id, job available))
     //Select activity
     cr match{
-      case (true,Some(id:Long)) => { //(job is scraped, check successful)
-        //Update next tracking time
-        updateNextCheckTime(id)
+      case (true,Some((id:Long, ja:JobAvailable))) => {
+        //Update next tracking time if job available
+        if(ja != JobAvailable.No){updateNextCheckTime(id)}
+        //Del from found jobs
         saver.addDelFoundJobTask(j)
-        logger.error("[Worker.JobsScraping] Job alredy sctaped, added to check, url: " + j.oUrl)}
+        logger.info("[Worker.JobsScraping] Job already scraped, url = : " + j.oUrl)}
       case (true,None) => { //(job  not scraped, check successful)
         //Get ant parse HTML
         val (pj, html) = getAndParseJob(j.oUrl)
@@ -326,15 +327,15 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
         //Estimate parsing quality
         val pq = estimateParsingQuality(pj)
         if(pq <= notSaveParsingQualityLevel){
-          logger.error("[Worker.JobsScraping] Job parsing error, job not save, url: " + j.oUrl)}
+          logger.error("[Worker.JobsScraping] Job parsing error, job not save, pq = " + pq + ", url: " + j.oUrl)}
         else if(pq <= errorParsingQualityLevel){
-          logger.error("[Worker.JobsScraping] Job parsing error, url: " + j.oUrl)}
+          logger.error("[Worker.JobsScraping] Job parsing error, pq = " + pq + ", url: " + j.oUrl)}
         else if(pq <= wornParsingQualityLevel){
-          logger.worn("[Worker.JobsScraping] Job parsing worn, url: " + j.oUrl)}
+          logger.worn("[Worker.JobsScraping] Job parsing worn, pq = " + pq + ", url: " + j.oUrl)}
         //Save source HTML if parsing quality low
         if(errorParsingQualityLevel > pq || wornParsingQualityLevel > pq || notSaveParsingQualityLevel > pq){
           saveWrongParsedHtml(j.oUrl, html, pq, cd)}
-        //If job parsed good ennouf to save
+        //If job parsed good enough to save
         if(pj.nonEmpty && pq > notSaveParsingQualityLevel){
           //Save job row, get job ID
           val jid = saveMainJobData(j,pj,pq, cd)

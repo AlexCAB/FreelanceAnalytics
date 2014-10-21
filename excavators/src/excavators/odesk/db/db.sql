@@ -1,6 +1,6 @@
 -- Build test database
 
--- open: cd test/excavators/odesk/db, mysql -u root -p
+-- open: cd src/excavators/odesk/db, mysql -u root -p
 -- run: source db.sql;
 
 -- select * from odesk_excavators_log;
@@ -73,7 +73,7 @@ create table odesk_jobs(
 create table odesk_jobs_changes(
   id bigint primary key auto_increment,
   job_id bigint not null,
-  available  varchar(20) not null,
+  available varchar(20) not null,
   create_date datetime not null,
   last_viewed datetime default null,
   n_applicants integer default null,

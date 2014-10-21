@@ -2,7 +2,7 @@ package excavators.odesk.ex_jods
 
 import excavators.odesk.db.DBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
-import excavators.util.logging.{DBConsoleLogger, SimpleLogger}
+import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
  * oDesk job excavator - collect new jobs from search
@@ -11,7 +11,7 @@ import excavators.util.logging.{DBConsoleLogger, SimpleLogger}
 
 object ODeskJobsExcavator {
   //Create components
-  val l = new DBConsoleLogger("ODeskJobsExcavator")
+  val l = new ToDBAndConsoleLogger("ODeskJobsExcavator")
   val db = new DBProvider
   val s = new Saver(l,db)
   val b = new Browser

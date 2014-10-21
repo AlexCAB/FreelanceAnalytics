@@ -170,14 +170,19 @@ class HTMLParsers{
       case None => List()}
     def sepSplit(sp:String):List[String] = os.pSplit.mkString(" ").split(sp).toList
     def parseTimeAgo(cd:Date):Option[Date] = { //Return past date
-      def pi(t:String):Option[Int] = try{Some(t.toInt)}catch{case _:Exception => None}
-      def nd(om:Option[Int]):Option[Date] = om.flatMap(m => Some(new Date(cd.getTime - (1000 * 60 * m))))
+      def pi(t:String):Option[Long] = try{Some(t.toInt)}catch{case _:Exception => None}
+      def nd(om:Option[Long]):Option[Date] = om.flatMap(m => Some(new Date(cd.getTime - (1000 * 60 * m))))
       os.pSplit match{
         case ws if(ws.contains("minute")) => nd(Some(1))
         case n :: f :: _ if(f == "minutes") => nd(pi(n))
         case ws if(ws.contains("hour")) => nd(Some(60))
         case n :: f :: _ if(f == "hours") => nd(pi(n).map(_ * 60))
         case n :: f :: _ if(f == "day") => nd(pi(n).map(_ * 60 * 24))
+        case n :: f :: _ if(f == "days") => nd(pi(n).map(_ * 60 * 24))
+        case n :: f :: _ if(f == "week") => nd(pi(n).map(_ * 60 * 24 * 7))
+        case n :: f :: _ if(f == "weeks") => nd(pi(n).map(_ * 60 * 24 * 7))
+        case ws if(ws.contains("month")) => nd(Some(60 * 24 * 30))
+        case n :: f :: _ if(f == "months") => nd(pi(n).map(_ * 60 * 24 * 30))
         case s :: _ if(s.contains('/')) => try{Some(new Date(oFullDateFormat.parse(s).getTime))}catch{case _:Exception => None}
         case _ => None}}
     def parseDate:Option[Date] = os match{

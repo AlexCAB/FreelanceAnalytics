@@ -275,7 +275,14 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientWorks.size == 9)
       val w0 = tr.clientWorks(0)
       assert(w0.oUrl == Some("/jobs/Front-End-Development-one-bespoke-landing-page-from-PSD_%7E01873a013776ffb0e2"))
-      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}}}
+      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}
+    "error on parse post date (fixed)" in { //https://www.odesk.com/jobs/Website-Proofreading_~013578d051cfcca59b ("Posted  3 months ago")
+    val html = getHtml("html\\JobNoPostDate1.html")
+      //
+      val tr = htmlParser.parseJob(html).get
+      //job:Job
+      println("posted = " + tr.job.postDate)
+      assert(tr.job.postDate != None)}}}
 
 
 

@@ -64,5 +64,10 @@ trait JobAvailable
 object JobAvailable{
   case object Unknown extends JobAvailable
   case object Yes extends JobAvailable
-  case object No extends JobAvailable}
+  case object No extends JobAvailable
+  def formString(s:String):JobAvailable = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
 
