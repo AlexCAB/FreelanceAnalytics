@@ -5,6 +5,7 @@ import java.util.Date
 import javax.imageio.ImageIO
 import excavators.odesk.db.DBProvider
 import excavators.odesk.structures._
+import excavators.util.parameters.ParametersMap
 import excavators.util.tasks.{TimedTaskExecutor,TimedTask}
 import java.io.File
 import excavators.odesk.parsers.HTMLParsers
@@ -19,35 +20,35 @@ import scala.math.random
 
 class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends ManagedWorker with TimedTaskExecutor{
   //Parameters General
-  val runAfterStart = false
+  private var runAfterStart = false
   //Parameters URLS
-  val mainPageURL = "https://www.odesk.com"
-  val jobSearchURL = "https://www.odesk.com/jobs/?q="
-  val htmlSaveFolder = System.getProperty("user.home") + "\\Desktop"
+  private val mainPageURL = "https://www.odesk.com"
+  private var jobSearchURL = "https://www.odesk.com/jobs/?q="
+  private val saveFolder = System.getProperty("user.home") + "\\Desktop"
   //Parameters Priority
-  val foundFreelancersPriority = 1
-  val collectJobsTaskPriority = 3
-  val buildJobsScrapingTaskPriority = 4
-  val jobsFoundBySearchScrapTaskPriority = 2
-  val jobsFoundByAnaliseScrapTaskPriority = 1
-  val jobsFoundBySearchPriority = 1
-  val jobsFoundByAnalisePriority = 1
-  val toTrackingJobPriority = 1
+  private var foundFreelancersPriority = 1
+  private var collectJobsTaskPriority = 3
+  private var buildJobsScrapingTaskPriority = 4
+  private var jobsFoundBySearchScrapTaskPriority = 2
+  private var jobsFoundByAnaliseScrapTaskPriority = 1
+  private var jobsFoundBySearchPriority = 1
+  private var jobsFoundByAnalisePriority = 1
+  private var toTrackingJobPriority = 1
   //Parameters Times
-  val searchNewJobTimeout = 1000 * 2000 //1000 * 60 * 50
-  val buildJobsScrapingTaskTimeout = 1000 * 60 //* 30
-  val nextJobCheckTimeout = 1000 * 60 * 60
+  private var searchNewJobTimeout = 1000 * 2000 //1000 * 60 * 50
+  private var buildJobsScrapingTaskTimeout = 1000 * 60 //* 30
+  private var nextJobCheckTimeout = 1000 * 60 * 60
   //Parameters Numbers
-  val numberOfJobToScripInIteration = 200
-  val maxNumberOfCheckedJob = 100
-  val overloadFoundJobTableRowNumber = 100000
+  private var numberOfJobToScripInIteration = 200
+  private var maxNumberOfCheckedJob = 100
+  private var overloadFoundJobTableRowNumber = 100000
   //Parameters Sizes
-  val sizeOfSetLastJobs = 100
-  val logoImageCoordinates = List(7,7,108,108) //x,y,w,h
+  private val sizeOfSetLastJobs = 100
+  private var logoImageCoordinates = List(7,7,108,108) //x,y,w,h
   //Parameters Levels
-  val wornParsingQualityLevel = 0.8
-  val errorParsingQualityLevel = 0.5
-  val notSaveParsingQualityLevel = 0.2
+  private var wornParsingQualityLevel = 0.8
+  private var errorParsingQualityLevel = 0.5
+  private var notSaveParsingQualityLevel = 0.2
   //Construction
   super.setPaused(! runAfterStart)
   addTask(new BuildJobsScrapingTask(System.currentTimeMillis()))
@@ -159,13 +160,13 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   private def estimateParsingQuality(opj:Option[ParsedJob]):Double = opj match {
     case Some(pj) => {
       var r = 1.0
-      if(pj.job.postDate == None){r -= 0.2}
+      if(pj.job.postDate == None){r -= 0.3}
       if(pj.job.deadline == None){r -= 0.05}
       if(pj.job.jobTitle == None){r -= 0.3}
       if(pj.job.jobType == None){r -= 0.2}
-      if(pj.job.jobPaymentType == Payment.Unknown){r -= 0.1}
+      if(pj.job.jobPaymentType == Payment.Unknown){r -= 0.3}
       if(pj.job.jobEmployment == Employment.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
-      if(pj.job.jobPrice == None && pj.job.jobPaymentType == Payment.Budget){r -= 0.1}
+      if(pj.job.jobPrice == None && pj.job.jobPaymentType == Payment.Budget){r -= 0.3}
       if(pj.job.jobLength == None && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
       if(pj.job.jobRequiredLevel == SkillLevel.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
       if(pj.job.jobDescription == None){r -= 0.3}
@@ -348,6 +349,67 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
             saver.addSaveJobAdditionalDataAndDelFoundTask(prs)})}}
       case _ =>}}}
   //Methods
+  def setParameters(p:ParametersMap) = {
+    runAfterStart = p.getOrElse("runAfterStart", {
+      logger.worn("[Worker.setParameters] Parameter 'runAfterStart' not found.")
+      runAfterStart})
+    jobSearchURL = p.getOrElse("jobSearchURL", {
+      logger.worn("[Worker.setParameters] Parameter 'jobSearchURL' not found.")
+      jobSearchURL})
+    foundFreelancersPriority = p.getOrElse("foundFreelancersPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'foundFreelancersPriority' not found.")
+      foundFreelancersPriority})
+    collectJobsTaskPriority = p.getOrElse("collectJobsTaskPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'collectJobsTaskPriority' not found.")
+      collectJobsTaskPriority})
+    buildJobsScrapingTaskPriority = p.getOrElse("buildJobsScrapingTaskPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'buildJobsScrapingTaskPriority' not found.")
+      buildJobsScrapingTaskPriority})
+    jobsFoundBySearchScrapTaskPriority = p.getOrElse("jobsFoundBySearchScrapTaskPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'jobsFoundBySearchScrapTaskPriority' not found.")
+      jobsFoundBySearchScrapTaskPriority})
+    jobsFoundByAnaliseScrapTaskPriority = p.getOrElse("jobsFoundByAnaliseScrapTaskPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'jobsFoundByAnaliseScrapTaskPriority' not found.")
+      jobsFoundByAnaliseScrapTaskPriority})
+    jobsFoundBySearchPriority = p.getOrElse("jobsFoundBySearchPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'jobsFoundBySearchPriority' not found.")
+      jobsFoundBySearchPriority})
+    jobsFoundByAnalisePriority = p.getOrElse("jobsFoundByAnalisePriority", {
+      logger.worn("[Worker.setParameters] Parameter 'jobsFoundByAnalisePriority' not found.")
+      jobsFoundByAnalisePriority})
+    toTrackingJobPriority = p.getOrElse("toTrackingJobPriority", {
+      logger.worn("[Worker.setParameters] Parameter 'toTrackingJobPriority' not found.")
+      toTrackingJobPriority})
+    searchNewJobTimeout = p.getOrElse("searchNewJobTimeout", {
+      logger.worn("[Worker.setParameters] Parameter 'searchNewJobTimeout' not found.")
+      searchNewJobTimeout})
+    buildJobsScrapingTaskTimeout = p.getOrElse("buildJobsScrapingTaskTimeout", {
+      logger.worn("[Worker.setParameters] Parameter 'buildJobsScrapingTaskTimeout' not found.")
+      buildJobsScrapingTaskTimeout})
+    nextJobCheckTimeout = p.getOrElse("nextJobCheckTimeout", {
+      logger.worn("[Worker.setParameters] Parameter 'nextJobCheckTimeout' not found.")
+      nextJobCheckTimeout})
+    numberOfJobToScripInIteration = p.getOrElse("numberOfJobToScripInIteration", {
+      logger.worn("[Worker.setParameters] Parameter 'numberOfJobToScripInIteration' not found.")
+      numberOfJobToScripInIteration})
+    maxNumberOfCheckedJob = p.getOrElse("maxNumberOfCheckedJob", {
+      logger.worn("[Worker.setParameters] Parameter 'maxNumberOfCheckedJob' not found.")
+      maxNumberOfCheckedJob})
+    overloadFoundJobTableRowNumber = p.getOrElse("overloadFoundJobTableRowNumber", {
+      logger.worn("[Worker.setParameters] Parameter 'overloadFoundJobTableRowNumber' not found.")
+      overloadFoundJobTableRowNumber})
+    logoImageCoordinates = p.getOrElse("logoImageCoordinates", {
+      logger.worn("[Worker.setParameters] Parameter 'logoImageCoordinates' not found.")
+      logoImageCoordinates})
+    wornParsingQualityLevel = p.getOrElse("wornParsingQualityLevel", {
+      logger.worn("[Worker.setParameters] Parameter 'wornParsingQualityLevel' not found.")
+      wornParsingQualityLevel})
+    errorParsingQualityLevel = p.getOrElse("errorParsingQualityLevel", {
+      logger.worn("[Worker.setParameters] Parameter 'errorParsingQualityLevel' not found.")
+      errorParsingQualityLevel})
+    notSaveParsingQualityLevel = p.getOrElse("notSaveParsingQualityLevel", {
+      logger.worn("[Worker.setParameters] Parameter 'notSaveParsingQualityLevel' not found.")
+      notSaveParsingQualityLevel})}
   def init() = {
     if(runAfterStart){logger.info("[Worker.init] Run on init.")}
     start()}
@@ -362,7 +424,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   def saveHtml() = {
     browser.getCurrentHTML match{
       case Some(t) => {
-        val p = htmlSaveFolder + "\\" + System.currentTimeMillis() + ".html"
+        val p = saveFolder + "\\" + System.currentTimeMillis() + ".html"
         try{
           tools.nsc.io.File(p).writeAll(t)
           logger.info("[Worker.saveHtml] File save to: " + p)}
@@ -371,7 +433,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
       case None => logger.worn("[Worker.saveHtml] Not save, is empty.")}}
   def saveScreenshot() = {
     val img = browser.captureImage
-    val p = htmlSaveFolder + "\\" + System.currentTimeMillis() + ".png"
+    val p = saveFolder + "\\" + System.currentTimeMillis() + ".png"
     val f = new File(p)
     ImageIO.write(img, "PNG", f)
     logger.info("[Worker.saveScreenshot] File save to: " + p)}

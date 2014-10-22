@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import excavators.util.logging.LoggerConsole
+import excavators.util.parameters.ParametersMap
 
 /**
  * Logger which log to console and to DB
@@ -12,8 +13,8 @@ import excavators.util.logging.LoggerConsole
 
 class ToDBAndConsoleLogger(name:String) extends Logger{
   //Parameter
-  val consoleLoggingLevel = List("info","debug","worn","error")
-  val dbLoggingLevel = List("worn","error")
+  private var consoleLoggingLevel = List("info","debug","worn","error")
+  private var dbLoggingLevel = List("info","debug","worn","error")
   //Helpers
   private val dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
   //Variables
@@ -36,6 +37,13 @@ class ToDBAndConsoleLogger(name:String) extends Logger{
             case None => println(">> " + t)}}}
       case _ =>}}
   //Methods
+  def setParameters(p:ParametersMap) = {
+    consoleLoggingLevel = p.getOrElse("consoleLoggingLevel", {
+      log("[ToDBAndConsoleLogger.setParameters]Parameter 'consoleLoggingLevel' not found", "worn")
+      consoleLoggingLevel})
+    dbLoggingLevel = p.getOrElse("dbLoggingLevel", {
+      log("[dbLoggingLevel.setParameters]Parameter 'dbLoggingLevel' not found", "worn")
+      dbLoggingLevel})}
   def setConsole(c:LoggerConsole) = {console = Some(c)}
   def setDB(b:LoggerDBProvider) = {db = Some(b)}
   def info(msg:String) = log(msg,"info")

@@ -12,7 +12,7 @@ import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 object ODeskJobsExcavator {
   //Create components
   val l = new ToDBAndConsoleLogger("ODeskJobsExcavator")
-  val db = new DBProvider
+  val db = new DBProvider("odesk_new_job_excavator_param")
   val s = new Saver(l,db)
   val b = new Browser
   val w = new Worker(b,l,s,db)
@@ -21,8 +21,22 @@ object ODeskJobsExcavator {
   l.setDB(db)
   //Methods
   def main(a:Array[String]):Unit = {
+    //Load arguments
+    if(a.size < 4){
+      println("Error: Not enough arguments.")
+      System.exit(-1)}
+    val dbAddress = a(0)
+    val dbUser = a(1)
+    val dbPassword = a(2)
+    val dbName = a(3)
+    //Connect to DB
+    println("Connect to: " + dbAddress +  ", user: " + dbUser + ", password: " + dbPassword + ", DB: " + dbName)
+    db.init(dbAddress, dbUser, dbPassword, dbName)
+    //Load and set parameters
+    val ps = db.loadParameters()
+    l.setParameters(ps)
+    w.setParameters(ps)
     //Run
-    db.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")
     s.start()
     ui.init()
     w.init()}

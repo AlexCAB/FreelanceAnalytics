@@ -39,7 +39,7 @@ class ParametersMapTest extends WordSpecLike with Matchers {
     val tr1 = param.getOrElse("list_string", List(""))
     val tr2 = param.getOrElse("rrr", List("t1","t2","t3"))
     assert(tr1 == List("st1","st2","st3"))
-    assert(tr2 == List("t1","t2","t3"))}
+    assert(tr2 == List("t1","t2","t3"))}}
 
 
 
@@ -49,4 +49,6 @@ class ParametersMapTest extends WordSpecLike with Matchers {
 
 
 
-}
+
+
+

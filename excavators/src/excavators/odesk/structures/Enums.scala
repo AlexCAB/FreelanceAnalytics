@@ -71,3 +71,14 @@ object JobAvailable{
     case "No" => No
     case _ => throw new Exception("Error on parse: " + s)}}
 
+trait Update
+object Update{
+  case object Unknown extends Update
+  case object NeedUpdate extends Update
+  case object Updated extends Update
+  def formString(s:String):Update = s match{
+    case "Unknown" => Unknown
+    case "NeedUpdate" => NeedUpdate
+    case "Updated" => Updated
+    case _ => throw new Exception("Error on parse: " + s)}}
+

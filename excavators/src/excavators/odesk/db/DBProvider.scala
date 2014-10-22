@@ -1,6 +1,7 @@
 package excavators.odesk.db
 import java.sql.Timestamp
 import excavators.util.logging.LoggerDBProvider
+import excavators.util.parameters.ParametersMap
 
 import slick.driver.H2Driver.simple._
 import slick.driver.H2Driver.backend.DatabaseDef
@@ -15,8 +16,9 @@ import scala.slick.jdbc.{StaticQuery => Q}
 * Created by CAB on 22.09.14.
 */
 
-class DBProvider extends LoggerDBProvider {
+class DBProvider(programParamTableName:String) extends LoggerDBProvider {
   //Tables names
+  private val need_update_param_name = "param_need_update"
   private val odesk_excavators_log = "odesk_excavators_log"
   private val odesk_excavators_error_pages = "odesk_excavators_error_pages"
   private val odesk_found_jobs = "odesk_found_jobs"
@@ -28,6 +30,16 @@ class DBProvider extends LoggerDBProvider {
   private val odesk_clients_works_history = "odesk_clients_works_history"
   private val odesk_found_freelancers = "odesk_found_freelancers"
   //Schema
+  private type ParamRowType = (Option[Long],String,String,Boolean,Timestamp,Option[String])
+  private class ExcavatorsParam(tag: Tag) extends Table[ParamRowType](tag, programParamTableName){
+    def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
+    def p_key = column[String]("p_key", O.NotNull)
+    def p_value = column[String]("p_value", O.NotNull)
+    def is_active = column[Boolean]("is_active", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def comment = column[Option[String]]("comment")
+    def * = (id,p_key,p_value,is_active,create_date,comment)}
+  private val excavatorsParamTable = TableQuery[ExcavatorsParam]
   private type LogRowType = (Option[Long],Timestamp,String,String,String)
   private class ExcavatorsLog(tag: Tag) extends Table[LogRowType](tag, odesk_excavators_log){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
@@ -404,7 +416,26 @@ class DBProvider extends LoggerDBProvider {
     db.get.withSession(implicit session => {
       val q = foundJobsTableTable.filter(_.id === id)
       q.delete})}
-}
+  def loadParameters():ParametersMap = {
+    if(db.isEmpty){throw new Exception("[DBProvider.loadParameters] No created DB.")}
+    db.get.withSession(implicit session => {
+      //Get params
+      val prs = excavatorsParamTable.filter(_.is_active === true).map(r => (r.p_key, r.p_value)).list
+      //Check if no two active
+      val ks = prs.map(_._1)
+      if(ks.size != ks.toSet.size){
+        throw new Exception("[DBProvider.loadParameters] Several ative params with same name: " + prs)}
+      //Reset update flag
+      if(ks.contains(need_update_param_name)){
+        val q = excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value)
+        q.update(Update.Updated.toString)}
+      ParametersMap(prs.toMap)})}
+  def checkParametersUpdateFlag():Boolean = {
+    if(db.isEmpty){throw new Exception("[DBProvider.checkParametersUpdateFlag] No created DB.")}
+    db.get.withSession(implicit session => {
+      excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value).firstOption match {
+        case Some(v) => Update.formString(v) == Update.NeedUpdate
+        case None => false}})}}
 
 
 

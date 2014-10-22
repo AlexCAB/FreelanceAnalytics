@@ -136,7 +136,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     date = new Date(System.currentTimeMillis()),
     priority = 10)
   //Provider
-  val dbProvider = new DBProvider
+  val dbProvider = new DBProvider("odesk_new_job_excavator_param")
   //Tests
   "initialize" in {
     dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
@@ -179,6 +179,18 @@ class DBProviderTest extends WordSpecLike with Matchers {
     assert(dbProvider.isJobScraped("http//www.deewdew") == None)}
   "setNextJobCheckTime" in {
     dbProvider.setNextJobCheckTime(1L, Some(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 48))))}
+  "check if parameters need update" in{
+    assert(dbProvider.checkParametersUpdateFlag == true)}
+  "load parameters and reset update flag" in{
+    val tr = dbProvider.loadParameters()
+    assert(tr.getOrElse("runAfterStart", true) == false)
+    assert(tr.getOrElse("jobsFoundBySearchPriority", 321) == 1)
+    assert(tr.getOrElse("wornParsingQualityLevel",  12.3) == 0.8)
+    assert(tr.getOrElse("searchNewJobTimeout", 678L) == 1000 * 60 * 50)
+    assert(tr.getOrElse("jobSearchURL", "str") == "https://www.odesk.com/jobs/?q=")
+    assert(tr.getOrElse("logoImageCoordinates", List(0)) == List(7,7,108,108))
+    assert(tr.getOrElse("consoleLoggingLevel", List("")) == List("info","debug","worn","error"))
+    assert(dbProvider.checkParametersUpdateFlag == false)}
   "stop" in {
     dbProvider.halt()}}
 

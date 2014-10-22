@@ -3,6 +3,7 @@
 -- open: cd src/excavators/odesk/db, mysql -u root -p
 -- run: source db.sql;
 
+-- select * from odesk_new_job_excavator_param;
 -- select * from odesk_excavators_log;
 -- select * from odesk_excavators_error_pages;
 -- select o_url,msg from odesk_excavators_error_pages;
@@ -23,6 +24,38 @@
 
 create database freelance_analytics;
 use freelance_analytics;
+
+create table odesk_new_job_excavator_param(
+  id bigint primary key auto_increment,
+  p_key varchar(256) not null,
+  p_value varchar(1024) not null,
+  is_active boolean default false,
+  create_date timestamp not null,
+  comment varchar(255) default null);
+
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('param_need_update',                   'NeedUpdate',                     true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('consoleLoggingLevel',                 'info|debug|worn|error',          true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('dbLoggingLevel',                      'info|debug|worn|error',          true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('runAfterStart',                       'false',                          true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobSearchURL',                        'https://www.odesk.com/jobs/?q=', true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('foundFreelancersPriority',            '1',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('collectJobsTaskPriority',             '3',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskPriority',       '4',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundBySearchScrapTaskPriority',  '2',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundByAnaliseScrapTaskPriority', '1',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundBySearchPriority',           '1',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundByAnalisePriority',          '1',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('toTrackingJobPriority',               '1',                              true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('searchNewJobTimeout',                 '3000000',                         true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskTimeout',        '1800000',                         true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('nextJobCheckTimeout',                 '3600000',                         true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('numberOfJobToScripInIteration',       '200',                            true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('maxNumberOfCheckedJob',               '100',                            true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('overloadFoundJobTableRowNumber',      '100000',                         true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active,comment) values ('logoImageCoordinates',        '7|7|108|108',                    true, '//x,y,w,h');
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('wornParsingQualityLevel',             '0.8',                            true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('errorParsingQualityLevel',            '0.5',                            true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('notSaveParsingQualityLevel',          '0.2',                            true);
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
