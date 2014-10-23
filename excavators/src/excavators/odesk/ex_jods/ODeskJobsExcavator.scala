@@ -13,10 +13,11 @@ object ODeskJobsExcavator {
   //Create components
   val l = new ToDBAndConsoleLogger("ODeskJobsExcavator")
   val db = new DBProvider("odesk_new_job_excavator_param")
+  val b = new Browser(l)
   val s = new Saver(l,db)
-  val b = new Browser
   val w = new Worker(b,l,s,db)
-  val ui = new ExcavatorUI(b, w, l, closing)
+  val ui = new ExcavatorUI(b, w, l, loadAndSetParam, closing)
+  val wc = new Watcher(b,w,s,ui)
   l.setConsole(ui)
   l.setDB(db)
   //Methods
@@ -33,15 +34,22 @@ object ODeskJobsExcavator {
     println("Connect to: " + dbAddress +  ", user: " + dbUser + ", password: " + dbPassword + ", DB: " + dbName)
     db.init(dbAddress, dbUser, dbPassword, dbName)
     //Load and set parameters
-    val ps = db.loadParameters()
-    l.setParameters(ps)
-    w.setParameters(ps)
+    loadAndSetParam()
     //Run
     s.start()
     ui.init()
-    w.init()}
+    w.init()
+    wc.init()}
+  def loadAndSetParam():Unit = {
+    //Reload and set parameters
+    val ps = db.loadParameters()
+    l.setParameters(ps)
+    b.setParameters(ps)
+    w.setParameters(ps)
+    l.info("[ODeskJobsExcavator.loadAndSetParam] Parameters loaded and set.")}
   def closing():Unit = {
     //Stop
+    wc.halt()
     w.halt()
     ui.halt()
     s.stop()

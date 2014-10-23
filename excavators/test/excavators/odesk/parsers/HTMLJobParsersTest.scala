@@ -7,20 +7,20 @@ import excavators.odesk.structures._
 
 
 /**
-* Test for HTMLParsers object
+* Test for HTMLJobJobParsers object
 * Created by CAB on 16.09.14.
 */
 
-class HTMLParsersTest extends WordSpecLike with Matchers {
+class HTMLJobParsersTest extends WordSpecLike with Matchers {
   //Helpers
   val dateFormater = new SimpleDateFormat("yyyy.MMM.dd HH:mm:ss", Locale.ENGLISH)
   def getHtml(path:String):String = {
     val uri = getClass.getResource(path).toURI
     io.Source.fromFile(uri).mkString}
   //Parser
-  val htmlParser = new HTMLParsers
+  val htmlParser = new HTMLJobParsers
   //Tests
-  "HTMLParsers must:" must{
+  "HTMLJobParsers must:" must{
     "parseWorkSearchResult" in {
       val html = getHtml("html\\SearchResult.html")
       //
@@ -41,10 +41,12 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
         nFreelancers = Some(3)))
       assert(lw.nFound == Some(74756))
       assert(lw.nextUrl == Some("/jobs/?q=&skip=10"))}
-    "parse hourly job" in {//https://www.odesk.com/jobs/WordPress-Plugin-Developer-Possible-Long-Term-Contract_~0116a80a41a3bd221a
+    "parse hourly job" in { //https://www.odesk.com/jobs/WordPress-Plugin-Developer-Possible-Long-Term-Contract_~0116a80a41a3bd221a
       val html = getHtml("html\\JobHourly.html")
       //
       val tr = htmlParser.parseJob(html).get
+      //
+    //  assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
       //
       val ct = System.currentTimeMillis()
       //job:Job
@@ -150,16 +152,21 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //
       val tr = htmlParser.parseJob(html).get
       //
+      assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
+      //
       val ct = System.currentTimeMillis()
       //job:Job
       val pd = tr.job.postDate.get.getTime + (1000 * 60 * 60 * 9) //Posted  9 hours ago
       assert((pd < ct && pd > (ct - 1000)) == true)
+      assert(tr.job.jobTitle == Some("Display ToolTip on SharePoint 2013 DVW controls"))
+      assert(tr.job.jobType == Some("Web Programming"))
       assert(tr.job.jobPaymentType == Payment.Budget)
       assert(tr.job.jobPrice == Some(200.0))
       assert(tr.job.jobEmployment == Employment.Unknown)
       assert(tr.job.jobLength == None)
       assert(tr.job.jobRequiredLevel == SkillLevel.Unknown)
       assert(tr.job.jobQualifications == Map())
+      assert(tr.job.deadline == Some(dateFormater.parse("2014.Sep.27 00:00:00")))
       assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
       //changes:JobChanges
       val lw = tr.jobChanges.lastViewed.get.getTime + (1000 * 60 * 60 * 10) //10 hours ago
@@ -208,6 +215,8 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       //
       val tr = htmlParser.parseJob(html).get
       //
+      assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
+      //
       val ct = System.currentTimeMillis()
       //job:Job
       val pd = tr.job.postDate.get.getTime + (1000 * 60 * 60 * 24) //Posted  1 day ago
@@ -227,6 +236,8 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       val html = getHtml("html\\JobClosed.html")
       //
       val tr = htmlParser.parseJob(html).get
+      //
+      assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
       //
       val ct = System.currentTimeMillis()
       //job:Job
@@ -276,13 +287,79 @@ class HTMLParsersTest extends WordSpecLike with Matchers {
       val w0 = tr.clientWorks(0)
       assert(w0.oUrl == Some("/jobs/Front-End-Development-one-bespoke-landing-page-from-PSD_%7E01873a013776ffb0e2"))
       assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}
-    "error on parse post date (fixed)" in { //https://www.odesk.com/jobs/Website-Proofreading_~013578d051cfcca59b ("Posted  3 months ago")
-    val html = getHtml("html\\JobNoPostDate1.html")
+    "parse post date (fixed)" in { //https://www.odesk.com/jobs/Website-Proofreading_~013578d051cfcca59b ("Posted  3 months ago")
+      val html = getHtml("html\\JobNoPostDate1.html")
       //
       val tr = htmlParser.parseJob(html).get
+      //
+      assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
       //job:Job
       println("posted = " + tr.job.postDate)
-      assert(tr.job.postDate != None)}}}
+      assert(tr.job.postDate != None)}
+    "parse new format budjet jobs " in {  //https://www.odesk.com/jobs/Geolocation-code-add-existing-app_%7E0184ecd9f1754aeaac
+      val html = getHtml("html\\JobNewFormat.html")
+      //
+      val tr = htmlParser.parseJob(html).get
+      //
+      assert(htmlParser.estimateParsingQuality(Some(tr)) == 0.95)
+      //
+      val ct = System.currentTimeMillis()
+      //job:Job
+      val pd = tr.job.postDate.get.getTime + (1000 * 60 * 60 * 24) //Posted  1 day ago
+      assert((pd < ct && pd > (ct - 1000)) == true)
+      assert(tr.job.jobType == Some("Mobile Apps"))
+      assert(tr.job.jobTitle == Some("Geolocation code to add to existing app"))
+      assert(tr.job.deadline == Some(dateFormater.parse("2014.Oct.30 00:00:00")))
+      assert(tr.job.jobPaymentType == Payment.Budget)
+      assert(tr.job.jobPrice == Some(200.0))
+      assert(tr.job.jobEmployment == Employment.Unknown)
+      assert(tr.job.jobLength == None)
+      assert(tr.job.jobRequiredLevel == SkillLevel.Intermediate)
+      assert(tr.job.jobQualifications == Map())
+      assert(tr.job.jobDescription.get.split(" ").take(4).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1")
+      //changes:JobChanges
+      val lw = tr.jobChanges.lastViewed.get.getTime + (1000 * 60 * 60 * 24) //10 hours ago
+      assert((lw < ct && lw > (ct - 1000)) == true)
+      assert(tr.jobChanges.nApplicants == Some(12))
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
+      assert(tr.jobChanges.applicantsAvg == Some(518.7))
+      assert(tr.jobChanges.rateMin == Some(180.0))
+      assert(tr.jobChanges.rateAvg == Some(518.7))
+      assert(tr.jobChanges.rateMax == Some(1800.0))
+      assert(tr.jobChanges.nInterviewing == Some(0))
+      assert(tr.jobChanges.interviewingAvg == None)
+      assert(tr.jobChanges.nHires == None)
+      assert(tr.job.jobDescription.get.split(" ").take(10).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1 class=\"oH2\">Job Description</h1> \n <div name=\"sku\" enctype=\"multipart/form-data\"")
+      //changes:ClientChanges
+      assert(tr.clientChanges.name == None)
+      assert(tr.clientChanges.logoUrl == None)
+      assert(tr.clientChanges.url == None)
+      assert(tr.clientChanges.description == None)
+      assert(tr.clientChanges.paymentMethod == PaymentMethod.No)
+      assert(tr.clientChanges.rating == None)
+      assert(tr.clientChanges.nReviews == None)
+      assert(tr.clientChanges.location == None)
+      assert(tr.clientChanges.nJobs == Some(2))
+      assert(tr.clientChanges.hireRate == Some(0))
+      assert(tr.clientChanges.nOpenJobs == Some(2))
+      assert(tr.clientChanges.totalSpend == None)
+      assert(tr.clientChanges.nHires == None)
+      assert(tr.clientChanges.nActive == None)
+      assert(tr.clientChanges.avgRate == None)
+      assert(tr.clientChanges.hours == None)
+      assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2014.Oct.22 00:00:00")))
+      //applicants:List[JobApplicant]
+      assert(tr.applicants.size == 13)
+      val a1 = tr.applicants(0)
+      val ud = a1.upDate.get.getTime + (1000 * 60 * 60 * 18) //18 hours ago
+      assert((ud < ct &&  ud > (ct - 1000)) == true)
+      assert(a1.name == Some("Jessica Anderson"))
+      assert(a1.initiatedBy == InitiatedBy.Freelancer)
+      assert(a1.url == None)
+      //hires:List[JobHired]
+      assert(tr.hires.size == 0)
+      //clientWorks:List[ClientWork]
+      assert(tr.clientWorks.size == 0)}}}
 
 
 

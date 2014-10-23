@@ -14,6 +14,8 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
   //Parameters
   val maxTaskQueueSize = 10000
   val overloadTimeout = 1000
+  //Variables
+  private var saveTime = 0L
   //Functions
   private def checkOverload() = if(queueSize > maxTaskQueueSize){
     logger.worn("[Saver.checkOverload] Queue overload, queueSize = " + queueSize)
@@ -22,6 +24,9 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
   case class SaveJobAdditionalDataAndDelFoundTask(d:(JobsChangesRow, ClientsChangesRow, List[JobsApplicantsRow], List[JobsHiredRow],
     List[ClientsWorksHistoryRow], Set[FoundFreelancerRow], Set[FoundJobsRow])) extends Task(1) {
     def execute() = d match{case ((jcr,ccr,ars,jhr,whr,ffr,fjr)) => {
+      //Start
+      val ct = System.currentTimeMillis()
+      //Save
       try{
         db.addJobsChangesRow(jcr)
         logger.info("[Saver.SaveJobAdditionalDataAndDelFoundTask] Added job changes, job id = " + jcr.jobId)
@@ -38,7 +43,9 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
         fjr.foreach(r => db.addFoundJobsRow(r))
         logger.info("[Saver.SaveJobAdditionalDataAndDelFoundTask] Added " + fjr.size + " found jobs, job id = " + jcr.jobId)}
       catch{case e:Exception =>
-        logger.error("[Saver.SaveJobAdditionalDataAndDelFoundTask] Exception on save job data: " + e)}}}}
+        logger.error("[Saver.SaveJobAdditionalDataAndDelFoundTask] Exception on save job data: " + e)}
+      //Save time
+      saveTime = System.currentTimeMillis() - ct}}}
   case class DelFoundJobTas(j:FoundJobsRow) extends Task(2) {
     def execute() = {
       try{
@@ -52,4 +59,10 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
     addTask(new SaveJobAdditionalDataAndDelFoundTask(d))}
   def addDelFoundJobTask(j:FoundJobsRow) = {
     checkOverload()
-    addTask(new DelFoundJobTas(j))}}
+    addTask(new DelFoundJobTas(j))}
+  def getMetrics:(Int,Long) = (queueSize,saveTime)} //Return: (queue size, save time)
+
+
+
+
+

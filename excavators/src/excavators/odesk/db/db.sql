@@ -46,9 +46,9 @@ insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jo
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundBySearchPriority',           '1',                              true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('jobsFoundByAnalisePriority',          '1',                              true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('toTrackingJobPriority',               '1',                              true);
-insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('searchNewJobTimeout',                 '3000000',                         true);
-insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskTimeout',        '1800000',                         true);
-insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('nextJobCheckTimeout',                 '3600000',                         true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('searchNewJobTimeout',                 '3000000',                        true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskTimeout',        '1800000',                        true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('nextJobCheckTimeout',                 '3600000',                        true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('numberOfJobToScripInIteration',       '200',                            true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('maxNumberOfCheckedJob',               '100',                            true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('overloadFoundJobTableRowNumber',      '100000',                         true);
@@ -56,6 +56,11 @@ insert into odesk_new_job_excavator_param(p_key, p_value, is_active,comment) val
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('wornParsingQualityLevel',             '0.8',                            true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('errorParsingQualityLevel',            '0.5',                            true);
 insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('notSaveParsingQualityLevel',          '0.2',                            true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('loadPageMaxTime',                     '60000',                          true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('loadPageTimeOut',                     '3000',                           true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('loadTryMaxTime',                      '10000',                          true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('confirmTimeOut',                      '2000',                           true);
+insert into odesk_new_job_excavator_param(p_key, p_value, is_active) values ('retryTimeOut',                        '1000',                           true);
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,

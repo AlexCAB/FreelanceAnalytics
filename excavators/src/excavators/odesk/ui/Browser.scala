@@ -1,22 +1,27 @@
 package excavators.odesk.ui
 
-import java.awt.{Image, Dialog, Frame, Dimension, Point}
 import java.awt.image.BufferedImage
-
-
+import excavators.util.logging.Logger
 import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser
-import javax.swing.{JLabel, ImageIcon, JDialog, SwingUtilities}
+import javax.swing.SwingUtilities
+import excavators.util.parameters.ParametersMap
 
+/**
+ * Native system browser wrapper.
+ * Created by CAB on 15.10.2014.
+ */
 
-class Browser extends JWebBrowser {
+class Browser(logger:Logger) extends JWebBrowser {
   //Parameters(time in milli sec)
-  val loadPageMaxTime = 60000
-  val loadPageTimeOut = 3000
-  val loadTryMaxTime = 10000
-  val confirmTimeOut = 2000
-  val retryTimeOut = 1000
+  private var loadPageMaxTime = 60000L
+  private var loadPageTimeOut = 3000L
+  private var loadTryMaxTime = 10000L
+  private var confirmTimeOut = 2000L
+  private var retryTimeOut = 1000L
   //Data
-  val webBrowser = this
+  private val webBrowser = this
+  //Variables
+  private var loadTime = 0L
   //Construction
   setMenuBarVisible(false)
   //Function
@@ -42,6 +47,22 @@ class Browser extends JWebBrowser {
     var info:Option[String] = None
     def run(){info = Some("type = " + getBrowserType + ", version = " + getBrowserVersion)}}
   //Methods
+  def setParameters(p:ParametersMap) = {
+    loadPageMaxTime = p.getOrElse("loadPageMaxTime", {
+      logger.worn("[Browser.setParameters] Parameter 'loadPageMaxTime' not found.")
+      loadPageMaxTime})
+    loadPageTimeOut = p.getOrElse("loadPageTimeOut", {
+      logger.worn("[Browser.setParameters] Parameter 'loadPageTimeOut' not found.")
+      loadPageTimeOut})
+    loadTryMaxTime = p.getOrElse("loadTryMaxTime", {
+      logger.worn("[Browser.setParameters] Parameter 'loadTryMaxTime' not found.")
+      loadTryMaxTime})
+    confirmTimeOut = p.getOrElse("confirmTimeOut", {
+      logger.worn("[Browser.setParameters] Parameter 'confirmTimeOut' not found.")
+      confirmTimeOut})
+    retryTimeOut = p.getOrElse("retryTimeOut", {
+      logger.worn("[Browser.setParameters] Parameter 'retryTimeOut' not found.")
+      retryTimeOut})}
   def openURL(url:String) = getHTMLbyURLNavigateRunnable.synchronized{
     getHTMLbyURLNavigateRunnable.url = url
     SwingUtilities.invokeLater(getHTMLbyURLNavigateRunnable)}
@@ -53,6 +74,8 @@ class Browser extends JWebBrowser {
       SwingUtilities.invokeAndWait(getHTMLbyURLResultRunnable)}
     getHTMLbyURLResultRunnable.content}
   def getHTMLbyURL(url:String):Option[String] = getHTMLbyURLResultRunnable.synchronized{
+    //Start
+    val tc = System.currentTimeMillis()
     //Three load try
     getHTMLbyURLResultRunnable.content = None
     var ltc = 3
@@ -93,6 +116,8 @@ class Browser extends JWebBrowser {
           SwingUtilities.invokeAndWait(getHTMLbyURLResultRunnable)}}
       //Next try
         ltc -= 1}
+    //Load time
+    loadTime = System.currentTimeMillis() - tc
     //Return
     getHTMLbyURLResultRunnable.content}
   def getBrowserInfo:String = getBrowserInfoRunnable.synchronized{
@@ -107,4 +132,6 @@ class Browser extends JWebBrowser {
       captureImageRunnable.run()}
     else{
       SwingUtilities.invokeAndWait(captureImageRunnable)}
-    captureImageRunnable.result}}
+    captureImageRunnable.result}
+  def getMetrics:Long = { //Return: Last HTML load time.
+    loadTime}}

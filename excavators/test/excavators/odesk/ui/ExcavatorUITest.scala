@@ -9,11 +9,16 @@ import javafx.concurrent.Worker
 
 object ExcavatorUITest {
   def main(a:Array[String]):Unit = {
-    val b = new Browser
-    val w = new TestWorker(b)
     val l = new TestLogger
-    val e = new ExcavatorUI(b, w, l, ()=>{
-      println("=== closing ===")
-      System.exit(0)})
-    e.init()}}
+    val b = new Browser(l)
+    val w = new TestWorker(b)
+    val e = new ExcavatorUI(b, w, l,
+      ()=>{
+        println("=== reload parameters ===")},
+      ()=>{
+        println("=== closing ===")
+        System.exit(0)})
+    e.init()
+    Thread.sleep(500)
+    e.printStatus(List(("A","123"),("B","123456789"),("CCCCCCCCCCCC","221"),("D","1")))}}
 

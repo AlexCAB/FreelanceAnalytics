@@ -30,6 +30,7 @@ trait TimedTaskExecutor{
   def addTask(t:TimedTask) = {
     taskQueue.synchronized{taskQueue += t}
     executorThread.synchronized{executorThread.notify()}}
+  def queueSize:Int = taskQueue.size
   //Thread
   private val executorThread:Thread = new Thread{override def run() = {
     while(work){

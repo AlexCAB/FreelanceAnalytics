@@ -13,7 +13,7 @@ import excavators.odesk.structures._
  * Created by CAB on 16.09.14.
  */
 
-class HTMLParsers{
+class HTMLJobParsers{
   //Parameters
   val jobClassName = "oMed oJobTile jsSimilarTile"
   val titleClassName = "oRowTitle oH3"
@@ -38,7 +38,7 @@ class HTMLParsers{
   val sideCN = "oSide"
   val titleP = List("oJobHeader","oH1Huge np")
   val jobTypeP = List("oJobHeader","p","oTag oSkill")
-  val jobPaymentP = List("oJobHeader","oLeft oJobHeaderBlock","oJobHeaderContent","oH4")
+
   val hourlyW = "Hourly"
   val fixedW = "Fixed"
   val jobPriceP = List("oJobHeader","oRight oJobHeaderBlock","oJobHeaderContent","oH4")
@@ -99,6 +99,12 @@ class HTMLParsers{
   val freelancerW = "Freelancer"
   val applicantListId = "applicantList"
   val applicantListBidRangeId = "applicantListBidRange"
+  val newJobHeaderP =  List("oJobHeader","cols oFixedPriceHeader")
+  val jobPaymentP = List("oJobHeader","oLeft oJobHeaderBlock","oJobHeaderContent","oH4")
+  val jobNewPayTypeP = List("col col2of6","oJobHeaderContent","oH4")
+  val newDeadLineP = List("col col2of6","oJobHeaderContent","oNull")
+  val newRequiredLevelP = List("col col3of6","oJobHeaderContent","oH4")
+  val newBudgetP = List("col col1of6","oJobHeaderContent","oH4")
   //Helpers
   private val oDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
   private val oShortDateFormat = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
@@ -257,8 +263,21 @@ class HTMLParsers{
      // val wd = m.getElemsByClassPath(workDataP).getHead
       //Extract job data
       val j = {
-        //Prepare job data
-        val jpt = m.getElemTextByClassPath(jobPaymentP).pSplit match{ //Job payment type
+       val (jt,dl,rl,b) = m.getElemsByClassPath(newJobHeaderP).headOption.flatMap(e => e) match{ //Try get "cols oFixedPriceHeader" (new job header)
+         case jh:Some[Element] =>{
+           val jt = jh.getElemTextByClassPath(jobNewPayTypeP)    //Job type
+           val dl = jh.getElemTextByClassPath(newDeadLineP)      //DeadLine
+           val rl = jh.getElemTextByClassPath(newRequiredLevelP) //Required level
+           val b =  jh.getElemTextByClassPath(newBudgetP)        //Budget
+           (jt,dl,rl,b)}
+         case None =>{  //Old format
+           val jt = m.getElemTextByClassPath(jobPaymentP) //Job type
+           val dl = m.getElemTextByClassPath(deadlineP)   //DeadLine
+           val rl = None                                  //Required level
+           val b = m.getElemTextByClassPath(jobPriceP)    //Budget
+           (jt,dl,rl,b)}}
+       //Prepare job data
+        val jpt = jt.pSplit match{ //Job payment type
           case lw if(lw.contains(hourlyW)) => Payment.Hourly
           case lw if(lw.contains(fixedW))=> Payment.Budget
           case _ => Payment.Unknown}
@@ -269,11 +288,11 @@ class HTMLParsers{
           postDate = m.getElemsByClassPath(postedP).getHead match{
             case e:Some[Element] => e.getElementByIdOpt(postedId).map(_.text()).parseTimeAgo(cd)
             case None => None},
-          deadline = Some(m.getElemTextByClassPath(deadlineP).pSplit.reverse.take(3).reverse.mkString(" ")).parseDate,
+          deadline = Some(dl.pSplit.reverse.take(3).reverse.mkString(" ")).parseDate,
           jobTitle = m.getElemTextByClassPath(titleP),
           jobType = m.getElemTextByClassPath(jobTypeP),
           jobPaymentType = jpt,
-          jobPrice = m.getElemTextByClassPath(jobPriceP).parseDouble,
+          jobPrice = b.parseDouble,
           jobEmployment = jpt match{
             case Payment.Hourly => eal match {
               case ws if(ws.contains(neededW)) => Employment.AsNeeded
@@ -286,7 +305,7 @@ class HTMLParsers{
               case sa if(sa.size >= 2) => Some(sa.drop(2).mkString(" "))
               case _ => None}
             case _ => None},
-          jobRequiredLevel = m.getElemTextByClassPath(jobSkillP).pSplit match{
+          jobRequiredLevel = (jpt match{case Payment.Hourly => b; case _ => rl}).pSplit match{
             case ws if(ws.contains(entryW)) => SkillLevel.Entry
             case ws if(ws.contains(intermediateW)) => SkillLevel.Intermediate
             case ws if(ws.contains(expertW)) => SkillLevel.Expert
@@ -461,7 +480,27 @@ class HTMLParsers{
         clientChanges = cc,
         applicants = al,
         hires = hl,
-        clientWorks = wl)})}}
+        clientWorks = wl)})}
+  def estimateParsingQuality(opj:Option[ParsedJob]):Double = opj match {
+    case Some(pj) => {
+      var r = 1.0
+      if(pj.job.postDate == None){r -= 0.3}
+      if(pj.job.deadline == None && pj.job.jobPaymentType == Payment.Budget){r -= 0.05}
+      if(pj.job.jobTitle == None){r -= 0.3}
+      if(pj.job.jobType == None){r -= 0.2}
+      if(pj.job.jobPaymentType == Payment.Unknown){r -= 0.3}
+      if(pj.job.jobEmployment == Employment.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
+      if(pj.job.jobPrice == None && pj.job.jobPaymentType == Payment.Budget){r -= 0.3}
+      if(pj.job.jobLength == None && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
+      if(pj.job.jobRequiredLevel == SkillLevel.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
+      if(pj.job.jobDescription == None){r -= 0.3}
+      if(pj.jobChanges.nApplicants == None){r -= 0.05}
+      if(pj.clientChanges.paymentMethod == PaymentMethod.Unknown){r -= 0.1}
+      if(pj.clientChanges.location == None){r -= 0.05}
+      if(r < 0.0){r = 0.0}
+      r}
+    case None => 0.0}
+}
 
 
 

@@ -8,7 +8,7 @@ import excavators.odesk.structures._
 import excavators.util.parameters.ParametersMap
 import excavators.util.tasks.{TimedTaskExecutor,TimedTask}
 import java.io.File
-import excavators.odesk.parsers.HTMLParsers
+import excavators.odesk.parsers.HTMLJobParsers
 import excavators.odesk.ui.{ManagedWorker, Browser}
 import excavators.util.logging.Logger
 import scala.math.random
@@ -49,11 +49,17 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   private var wornParsingQualityLevel = 0.8
   private var errorParsingQualityLevel = 0.5
   private var notSaveParsingQualityLevel = 0.2
+  //Variables
+  private var numberOfFoundJob = 0
+  private var numberOfProcJob = 0
+  private var numberOfDoubleFoundJob = 0
+  private var lastParsingQuality = 0.0
+  private var numberOfFailureParsed = 0
   //Construction
   super.setPaused(! runAfterStart)
   addTask(new BuildJobsScrapingTask(System.currentTimeMillis()))
   addTask(new CollectJobs(System.currentTimeMillis()))
-  val htmlParser = new HTMLParsers
+  val htmlParser = new HTMLJobParsers
   //Functions
   private def saveFoundJobsToDB(fj:List[FoundWork], ljs:Set[String]):(Int,Int) = { //Return (N saved, N in 'ljs')
     //Preparing jobs to save
@@ -157,26 +163,6 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
       case _ => {
         logger.worn("[Worker.getAndParseJob] No job html on: " + url)
         (None,None)}}}
-  private def estimateParsingQuality(opj:Option[ParsedJob]):Double = opj match {
-    case Some(pj) => {
-      var r = 1.0
-      if(pj.job.postDate == None){r -= 0.3}
-      if(pj.job.deadline == None){r -= 0.05}
-      if(pj.job.jobTitle == None){r -= 0.3}
-      if(pj.job.jobType == None){r -= 0.2}
-      if(pj.job.jobPaymentType == Payment.Unknown){r -= 0.3}
-      if(pj.job.jobEmployment == Employment.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
-      if(pj.job.jobPrice == None && pj.job.jobPaymentType == Payment.Budget){r -= 0.3}
-      if(pj.job.jobLength == None && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
-      if(pj.job.jobRequiredLevel == SkillLevel.Unknown && pj.job.jobPaymentType == Payment.Hourly){r -= 0.1}
-      if(pj.job.jobDescription == None){r -= 0.3}
-      if(pj.jobChanges.nApplicants == None){r -= 0.05}
-      if(pj.clientChanges.name == None){r -= 0.05}
-      if(pj.clientChanges.paymentMethod == PaymentMethod.Unknown){r -= 0.1}
-      if(pj.clientChanges.location == None){r -= 0.05}
-      if(r < 0.0){r = 0.0}
-      r}
-    case None => 0.0}
   private def saveWrongParsedHtml(url:String, html:Option[String], pq:Double, cd:Date) = {
     val dr = ParsingErrorRow(
       id = 0,
@@ -285,6 +271,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     //Add next task
     val mt = searchNewJobTimeout / 5
     val nt = ((searchNewJobTimeout - mt) * random).toInt + mt
+    numberOfFoundJob += nc
     logger.info("[Worker.CollectJobs] End collection of new job, next via " + (nt / 1000) +
       " sec., found " + nf + ", collected " + nc + " jobs.")
     addTask(new CollectJobs(nt + System.currentTimeMillis()))}}
@@ -310,6 +297,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     addTask(new BuildJobsScrapingTask(ct + buildJobsScrapingTaskTimeout))}}
   case class JobsScraping(t:Long, p:Int, j:FoundJobsRow) extends TimedTask(t, p){def execute() = {
     logger.info("[Worker.BuildJobsScrapingTask] Start scrap url: " + j.oUrl)
+    numberOfProcJob += 1
     //Check if jib already scraped
     val cr = checkIfJojAlreadyScraped(j.oUrl) //(check successful, Option(scraped job id, job available))
     //Select activity
@@ -319,6 +307,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
         if(ja != JobAvailable.No){updateNextCheckTime(id)}
         //Del from found jobs
         saver.addDelFoundJobTask(j)
+        numberOfDoubleFoundJob += 1
         logger.info("[Worker.JobsScraping] Job already scraped, url = : " + j.oUrl)}
       case (true,None) => { //(job  not scraped, check successful)
         //Get ant parse HTML
@@ -326,7 +315,8 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
         //Date to be use as 'created date'
         val cd = pj match{case Some(j) => j.job.createDate; case None => new Date}
         //Estimate parsing quality
-        val pq = estimateParsingQuality(pj)
+        val pq = htmlParser.estimateParsingQuality(pj)
+        lastParsingQuality = pq
         if(pq <= notSaveParsingQualityLevel){
           logger.error("[Worker.JobsScraping] Job parsing error, job not save, pq = " + pq + ", url: " + j.oUrl)}
         else if(pq <= errorParsingQualityLevel){
@@ -335,6 +325,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
           logger.worn("[Worker.JobsScraping] Job parsing worn, pq = " + pq + ", url: " + j.oUrl)}
         //Save source HTML if parsing quality low
         if(errorParsingQualityLevel > pq || wornParsingQualityLevel > pq || notSaveParsingQualityLevel > pq){
+          numberOfFailureParsed += 1
           saveWrongParsedHtml(j.oUrl, html, pq, cd)}
         //If job parsed good enough to save
         if(pj.nonEmpty && pq > notSaveParsingQualityLevel){
@@ -442,5 +433,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     if(s){
       logger.info("[Worker.setWork] Paused.")}
     else{
-      logger.info("[Worker.setWork] Run.")}}}
+      logger.info("[Worker.setWork] Run.")}}
+  def getMetrics:(Int,Int,Int,Int,Double,Int) = { //Return: (Worker q. size, N proc work, N found by search, N double found, Parsing q., N failure parsed)
+    (queueSize,numberOfProcJob,numberOfFoundJob,numberOfDoubleFoundJob,lastParsingQuality, numberOfFailureParsed)}}
 

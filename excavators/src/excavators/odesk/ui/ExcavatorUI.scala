@@ -1,18 +1,23 @@
 package excavators.odesk.ui
 
+import java.awt.Font
+
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, ListBuffer => MutList}
 import chrriis.dj.nativeswing.swtimpl.NativeInterface
 import scala.swing._
 import scala.swing.event._
 import excavators.util.logging.{LoggerConsole, Logger}
 import javax.swing.SwingUtilities
+import BorderPanel.Position._
+import FlowPanel.Alignment._
+import java.awt.Color
 
 /**
  * Excavator UI
  * Created by CAB on 21.09.14.
  */
 
-class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:()=>Unit) extends Frame with LoggerConsole{
+class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, reloadParam:()=>Unit, closing:()=>Unit) extends Frame with LoggerConsole{
   //Parameters
   val maxLogSize = 100
   //Variables
@@ -35,9 +40,12 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
         if(logList.size > maxLogSize){logList.remove(0)}
         loggerPnl.text = logList.mkString("\n")}}
   //UI
+  private val statBar = new TextArea(){
+    text = "Status..."
+    preferredSize = new Dimension(0,37)
+    font = new Font(Font.MONOSPACED, Font.PLAIN, 12)
+    border = Swing.MatteBorder(1,1,2,2,Color.gray)}
   private val mainPanel = new BorderPanel {
-    import BorderPanel.Position._
-    import FlowPanel.Alignment._
     layout(new FlowPanel(Left)(){
       contents += new Button("To main"){
         preferredSize = new Dimension(100,20)
@@ -51,13 +59,19 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
           worker.saveScreenshot()}}
+      contents += new Button("Up param"){
+        preferredSize = new Dimension(100,20)
+        reactions += {case ButtonClicked(_) =>
+          reloadParam()}}
       def wst(s:Boolean):String = if(s){"RUN"}else{"STOP"}
       contents += new Button(wst(worker.isPaused)){
         preferredSize = new Dimension(100,20)
         reactions += {case ButtonClicked(_) =>
           worker.setPaused(! worker.isPaused)
           text = wst(worker.isPaused)}}}) = North
-    layout(new ScrollPane(loggerPnl){preferredSize = new Dimension(0,80)}) = South}
+    layout(new BorderPanel {
+      layout(new ScrollPane(loggerPnl){preferredSize = new Dimension(0,80)}) = North
+      layout(statBar) = South}) = South}
   contents = mainPanel
   //Methods
   def init() = {
@@ -79,7 +93,18 @@ class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, closing:
     SwingUtilities.invokeLater(printRunnable)}
   def printLines(ls:List[String]) = {
     logList.synchronized{logList ++= ls}
-    SwingUtilities.invokeLater(printRunnable)}}
+    SwingUtilities.invokeLater(printRunnable)}
+  def printStatus(sl:List[(String,String)]) = { //Arg: List(Name, Value)
+    //Format
+    def genSps(n:Int):String = (0 until n).map(_ => " ").mkString("")
+    val fsl = sl.map{case(n,v) => {
+      val s = if(n.size < 6){6}else{n.size}
+      val nn = if(n.size < 6){n + genSps(6 - n.size)}else{n}
+      val nv = if(v.size > s){v.take(s)}else if(v.size < s){v + genSps(s - v.size)}else {v}
+      (nn, nv)}}
+    //Print
+    val (ns,vs) = fsl.unzip
+    statBar.text = " " + ns.mkString(" ") + "\n" + " " + vs.mkString(" ")}}
 
 
 
