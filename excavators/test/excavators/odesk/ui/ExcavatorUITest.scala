@@ -12,7 +12,7 @@ object ExcavatorUITest {
     val l = new TestLogger
     val b = new Browser(l)
     val w = new TestWorker(b)
-    val e = new ExcavatorUI(b, w, l,
+    val e = new ExcavatorUI("Test UI",b, w, l,
       ()=>{
         println("=== reload parameters ===")},
       ()=>{

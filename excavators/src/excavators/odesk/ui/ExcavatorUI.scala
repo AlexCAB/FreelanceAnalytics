@@ -17,14 +17,14 @@ import java.awt.Color
  * Created by CAB on 21.09.14.
  */
 
-class ExcavatorUI(browser:Browser, worker:ManagedWorker, logger:Logger, reloadParam:()=>Unit, closing:()=>Unit) extends Frame with LoggerConsole{
+class ExcavatorUI(name:String, browser:Browser, worker:ManagedWorker, logger:Logger, reloadParam:()=>Unit, closing:()=>Unit) extends Frame with LoggerConsole{
   //Parameters
   val maxLogSize = 100
   //Variables
   private var ready = false
   val logList = MutList[String]()
   //Construction
-  title = "oDesk excavator"
+  title = name
   preferredSize = new Dimension(1000, 600)
   override def closeOperation():Unit = {closing()}
   //Init thread

@@ -226,45 +226,57 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
         d.oUrl,
         d.msg,
         d.html)})}
-  def addFoundJobsRow(d:FoundJobsRow) = {
+  def addFoundJobsRow(d:FoundJobsRow):Boolean = {  //Return true if row beet insert, and false if row with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
     db.get.withSession(implicit session => {
-      foundJobsTableTable += (
-        None,                          // id
-        d.oUrl,                        // o_url
-        d.foundBy.toString,            // found_by
-        new Timestamp(d.date.getTime), // reate_date
-        d.priority,                    // priority
-        d.skills.mkString(","),        // job_skills
-        d.nFreelancers)})}             //n_freelancers
-  def addJobsRow(d:JobsRow):Long = { //Return ID of addad job row
+      //Check if job already in foundJobsTableTable or jobTable
+      val ni = {foundJobsTableTable.filter(_.o_url === d.oUrl).firstOption.isEmpty &&
+        jobTable.filter(_.o_url === d.oUrl).firstOption.isEmpty}
+      //If not then insert
+      if(ni){
+        foundJobsTableTable += (
+          None,                          // id
+          d.oUrl,                        // o_url
+          d.foundBy.toString,            // found_by
+          new Timestamp(d.date.getTime), // reate_date
+          d.priority,                    // priority
+          d.skills.mkString(","),        // job_skills
+          d.nFreelancers)}
+      ni})}             //n_freelancers
+  def addJobsRow(d:JobsRow):Option[Long] = { //Return ID of added job row, on None if job with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsRow] No created DB.")}
     db.get.withSession(implicit session => {
-      //Save row
-      jobTable += (
-        None,                                                   // id Option[Long]
-        d.foundData.oUrl,                                       // o_url String
-        d.foundData.foundBy.toString,                           // found_by String
-        new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
-        new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
-        d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
-        d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
-        d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
-        d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
-        d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
-        d.foundData.nFreelancers,                               // n_freelancers Option[Int]
-        d.jabData.jobTitle,                                     // job_title Option[String]
-        d.jabData.jobType,                                      // job_type Option[String]
-        d.jabData.jobPaymentType.toString,                      // job_payment_type Option[String]
-        d.jabData.jobPrice,                                     // job_price Option[Double]
-        d.jabData.jobEmployment.toString,                       // job_employment Option[String]
-        d.jabData.jobLength,                                    // job_length Option[String]
-        d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
-        d.foundData.skills.mkString(","),                       // job_skills Option[String]
-        d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
-        d.jabData.jobDescription)
+      //Check if job already in foundJobsTableTable or jobTable
+      val ni = jobTable.filter(_.o_url === d.foundData.oUrl).firstOption.isEmpty
+      //If not save row
+      if(ni){
+        jobTable += (
+          None,                                                   // id Option[Long]
+          d.foundData.oUrl,                                       // o_url String
+          d.foundData.foundBy.toString,                           // found_by String
+          new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
+          new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
+          d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
+          d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
+          d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
+          d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
+          d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
+          d.foundData.nFreelancers,                               // n_freelancers Option[Int]
+          d.jabData.jobTitle,                                     // job_title Option[String]
+          d.jabData.jobType,                                      // job_type Option[String]
+          d.jabData.jobPaymentType.toString,                      // job_payment_type Option[String]
+          d.jabData.jobPrice,                                     // job_price Option[Double]
+          d.jabData.jobEmployment.toString,                       // job_employment Option[String]
+          d.jabData.jobLength,                                    // job_length Option[String]
+          d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
+          d.foundData.skills.mkString(","),                       // job_skills Option[String]
+          d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
+          d.jabData.jobDescription)}                              // job_description Option[String]
       //Get ID
-      jobTable.filter(_.o_url === d.foundData.oUrl).map(_.id).first.get})}                            // job_description Option[String]
+      if(ni){
+        Some(jobTable.filter(_.o_url === d.foundData.oUrl).map(_.id).first.get)}
+      else{
+        None}})}
   def addJobsChangesRow(d:JobsChangesRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsChangesRow] No created DB.")}
     db.get.withSession(implicit session => {
@@ -333,56 +345,68 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
         d.hiredData.name,                              // name
         d.hiredData.freelancerUrl,                     // freelancer_url
         d.freelancerId)})}                             // freelancer_id
-  def addClientsWorksHistoryRow(d:ClientsWorksHistoryRow) = {
+  def addClientsWorksHistoryRow(d:ClientsWorksHistoryRow):Boolean = { // Return true if row been insert, and false if row with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addClientsWorksHistoryRow] No created DB.")}
     db.get.withSession(implicit session => {
-      clientsWorksHistoryTable += (
-        None,                                                    // id
-        d.jobId,                                                 // job_id
-        new Timestamp(d.workData.createDate.getTime),            // create_date
-        d.workData.oUrl,                                         // o_url
-        d.workData.title,                                        // title
-        d.workData.inProgress.toString,                          // in_progress
-        d.workData.startDate.map(t => new Timestamp(t.getTime)), // start_date
-        d.workData.endDate.map(t => new Timestamp(t.getTime)),   // end_date
-        d.workData.paymentType.toString,                         // payment_type
-        d.workData.billed,                                       // billed
-        d.workData.hours,                                        // hours
-        d.workData.rate,                                         // rate
-        d.workData.freelancerFeedbackText,                       // freelancer_feedback_text
-        d.workData.freelancerFeedback,                           // freelancer_feedback
-        d.workData.freelancerName,                               // freelancer_name
-        d.workData.freelancerName,                               // freelancer_url
-        d.freelancerId,                                          // freelancer_id
-        d.workData.clientFeedback)})}                            // client_feedback
-  def addFoundFreelancerRow(d:FoundFreelancerRow) = {
+      //Check if job already exist
+      val ni = d.workData.oUrl match{
+        case Some(url) => clientsWorksHistoryTable.filter(r => r.o_url.isDefined && r.o_url === url).firstOption.isEmpty
+        case None => true}  //Add anyway if no URL
+      //If not then insert
+      if(ni){
+        clientsWorksHistoryTable += (
+          None,                                                    // id
+          d.jobId,                                                 // job_id
+          new Timestamp(d.workData.createDate.getTime),            // create_date
+          d.workData.oUrl,                                         // o_url
+          d.workData.title,                                        // title
+          d.workData.inProgress.toString,                          // in_progress
+          d.workData.startDate.map(t => new Timestamp(t.getTime)), // start_date
+          d.workData.endDate.map(t => new Timestamp(t.getTime)),   // end_date
+          d.workData.paymentType.toString,                         // payment_type
+          d.workData.billed,                                       // billed
+          d.workData.hours,                                        // hours
+          d.workData.rate,                                         // rate
+          d.workData.freelancerFeedbackText,                       // freelancer_feedback_text
+          d.workData.freelancerFeedback,                           // freelancer_feedback
+          d.workData.freelancerName,                               // freelancer_name
+          d.workData.freelancerUrl,                                // freelancer_url
+          d.freelancerId,                                          // freelancer_id
+          d.workData.clientFeedback)}                              // client_feedback
+    ni})}
+  def addFoundFreelancerRow(d:FoundFreelancerRow):Boolean = {    // Return true if row been insert, and false if row with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addFoundFreelancerRow] No created DB.")}
     db.get.withSession(implicit session => {
-       foundFreelancersTable += (
-        None,                          // id
-        d.oUrl,                        // o_url
-        new Timestamp(d.date.getTime), // create_date
-        d.priority)})}                 // priority
-  def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
-    if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
-    val r = db.get.withSession(implicit session => {
-      //Get auto inctement count and calc min id
-      val cq = Q.query[String, Int]("SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + databaseName.get + "' AND TABLE_NAME = ? ;")
-      def nln(n:Int):Int = {val t = n - size; if(t < 0){0}else{t}}
-      val mif = nln(cq("odesk_found_jobs").first)
-      val mij = nln(cq("odesk_jobs").first)
-      //Get last oURLs
-      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
-      val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
-      //Return set
-      dqf.toSet ++ dqj.toSet})
-    r}
-  def getNOfOldFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N older rows, and total rows in table
+      //Check if job already exist
+      val ni = foundFreelancersTable.filter(_.o_url === d.oUrl).firstOption.isEmpty
+      //If not then insert
+      if(ni){
+        foundFreelancersTable += (
+          None,                          // id
+          d.oUrl,                        // o_url
+          new Timestamp(d.date.getTime), // create_date
+          d.priority)}                   // priority
+      ni})}
+//  def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
+//    if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
+//    val r = db.get.withSession(implicit session => {
+//      //Get auto inctement count and calc min id
+//      val cq = Q.query[String, Int]("SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + databaseName.get + "' AND TABLE_NAME = ? ;")
+//      def nln(n:Int):Int = {val t = n - size; if(t < 0){0}else{t}}
+//      val mif = nln(cq("odesk_found_jobs").first)
+//      val mij = nln(cq("odesk_jobs").first)
+//      //Get last oURLs
+//      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
+//      val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
+//      //Return set
+//      dqf.toSet ++ dqj.toSet})
+//    r}
+  def getNOfFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N rows with max priority, and total rows in table
     if(db.isEmpty){throw new Exception("[DBProvider.getNOfOldFoundJobs] No created DB.")}
     db.get.withSession(implicit session => {
       //Gen older rows
       val nr = foundJobsTableTable.length.run
-      val rs = foundJobsTableTable.filter(_.found_by === fb.toString).sortBy(_.create_date).take(n).list.map{
+      val rs = foundJobsTableTable.filter(_.found_by === fb.toString).sortBy(_.priority).take(n).list.map{
         case(id:Option[Long], url:String, fb:String, d:Timestamp, p:Int, sks:String, nf:Option[Int]) => {
           FoundJobsRow(
             id = id.get,
@@ -435,7 +459,8 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
     db.get.withSession(implicit session => {
       excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value).firstOption match {
         case Some(v) => Update.formString(v) == Update.NeedUpdate
-        case None => false}})}}
+        case None => false}})}
+}
 
 
 

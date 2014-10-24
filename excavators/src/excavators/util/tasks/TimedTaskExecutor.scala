@@ -31,6 +31,9 @@ trait TimedTaskExecutor{
     taskQueue.synchronized{taskQueue += t}
     executorThread.synchronized{executorThread.notify()}}
   def queueSize:Int = taskQueue.size
+  def getNumTaskLike(t:TimedTask):Int = {
+    val tc = t.getClass
+    taskQueue.count(e => e.getClass.equals(tc))}
   //Thread
   private val executorThread:Thread = new Thread{override def run() = {
     while(work){

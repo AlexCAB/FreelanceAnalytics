@@ -60,6 +60,19 @@ class TimedTaskExecutorTest extends WordSpecLike with Matchers {
 //    executor.addTask(new ExTask(ct, 2, "qq"))
 //    Thread.sleep(400)
 //    assert(i == 1)}
+  "return number like task" in {
+    val ex = new TimedTaskExecutor{}
+    class TT1(t:Int) extends TimedTask(t, 1){def execute() = {}}
+    class TT2(t:Int) extends TimedTask(t, 1){def execute() = {}}
+    //
+    ex.addTask(new TT1(0))
+    ex.addTask(new TT2(0))
+    ex.addTask(new TT1(0))
+    ex.addTask(new TT2(0))
+    ex.addTask(new TT1(0))
+    //
+    assert(ex.getNumTaskLike(new TT1(1)) == 3)
+    assert(ex.getNumTaskLike(new TT2(2)) == 2)}
   "should stop only after end current task" in {
     var fl = false
     val ct = System.currentTimeMillis()

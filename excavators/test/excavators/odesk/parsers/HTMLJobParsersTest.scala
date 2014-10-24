@@ -98,7 +98,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientChanges.hours == Some(23))
       assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2012.Mar.21 00:00:00")))
       //applicants:List[JobApplicant]
-      assert(tr.applicants.size == 47)
+      assert(tr.applicants.size == 46)
       val a1 = tr.applicants(0)
       val fd3 = a1.createDate.getTime
       assert((fd3 < ct &&  fd3 > (ct - 1000)) == true)
@@ -227,7 +227,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.jobChanges.rateMax == Some(333.33))
       assert(tr.clientChanges.time == Some("05:41 PM"))
       //applicants:List[JobApplicant]
-      assert(tr.applicants.size == 10)
+      assert(tr.applicants.size == 9)
       //hires:List[JobHired]
       assert(tr.hires.size == 0)
       //clientWorks:List[ClientWork]
@@ -274,7 +274,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientChanges.hours == Some(1554))
       assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2011.Dec.07 00:00:00")))
       //applicants:List[JobApplicant]
-      assert(tr.applicants.size == 56)
+      assert(tr.applicants.size == 55)
       //hires:List[JobHired]
       assert(tr.hires.size == 1)
       val h = tr.hires(0)
@@ -286,7 +286,15 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientWorks.size == 9)
       val w0 = tr.clientWorks(0)
       assert(w0.oUrl == Some("/jobs/Front-End-Development-one-bespoke-landing-page-from-PSD_%7E01873a013776ffb0e2"))
-      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))}
+      assert(w0.title == Some("Front End Development of one bespoke landing page from PSD"))
+      assert(w0.freelancerName == Some("Bryan Joseph King"))
+      assert(w0.clientFeedback == Some(4.8))
+      assert(w0.freelancerFeedback == Some(5.0))
+      assert(w0.freelancerFeedbackText == Some("Jonathan is a great client to work with. Clear with his instructions and responds quickly. Thanks!"))
+      assert(w0.startDate == Some(dateFormater.parse("2014.Jul.01 00:00:00")))
+      assert(w0.endDate == Some(dateFormater.parse("2014.Jul.01 00:00:00")))
+      assert(w0.billed == Some(160.00 ))
+      assert(w0.freelancerUrl == Some("/users/PHP-MySQL-Developer-WordPress-Guru-HTML5-CSS3-jQuery-AJAX_%7E01de17ef4d4dd849f6"))}
     "parse post date (fixed)" in { //https://www.odesk.com/jobs/Website-Proofreading_~013578d051cfcca59b ("Posted  3 months ago")
       val html = getHtml("html\\JobNoPostDate1.html")
       //
@@ -349,7 +357,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.clientChanges.hours == None)
       assert(tr.clientChanges.registrationDate == Some(dateFormater.parse("2014.Oct.22 00:00:00")))
       //applicants:List[JobApplicant]
-      assert(tr.applicants.size == 13)
+      assert(tr.applicants.size == 12)
       val a1 = tr.applicants(0)
       val ud = a1.upDate.get.getTime + (1000 * 60 * 60 * 18) //18 hours ago
       assert((ud < ct &&  ud > (ct - 1000)) == true)

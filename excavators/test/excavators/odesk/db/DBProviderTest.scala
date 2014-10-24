@@ -20,7 +20,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     html = "httttml")
   val foundJobsRow1 = FoundJobsRow(
     id = 0,
-    oUrl = "http//www.",
+    oUrl = "http//www.1",
     foundBy = FoundBy.Analyse,
     date = new Date(System.currentTimeMillis()),
     priority = 5,
@@ -28,7 +28,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     nFreelancers = Some(12))
   val foundJobsRow2 = FoundJobsRow(
     id = 0,
-    oUrl = "http//www.",
+    oUrl = "http//www.2",
     foundBy = FoundBy.Search,
     date = new Date(System.currentTimeMillis()),
     priority = 5,
@@ -110,12 +110,12 @@ class DBProviderTest extends WordSpecLike with Matchers {
       name = Some("name"),
       freelancerUrl = Some("freelancerUrl")),
     freelancerId = None)
-  val clientsWorksHistoryRow = ClientsWorksHistoryRow(
+  def clientsWorksHistoryRow(url:Option[String]):ClientsWorksHistoryRow = ClientsWorksHistoryRow(
     id = 0,
     jobId = 1L,
     workData = ClientWork(
       createDate = new Date(System.currentTimeMillis()),
-      oUrl = Some("oUrl"),
+      oUrl = url,
       title = Some("title"),
       inProgress = JobState.InProcess,
       startDate = Some(new Date(System.currentTimeMillis())),
@@ -127,7 +127,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
       freelancerFeedbackText = Some("freelancerFeedbackText"),
       freelancerFeedback = Some(12.3),
       freelancerName = Some("freelancerName"),
-      freelancerUrl = Some("freelancerUrl"),
+      freelancerUrl = Some("f_Url"),
       clientFeedback = Some(12.3)),
     freelancerId = None)
   val foundFreelancerRow = FoundFreelancerRow(
@@ -136,7 +136,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     date = new Date(System.currentTimeMillis()),
     priority = 10)
   //Provider
-  val dbProvider = new DBProvider("odesk_new_job_excavator_param")
+  val dbProvider = new DBProvider("odesk_job_excavators_param")
   //Tests
   "initialize" in {
     dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
@@ -147,10 +147,12 @@ class DBProviderTest extends WordSpecLike with Matchers {
   "add parsing error row" in{
     dbProvider.addParsingErrorRow(parseError)}
   "add to odesk_found_jobs table" in {
-    dbProvider.addFoundJobsRow(foundJobsRow1)
-    dbProvider.addFoundJobsRow(foundJobsRow2)}
+    assert(dbProvider.addFoundJobsRow(foundJobsRow1) == true)
+    assert(dbProvider.addFoundJobsRow(foundJobsRow2) == true)
+    assert(dbProvider.addFoundJobsRow(foundJobsRow1) == false)} //Non add with exist URL
   "add to odesk_jobs table" in {
-    dbProvider.addJobsRow(jobsRow(foundJobsRow1))}
+    assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) != None)
+    assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) == None)}
   "add to odesk_jobs_changes table" in {
     dbProvider.addJobsChangesRow(jobsChangesRow)}
   "add to odesk_client_changes table" in {
@@ -160,22 +162,27 @@ class DBProviderTest extends WordSpecLike with Matchers {
   "add to odesk_jobs_hired table" in {
     dbProvider.addJobsHiredRow(jobsHiredRow)}
   "add to odesk_clients_works_history table" in {
-    dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow)}
+    assert(dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow(Some("url1"))) == true)
+    assert(dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow(Some("url2"))) == true)
+    assert(dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow(Some("url1"))) == false)
+    assert(dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow(None)) == true)
+    assert(dbProvider.addClientsWorksHistoryRow(clientsWorksHistoryRow(None)) == true)}
   "add to odesk_found_freelancers table" in {
-    dbProvider.addFoundFreelancerRow(foundFreelancerRow)}
-  "get set of last jobs URL" in {
-    val tr1 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Search)
-    assert(tr1.nonEmpty)
-    assert(tr1.contains("http//www."))
-    val tr2 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Analyse)
-    assert(tr2.nonEmpty)
-    assert(tr2.contains("http//www."))}
+    assert(dbProvider.addFoundFreelancerRow(foundFreelancerRow) == true)
+    assert(dbProvider.addFoundFreelancerRow(foundFreelancerRow) == false)}
+//  "get set of last jobs URL" in {
+//    val tr1 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Search)
+//    assert(tr1.nonEmpty)
+//    assert(tr1.contains("http//www."))
+//    val tr2 = dbProvider.getSetOfLastJobsURLoFundBy(10, FoundBy.Analyse)
+//    assert(tr2.nonEmpty)
+//    assert(tr2.contains("http//www."))}
   "get N of old found jobs" in {
-    val (tr, _) = dbProvider.getNOfOldFoundByJobs(10, FoundBy.Search)
+    val (tr, _) = dbProvider.getNOfFoundByJobs(10, FoundBy.Search)
     assert(tr.nonEmpty)
-    assert(tr.map(_.oUrl).contains("http//www."))}
+    assert(tr.map(_.oUrl).contains("http//www.2"))}
   "check existence url" in {
-    assert(dbProvider.isJobScraped("http//www.") == Some(1L,JobAvailable.No))
+    assert(dbProvider.isJobScraped("http//www.1") == Some(1L,JobAvailable.No))
     assert(dbProvider.isJobScraped("http//www.deewdew") == None)}
   "setNextJobCheckTime" in {
     dbProvider.setNextJobCheckTime(1L, Some(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 48))))}
@@ -184,7 +191,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
   "load parameters and reset update flag" in{
     val tr = dbProvider.loadParameters()
     assert(tr.getOrElse("runAfterStart", true) == false)
-    assert(tr.getOrElse("jobsFoundBySearchPriority", 321) == 1)
+    assert(tr.getOrElse("jobsFoundBySearchPriority", 321) == 100)
     assert(tr.getOrElse("wornParsingQualityLevel",  12.3) == 0.8)
     assert(tr.getOrElse("searchNewJobTimeout", 678L) == 1000 * 60 * 50)
     assert(tr.getOrElse("jobSearchURL", "str") == "https://www.odesk.com/jobs/?q=")
