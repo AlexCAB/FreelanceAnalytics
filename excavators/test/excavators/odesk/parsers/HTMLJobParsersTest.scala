@@ -295,15 +295,6 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(w0.endDate == Some(dateFormater.parse("2014.Jul.01 00:00:00")))
       assert(w0.billed == Some(160.00 ))
       assert(w0.freelancerUrl == Some("/users/PHP-MySQL-Developer-WordPress-Guru-HTML5-CSS3-jQuery-AJAX_%7E01de17ef4d4dd849f6"))}
-    "parse post date (fixed)" in { //https://www.odesk.com/jobs/Website-Proofreading_~013578d051cfcca59b ("Posted  3 months ago")
-      val html = getHtml("html\\JobNoPostDate1.html")
-      //
-      val tr = htmlParser.parseJob(html).get
-      //
-      assert(htmlParser.estimateParsingQuality(Some(tr)) == 1.0)
-      //job:Job
-      println("posted = " + tr.job.postDate)
-      assert(tr.job.postDate != None)}
     "parse new format budjet jobs " in {  //https://www.odesk.com/jobs/Geolocation-code-add-existing-app_%7E0184ecd9f1754aeaac
       val html = getHtml("html\\JobNewFormat.html")
       //
@@ -367,7 +358,19 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       //hires:List[JobHired]
       assert(tr.hires.size == 0)
       //clientWorks:List[ClientWork]
-      assert(tr.clientWorks.size == 0)}}}
+      assert(tr.clientWorks.size == 0)}
+  "applicants avg rate error" in { //https://www.odesk.com/jobs/Logo-design_%7E01b4638940f9699331 (should be None)
+    val html = getHtml("html\\AvgRateErr.html")
+    //
+    val tr = htmlParser.parseJob(html).get
+    //changes:JobChanges
+    assert(tr.jobChanges.applicantsAvg == None)}
+  "interviewing avg rate error" in { //https://www.odesk.com/jobs/RESTful-API-with-Chunked-HTTP-Streaming-json-Play2-Spray_~014e005d00964bd30a (should be 33.33)
+    val html = getHtml("html\\IntAvgRateErr.html")
+    //
+    val tr = htmlParser.parseJob(html).get
+    //changes:JobChanges
+    assert(tr.jobChanges.interviewingAvg == Some(33.33))}}}
 
 
 

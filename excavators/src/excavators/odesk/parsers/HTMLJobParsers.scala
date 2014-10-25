@@ -207,7 +207,9 @@ class HTMLJobParsers{
       case None => None}
     def parseDouble:Option[Double] = os match{
       case Some(s) => try{Some(getNum(s).toDouble)}catch{case _:Exception => None}
-      case None => None}}
+      case None => None}
+    def extractAvgIfIs:Option[Double] = {
+      os.pSplit.dropWhile(_ != "(avg").drop(1).headOption.parseDouble}}
   private implicit class MapHelper(m:Map[String,String]){
     def findByKeyPart(kp:String):Option[String] = {
       m.find{case (k,_) => Some(k).pSplit.contains(kp)}.map{case (_,v) => v}}}
@@ -358,14 +360,12 @@ class HTMLJobParsers{
             case Some(s) => Some(s).parseTimeAgo(cd)
             case _ => None},
           nApplicants = ap.pSplit.headOption.parseInt,
-          applicantsAvg = ap.pSplit.lastOption.parseDouble,
+          applicantsAvg = ap.extractAvgIfIs,
           rateMin = app.findByKeyPart(lowW).parseDouble,
           rateAvg = app.findByKeyPart(avgW).parseDouble,
           rateMax = app.findByKeyPart(highW).parseDouble,
           nInterviewing = in.pSplit.headOption.parseInt,
-          interviewingAvg = in.pSplit match{
-            case _ :: s :: _ => Some(s).parseDouble
-            case _ => None},
+          interviewingAvg = in.extractAvgIfIs,
           nHires = hr.pSplit.headOption.parseInt),
         ClientChanges(
           createDate = cd,

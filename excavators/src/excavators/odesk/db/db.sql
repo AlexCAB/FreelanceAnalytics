@@ -23,8 +23,6 @@
 
 -- drop database freelance_analytics;
 
-
-
 create database freelance_analytics;
 use freelance_analytics;
 
