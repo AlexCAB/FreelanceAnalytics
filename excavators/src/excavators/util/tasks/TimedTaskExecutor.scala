@@ -29,6 +29,7 @@ trait TimedTaskExecutor{
   def isPaused:Boolean = paused
   def addTask(t:TimedTask) = {
     taskQueue.synchronized{taskQueue += t}
+    println(taskQueue)
     executorThread.synchronized{executorThread.notify()}}
   def queueSize:Int = taskQueue.size
   def getNumTaskLike(t:TimedTask):Int = {

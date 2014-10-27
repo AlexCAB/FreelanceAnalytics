@@ -71,3 +71,23 @@ case class ToTrackingJob(
   oUrl:String,
   date:Date,
   priority:Int)
+
+case class AllJobData(
+  foundJobsRow:FoundJobsRow,
+  jobsRow:JobsRow,
+  jobsChangesRow:JobsChangesRow,
+  clientsChangesRow:ClientsChangesRow,
+  jobsApplicantsRows:List[JobsApplicantsRow],
+  jobsHiredRows:List[JobsHiredRow],
+  clientsWorksHistoryRows:List[ClientsWorksHistoryRow],
+  foundFreelancerRows:List[FoundFreelancerRow],
+  foundJobsRows:List[FoundJobsRow])
+
+
+
+
+
+
+
+
+

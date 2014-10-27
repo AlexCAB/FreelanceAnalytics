@@ -46,6 +46,7 @@ object Main {
     l.setParameters(ps)
     b.setParameters(ps)
     w.setParameters(ps)
+    s.setParameters(ps)
     l.info("[Main.loadAndSetParam] Parameters loaded and set.")}
   def closing():Unit = {
     //Stop

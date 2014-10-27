@@ -18,14 +18,13 @@ class Watcher(browser:Browser, worker:Worker, saver:Saver, ui:ExcavatorUI) {
   private val workerThread = new Thread{override def run():Unit = {while(work){
     //Get data
     val tl = browser.getMetrics
-    val (wqs,npj,ndf,pq,npf) = worker.getMetrics
+    val (wqs,npj,pq,npf) = worker.getMetrics
     val (sqs,ts) = saver.getMetrics
     //Build report
     val r = List(
       ("Worker q. size",wqs.toString),
       ("Saver q. size",sqs.toString),
       ("N proc job",npj.toString),
-      ("N double found",ndf.toString),
       ("Parsing q.",pq.toString),
       ("N parsing fails", npf.toString),
       ("T load",(tl.toDouble / 1000).toString),

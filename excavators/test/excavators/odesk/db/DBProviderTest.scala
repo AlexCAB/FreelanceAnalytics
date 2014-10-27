@@ -147,9 +147,8 @@ class DBProviderTest extends WordSpecLike with Matchers {
   "add parsing error row" in{
     dbProvider.addParsingErrorRow(parseError)}
   "add to odesk_found_jobs table" in {
-    assert(dbProvider.addFoundJobsRow(foundJobsRow1) == true)
-    assert(dbProvider.addFoundJobsRow(foundJobsRow2) == true)
-    assert(dbProvider.addFoundJobsRow(foundJobsRow1) == false)} //Non add with exist URL
+    assert(dbProvider.addFoundJobsRows(List(foundJobsRow1)) == 1)
+    assert(dbProvider.addFoundJobsRows(List(foundJobsRow2,foundJobsRow1)) == 1)} //Non add with exist URL
   "add to odesk_jobs table" in {
     assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) != None)
     assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) == None)}

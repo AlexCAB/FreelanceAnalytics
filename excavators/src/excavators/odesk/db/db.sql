@@ -21,6 +21,17 @@
 -- select * from odesk_clients_works_history;
 -- select * from odesk_found_freelancers;
 
+
+
+insert into test (o_url,found_by) values ('u1','S'),('u2','S');
+insert into test (o_url,found_by) values ('u5','S'),('u6','S');
+insert ignore into test (o_url,found_by) values ('u1','S'),('u3','S'),('u4','S'),('u2','S');
+
+ create table test(
+   id bigint primary key auto_increment,
+   o_url varchar(255) not null unique,
+   found_by varchar(20) not null);
+
 -- drop database freelance_analytics;
 
 create database freelance_analytics;

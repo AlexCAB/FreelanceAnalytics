@@ -226,23 +226,49 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
         d.oUrl,
         d.msg,
         d.html)})}
-  def addFoundJobsRow(d:FoundJobsRow):Boolean = {  //Return true if row beet insert, and false if row with given URL already exist
+  def addFoundJobsRows(ds:List[FoundJobsRow]):Int = {  //Return number of insert(not insert if already exist in jobTable or in foundJobsTableTable)
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
     db.get.withSession(implicit session => {
-      //Check if job already in foundJobsTableTable or jobTable
-      val ni = {foundJobsTableTable.filter(_.o_url === d.oUrl).firstOption.isEmpty &&
-        jobTable.filter(_.o_url === d.oUrl).firstOption.isEmpty}
-      //If not then insert
-      if(ni){
-        foundJobsTableTable += (
-          None,                          // id
-          d.oUrl,                        // o_url
-          d.foundBy.toString,            // found_by
-          new Timestamp(d.date.getTime), // reate_date
-          d.priority,                    // priority
-          d.skills.mkString(","),        // job_skills
-          d.nFreelancers)}
-      ni})}             //n_freelancers
+      //Prepare
+
+
+      val rs = ds.map(d => (
+        None,                          // id
+        d.oUrl,                        // o_url
+        d.foundBy.toString,            // found_by
+        new Timestamp(d.date.getTime), // reate_date
+        d.priority,                    // priority
+        d.skills.mkString(","),        // job_skills
+        d.nFreelancers))
+      //Insert
+//      foundJobsTableTable ++= rs
+
+
+       //Можно выбрать за два обращения
+
+
+
+
+      //Должен вставлять тлько если нет в таблицах jobTable or in foundJobsTableTable
+//      //Должна за одну операцию проверять и вставлять.
+//
+//      //Check if job already in foundJobsTableTable or jobTable
+//      val ni = {foundJobsTableTable.filter(_.o_url === d.oUrl).firstOption.isEmpty &&
+//        jobTable.filter(_.o_url === d.oUrl).firstOption.isEmpty}
+//      //If not then insert
+//      if(ni){
+//        foundJobsTableTable += (
+//          None,                          // id
+//          d.oUrl,                        // o_url
+//          d.foundBy.toString,            // found_by
+//          new Timestamp(d.date.getTime), // reate_date
+//          d.priority,                    // priority
+//          d.skills.mkString(","),        // job_skills
+//          d.nFreelancers)}
+//      ni
+
+    ds.size
+    })}             //n_freelancers
   def addJobsRow(d:JobsRow):Option[Long] = { //Return ID of added job row, on None if job with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsRow] No created DB.")}
     db.get.withSession(implicit session => {
@@ -387,20 +413,20 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
           new Timestamp(d.date.getTime), // create_date
           d.priority)}                   // priority
       ni})}
-//  def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
-//    if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
-//    val r = db.get.withSession(implicit session => {
-//      //Get auto inctement count and calc min id
-//      val cq = Q.query[String, Int]("SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + databaseName.get + "' AND TABLE_NAME = ? ;")
-//      def nln(n:Int):Int = {val t = n - size; if(t < 0){0}else{t}}
-//      val mif = nln(cq("odesk_found_jobs").first)
-//      val mij = nln(cq("odesk_jobs").first)
-//      //Get last oURLs
-//      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
-//      val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
-//      //Return set
-//      dqf.toSet ++ dqj.toSet})
-//    r}
+  def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
+    if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
+    val r = db.get.withSession(implicit session => {
+      //Get auto inctement count and calc min id
+      val cq = Q.query[String, Int]("SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + databaseName.get + "' AND TABLE_NAME = ? ;")
+      def nln(n:Int):Int = {val t = n - size; if(t < 0){0}else{t}}
+      val mif = nln(cq("odesk_found_jobs").first)
+      val mij = nln(cq("odesk_jobs").first)
+      //Get last oURLs
+      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
+      val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
+      //Return set
+      dqf.toSet ++ dqj.toSet})
+    r}
   def getNOfFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N rows with max priority, and total rows in table
     if(db.isEmpty){throw new Exception("[DBProvider.getNOfOldFoundJobs] No created DB.")}
     db.get.withSession(implicit session => {
@@ -460,6 +486,35 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
       excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value).firstOption match {
         case Some(v) => Update.formString(v) == Update.NeedUpdate
         case None => false}})}
+  def addAllJobDataAndDelFromFound(d:AllJobData):Option[(Int,Int,Int,Int,Int)] = { //If added return N added: Some(applicants,hired,clients works,found freelancer,found jobs)
+
+//  }
+//    d match{case ((jcr,ccr,ars,jhr,whr,ffr,fjr)) => {
+//
+//
+//    }
+//
+//      //Save
+//      try{
+//        db.addJobsChangesRow(jcr)
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added job changes, job id = " + jcr.jobId)
+//        db.addClientsChangesRow(ccr)
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added client changes, job id = " + jcr.jobId)
+//        ars.foreach(r => db.addJobsApplicantsRow(r))
+//
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + ars.size + " applicants, job id = " + jcr.jobId)
+//        jhr.foreach(r => db.addJobsHiredRow(r))
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + jhr.size + " jobs hired, job id = " + jcr.jobId)
+//        val ncw = whr.map(r => if(db.addClientsWorksHistoryRow(r)) 1 else 0).sum
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + ncw + " (of "  + whr.size + ") of clients works history, job id = " + jcr.jobId)
+//        val nfi = ffr.toList.map(r => if(db.addFoundFreelancerRow(r)) 1 else 0).sum
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + nfi + " (of " + ffr.size + ") of found freelancer, job id = " + jcr.jobId)
+//        val nji = fjr.toList.map(r => if(db.addFoundJobsRows(r)) 1 else 0).sum
+//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + nji + " (of " + fjr.size + ") of found jobs, job id = " + jcr.jobId)}
+    None
+    }
+
+
 }
 
 
