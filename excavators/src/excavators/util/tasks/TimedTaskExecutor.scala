@@ -29,7 +29,6 @@ trait TimedTaskExecutor{
   def isPaused:Boolean = paused
   def addTask(t:TimedTask) = {
     taskQueue.synchronized{taskQueue += t}
-    println(taskQueue)
     executorThread.synchronized{executorThread.notify()}}
   def queueSize:Int = taskQueue.size
   def getNumTaskLike(t:TimedTask):Int = {
@@ -53,12 +52,12 @@ trait TimedTaskExecutor{
         //Execute task or wait
         nt match{
           case Some(t) => {
-            taskQueue -= t
             try{
               t.execute()} //Execute task
             catch{
               case e:Exception => e.printStackTrace()
-              case e:Error => e.printStackTrace()}}
+              case e:Error => e.printStackTrace()}
+            taskQueue -= t}
           case None => {
             synchronized{wait(tm)}}}} //If no ready task then wait
       else{

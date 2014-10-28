@@ -39,12 +39,12 @@ trait TaskExecutor {
       //Execute task or wait
       nt match{
         case Some(t) => {
-          taskQueue -= t
           try{
             t.execute()} //Execute task
           catch{
             case e:Exception => e.printStackTrace()
-            case e:Error => e.printStackTrace()}}
+            case e:Error => e.printStackTrace()}
+          taskQueue -= t}
         case None => {
           synchronized{wait(checkTimeOut)}}}}}}
   executorThread.setDaemon(true)}

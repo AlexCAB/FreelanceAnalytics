@@ -73,7 +73,6 @@ case class ToTrackingJob(
   priority:Int)
 
 case class AllJobData(
-  foundJobsRow:FoundJobsRow,
   jobsRow:JobsRow,
   jobsChangesRow:JobsChangesRow,
   clientsChangesRow:ClientsChangesRow,

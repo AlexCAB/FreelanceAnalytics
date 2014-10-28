@@ -31,12 +31,13 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
   private var searchNewJobTimeout = 1000 * 60 * 50
   private var nextJobCheckTimeout = 1000 * 60 * 60
   private var maxNumberOfCheckedJob = 100
+  private val waitSaverTimeout = 1000 * 10
   //Variables
   private var numberOfFoundJob = 0
   private var numberOfFoundJobInDB = 0
   //Construction
   super.setPaused(! runAfterStart)
-  addTask(new BuildJobsScrapingTask(System.currentTimeMillis()))
+  addTask(new BuildJobsScrapingTask(System.currentTimeMillis() + buildJobsScrapingTaskTimeout, true))
   addTask(new SearchNewJobs(System.currentTimeMillis()))
   //Functions
   private def saveFoundJobsToDB(fj:List[FoundWork]):(Int,Boolean) = { //Return (N saved, Has already exist in DB)
@@ -103,8 +104,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     //Search works
     val (nf,nc) = searchAndSaveJobs()
     //Add BuildJobsScrapingTask task if added some jobs.
-    if(nc != 0){
-      addTask(new BuildJobsScrapingTask(System.currentTimeMillis()))}
+    addTask(new BuildJobsScrapingTask((System.currentTimeMillis() + waitSaverTimeout), false))
     //Add next task
     val mt = searchNewJobTimeout / 5
     val nt = ((searchNewJobTimeout - mt) * random).toInt + mt
@@ -112,22 +112,28 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:DBProvider) extends
     logger.info("[Worker.SearchNewJobs] End searching of new job, next via " + (nt / 1000) +
       " sec., found " + nf + ", collected " + nc + " jobs.")
     addTask(new SearchNewJobs(nt + System.currentTimeMillis()))}}
-  case class BuildJobsScrapingTask(t:Long) extends TimedTask(t, buildJobsScrapingTaskPriority){def execute() = {
-    //Get jobs
-    val (js, n) = getFoundJobs(numberOfJobToScripInIteration, FoundBy.Search)
-    numberOfFoundJobInDB = n
-    //Add scraping tasks
-    js.foreach(j => {addTask(new JobsScraping(0,j,1))})
-    //Logging
-    logger.info("[Worker.BuildJobsScrapingTask] " + js.size + " new jobs added to scraping.")
-    //Add self to task set
-    addTask(new BuildJobsScrapingTask(System.currentTimeMillis() + buildJobsScrapingTaskTimeout))}}
+  case class BuildJobsScrapingTask(t:Long, isTimed:Boolean) extends TimedTask(t, buildJobsScrapingTaskPriority){def execute() = {
+    //I sever not end work, then wait
+    if(saver.isInProcess){
+      addTask(new BuildJobsScrapingTask((System.currentTimeMillis() + waitSaverTimeout), false))
+      logger.worn("[Worker.BuildJobsScrapingTask] Saver is to slow.")}
+    else{
+      //Get jobs
+      val (js, n) = getFoundJobs(numberOfJobToScripInIteration, FoundBy.Search)
+      numberOfFoundJobInDB = n
+      //Add scraping tasks
+      js.foreach(j => {addTask(new JobsScraping(0,j,1))})
+      //Logging
+      logger.info("[Worker.BuildJobsScrapingTask] " + js.size + " new jobs added to scraping.")}
+      //Add self to task set
+      if(isTimed){
+        addTask(new BuildJobsScrapingTask(System.currentTimeMillis() + buildJobsScrapingTaskTimeout, true))}}}
   case class JobsScraping(t:Long, j:FoundJobsRow, nScrapTry:Int) extends TimedTask(t, jobsFoundBySearchScrapTaskPriority){def execute() = {
     //Start
-    logger.info("[Worker.BuildJobsScrapingTask] Start scrap url: " + j.oUrl)
+    logger.info("[Worker.BuildJobsScrapingTask] Start scrap,\n  url: " + j.oUrl)
     numberOfProcJob += 1
     //Add build jobs if no more in queue
-    if(getNumTaskLike(this) == 0){addTask(new BuildJobsScrapingTask(0))}
+    if(getNumTaskLike(this) == 0){addTask(new BuildJobsScrapingTask((System.currentTimeMillis() + waitSaverTimeout), false))}
     //Get and parse HTML
     val (pj, html) = getAndParseJob(j.oUrl)
     //Date to be use as 'created date'

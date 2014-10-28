@@ -68,7 +68,7 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
     def job_skills = column[String]("job_skills", O.NotNull)
     def n_freelancers = column[Option[Int]]("n_freelancers")
     def * = (id,o_url,found_by,create_date,priority,job_skills,n_freelancers)}
-  private val foundJobsTableTable = TableQuery[FoundJobs]
+  private val foundJobsTable = TableQuery[FoundJobs]
   private type JobRowType = (Option[Long],String,String,Timestamp,Timestamp,Option[Timestamp],
     Option[Timestamp],Option[Timestamp],Option[Timestamp],
     Option[Timestamp],Option[Int],Option[String],Option[String],String,Option[Double],String,
@@ -204,6 +204,119 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
   //Variables
   private var db:Option[DatabaseDef] = None
   private var databaseName:Option[String] = None
+  //Functions
+  private def buildFoundJobsRow(d:FoundJobsRow):FoundJobsRowType = {(
+    None,                          // id
+    d.oUrl,                        // o_url
+    d.foundBy.toString,            // found_by
+    new Timestamp(d.date.getTime), // reate_date
+    d.priority,                    // priority
+    d.skills.mkString(","),        // job_skills
+    d.nFreelancers)}               //n_freelancers
+  private def buildJobsRow(d:JobsRow):JobRowType = { (
+    None,                                                   // id Option[Long]
+    d.foundData.oUrl,                                       // o_url String
+    d.foundData.foundBy.toString,                           // found_by String
+    new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
+    new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
+    d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
+    d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
+    d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
+    d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
+    d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
+    d.foundData.nFreelancers,                               // n_freelancers Option[Int]
+    d.jabData.jobTitle,                                     // job_title Option[String]
+    d.jabData.jobType,                                      // job_type Option[String]
+    d.jabData.jobPaymentType.toString,                      // job_payment_type Option[String]
+    d.jabData.jobPrice,                                     // job_price Option[Double]
+    d.jabData.jobEmployment.toString,                       // job_employment Option[String]
+    d.jabData.jobLength,                                    // job_length Option[String]
+    d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
+    d.foundData.skills.mkString(","),                       // job_skills Option[String]
+    d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
+    d.jabData.jobDescription)}                              // job_description Option[String]
+  private def buildJobsChangesRow(d:JobsChangesRow, jid:Long):JobsChangesRowType = {(
+    None, // id
+    jid, // job_id
+    new Timestamp(d.changeData.createDate.getTime),             // create_date
+    d.changeData.jobAvailable.toString,                         // available
+    d.changeData.lastViewed.map(t => new Timestamp(t.getTime)), // last_viewed
+    d.changeData.nApplicants,                                   // n_applicants
+    d.changeData.applicantsAvg,                                 // applicants_avg
+    d.changeData.rateMin,                                       // rate_min
+    d.changeData.rateAvg,                                       // rate_avg
+    d.changeData.rateMax,                                       // rate_max
+    d.changeData.nInterviewing,                                 // n_interviewing
+    d.changeData.interviewingAvg,                               // interviewing_avg
+    d.changeData.nHires)}                                       // n_hires
+  private def buildClientsChangesRow(d:ClientsChangesRow, jid:Long):ClientsChangesRowType = {
+    //Prepare
+    val ib = d.logo.map(i => {
+      val ib = new ByteArrayOutputStream()
+      ImageIO.write(i, "jpg", ib )
+      ib.toByteArray})
+    //Build
+    ( None,                                           // id
+      jid,                                        // job_id
+      new Timestamp(d.changeData.createDate.getTime), // create_date
+      d.changeData.name,                              // client_name
+      ib,                                             // client_logo
+      d.changeData.url,                               // client_url
+      d.changeData.description,                       // client_description
+      d.changeData.paymentMethod.toString,            // client_payment_method
+      d.changeData.rating,                            // client_rating
+      d.changeData.nReviews,                          // client_n_reviews
+      d.changeData.location,                          // client_location
+      d.changeData.time,                              // client_time
+      d.changeData.nJobs,                             // client_n_jobs
+      d.changeData.hireRate,                          // client_hire_rate
+      d.changeData.nOpenJobs,                         // client_n_open_jobs
+      d.changeData.totalSpend,                        // client_total_spend
+      d.changeData.nHires,                            // client_n_hires
+      d.changeData.nActive,                           // client_n_active
+      d.changeData.avgRate,                           // client_avg_rate
+      d.changeData.hours,                             // client_hours
+      d.changeData.registrationDate.map(t => new Timestamp(t.getTime)))} // client_registration_date
+  private def buildJobsApplicantsRows(d:JobsApplicantsRow, jid:Long):JobsApplicantsRowType = (
+    None,                                                      // id
+    jid,                                                       // job_id
+    new Timestamp(d.applicantData.createDate.getTime),         // create_date
+    d.applicantData.upDate.map(t => new Timestamp(t.getTime)), // up_date
+    d.applicantData.name,                                      // name
+    d.applicantData.initiatedBy.toString,                      // initiated_by
+    d.applicantData.url,                                       // freelancer_url
+    d.freelancerId)                                            // freelancer_id
+  private def buildJobsHiredRows(d:JobsHiredRow, jid:Long):JobsHiredRowType = (
+    None,                                          // id
+    jid,                                           // job_id
+    new Timestamp(d.hiredData.createDate.getTime), // create_date
+    d.hiredData.name,                              // name
+    d.hiredData.freelancerUrl,                     // freelancer_url
+    d.freelancerId)                                // freelancer_id
+  private def buildClientsWorksHistoryRow(d:ClientsWorksHistoryRow, jid:Long):ClientsWorksHistoryRowType = (
+    None,                                                    // id
+    jid,                                                     // job_id
+    new Timestamp(d.workData.createDate.getTime),            // create_date
+    d.workData.oUrl,                                         // o_url
+    d.workData.title,                                        // title
+    d.workData.inProgress.toString,                          // in_progress
+    d.workData.startDate.map(t => new Timestamp(t.getTime)), // start_date
+    d.workData.endDate.map(t => new Timestamp(t.getTime)),   // end_date
+    d.workData.paymentType.toString,                         // payment_type
+    d.workData.billed,                                       // billed
+    d.workData.hours,                                        // hours
+    d.workData.rate,                                         // rate
+    d.workData.freelancerFeedbackText,                       // freelancer_feedback_text
+    d.workData.freelancerFeedback,                           // freelancer_feedback
+    d.workData.freelancerName,                               // freelancer_name
+    d.workData.freelancerUrl,                                // freelancer_url
+    d.freelancerId,                                          // freelancer_id
+    d.workData.clientFeedback)                               // client_feedback
+  private def buildFoundFreelancerRow(d:FoundFreelancerRow):FoundFreelancersRowType = (
+    None,                          // id
+    d.oUrl,                        // o_url
+    new Timestamp(d.date.getTime), // create_date
+    d.priority)                    // priority
   //Service methods
   def init(url:String, user:String, password:String, dbName:String) = {
     val b = Database.forURL(url + "/" + dbName, driver = "scala.slick.driver.MySQLDriver", user = user, password = password)
@@ -229,75 +342,23 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
   def addFoundJobsRows(ds:List[FoundJobsRow]):Int = {  //Return number of insert(not insert if already exist in jobTable or in foundJobsTableTable)
     if(db.isEmpty){throw new Exception("[DBProvider.saveLogMessage] No created DB.")}
     db.get.withSession(implicit session => {
+      //Filtering of exist
+      val us = ds.map(_.oUrl)
+      val ejs = (jobTable.filter(_.o_url inSetBind us).map(_.o_url) ++ foundJobsTable.filter(_.o_url inSetBind us).map(_.o_url)).list.toSet
+      val fds = ds.filter(u => {! ejs.contains(u.oUrl)})
       //Prepare
-
-
-      val rs = ds.map(d => (
-        None,                          // id
-        d.oUrl,                        // o_url
-        d.foundBy.toString,            // found_by
-        new Timestamp(d.date.getTime), // reate_date
-        d.priority,                    // priority
-        d.skills.mkString(","),        // job_skills
-        d.nFreelancers))
+      val rs = fds.map(d => buildFoundJobsRow(d))               //n_freelancers
       //Insert
-//      foundJobsTableTable ++= rs
-
-
-       //Можно выбрать за два обращения
-
-
-
-
-      //Должен вставлять тлько если нет в таблицах jobTable or in foundJobsTableTable
-//      //Должна за одну операцию проверять и вставлять.
-//
-//      //Check if job already in foundJobsTableTable or jobTable
-//      val ni = {foundJobsTableTable.filter(_.o_url === d.oUrl).firstOption.isEmpty &&
-//        jobTable.filter(_.o_url === d.oUrl).firstOption.isEmpty}
-//      //If not then insert
-//      if(ni){
-//        foundJobsTableTable += (
-//          None,                          // id
-//          d.oUrl,                        // o_url
-//          d.foundBy.toString,            // found_by
-//          new Timestamp(d.date.getTime), // reate_date
-//          d.priority,                    // priority
-//          d.skills.mkString(","),        // job_skills
-//          d.nFreelancers)}
-//      ni
-
-    ds.size
-    })}             //n_freelancers
+      foundJobsTable ++= rs
+      //Return  number of insert
+      fds.size})}
   def addJobsRow(d:JobsRow):Option[Long] = { //Return ID of added job row, on None if job with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsRow] No created DB.")}
     db.get.withSession(implicit session => {
       //Check if job already in foundJobsTableTable or jobTable
       val ni = jobTable.filter(_.o_url === d.foundData.oUrl).firstOption.isEmpty
       //If not save row
-      if(ni){
-        jobTable += (
-          None,                                                   // id Option[Long]
-          d.foundData.oUrl,                                       // o_url String
-          d.foundData.foundBy.toString,                           // found_by String
-          new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
-          new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
-          d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
-          d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
-          d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
-          d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
-          d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
-          d.foundData.nFreelancers,                               // n_freelancers Option[Int]
-          d.jabData.jobTitle,                                     // job_title Option[String]
-          d.jabData.jobType,                                      // job_type Option[String]
-          d.jabData.jobPaymentType.toString,                      // job_payment_type Option[String]
-          d.jabData.jobPrice,                                     // job_price Option[Double]
-          d.jabData.jobEmployment.toString,                       // job_employment Option[String]
-          d.jabData.jobLength,                                    // job_length Option[String]
-          d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
-          d.foundData.skills.mkString(","),                       // job_skills Option[String]
-          d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
-          d.jabData.jobDescription)}                              // job_description Option[String]
+      if(ni){jobTable += buildJobsRow(d)}
       //Get ID
       if(ni){
         Some(jobTable.filter(_.o_url === d.foundData.oUrl).map(_.id).first.get)}
@@ -305,72 +366,16 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
         None}})}
   def addJobsChangesRow(d:JobsChangesRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsChangesRow] No created DB.")}
-    db.get.withSession(implicit session => {
-      jobsChangesTable += (
-        None, // id
-        d.jobId, // job_id
-        new Timestamp(d.changeData.createDate.getTime),             // create_date
-        d.changeData.jobAvailable.toString,                         // available
-        d.changeData.lastViewed.map(t => new Timestamp(t.getTime)), // last_viewed
-        d.changeData.nApplicants,                                   // n_applicants
-        d.changeData.applicantsAvg,                                 // applicants_avg
-        d.changeData.rateMin,                                       // rate_min
-        d.changeData.rateAvg,                                       // rate_avg
-        d.changeData.rateMax,                                       // rate_max
-        d.changeData.nInterviewing,                                 // n_interviewing
-        d.changeData.interviewingAvg,                               // interviewing_avg
-        d.changeData.nHires)})}                                     // n_hires
+    db.get.withSession(implicit session => {jobsChangesTable += buildJobsChangesRow(d, d.jobId)})}
   def addClientsChangesRow(d:ClientsChangesRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addClientsChangesRow] No created DB.")}
-    db.get.withSession(implicit session => {
-      val ib = d.logo.map(i => {
-        val ib = new ByteArrayOutputStream()
-        ImageIO.write(i, "jpg", ib )
-        ib.toByteArray})
-      clientsChangesTable += (
-        None,                                           // id
-        d.jobId,                                        // job_id
-        new Timestamp(d.changeData.createDate.getTime), // create_date
-        d.changeData.name,                              // client_name
-        ib,                                             // client_logo
-        d.changeData.url,                               // client_url
-        d.changeData.description,                       // client_description
-        d.changeData.paymentMethod.toString,            // client_payment_method
-        d.changeData.rating,                            // client_rating
-        d.changeData.nReviews,                          // client_n_reviews
-        d.changeData.location,                          // client_location
-        d.changeData.time,                              // client_time
-        d.changeData.nJobs,                             // client_n_jobs
-        d.changeData.hireRate,                          // client_hire_rate
-        d.changeData.nOpenJobs,                         // client_n_open_jobs
-        d.changeData.totalSpend,                        // client_total_spend
-        d.changeData.nHires,                            // client_n_hires
-        d.changeData.nActive,                           // client_n_active
-        d.changeData.avgRate,                           // client_avg_rate
-        d.changeData.hours,                             // client_hours
-        d.changeData.registrationDate.map(t => new Timestamp(t.getTime)))})} // client_registration_date
+    db.get.withSession(implicit session => {clientsChangesTable += buildClientsChangesRow(d, d.jobId)})}
   def addJobsApplicantsRow(d:JobsApplicantsRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsApplicantsRow] No created DB.")}
-    db.get.withSession(implicit session => {
-      jobsApplicantsTable += (
-        None,                                                      // id
-        d.jobId,                                                   // job_id
-        new Timestamp(d.applicantData.createDate.getTime),         // create_date
-        d.applicantData.upDate.map(t => new Timestamp(t.getTime)), // up_date
-        d.applicantData.name,                                      // name
-        d.applicantData.initiatedBy.toString,                      // initiated_by
-        d.applicantData.url,                                       // freelancer_url
-        d.freelancerId)})}                                         // freelancer_id
+    db.get.withSession(implicit session => {jobsApplicantsTable += buildJobsApplicantsRows(d, d.jobId)})}
   def addJobsHiredRow(d:JobsHiredRow) = {
     if(db.isEmpty){throw new Exception("[DBProvider.addJobsHiredRow] No created DB.")}
-    db.get.withSession(implicit session => {
-      jobsHiredTable += (
-        None,                                          // id
-        d.jobId,                                       // job_id
-        new Timestamp(d.hiredData.createDate.getTime), // create_date
-        d.hiredData.name,                              // name
-        d.hiredData.freelancerUrl,                     // freelancer_url
-        d.freelancerId)})}                             // freelancer_id
+    db.get.withSession(implicit session => {jobsHiredTable += buildJobsHiredRows(d, d.jobId)})}
   def addClientsWorksHistoryRow(d:ClientsWorksHistoryRow):Boolean = { // Return true if row been insert, and false if row with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addClientsWorksHistoryRow] No created DB.")}
     db.get.withSession(implicit session => {
@@ -379,26 +384,7 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
         case Some(url) => clientsWorksHistoryTable.filter(r => r.o_url.isDefined && r.o_url === url).firstOption.isEmpty
         case None => true}  //Add anyway if no URL
       //If not then insert
-      if(ni){
-        clientsWorksHistoryTable += (
-          None,                                                    // id
-          d.jobId,                                                 // job_id
-          new Timestamp(d.workData.createDate.getTime),            // create_date
-          d.workData.oUrl,                                         // o_url
-          d.workData.title,                                        // title
-          d.workData.inProgress.toString,                          // in_progress
-          d.workData.startDate.map(t => new Timestamp(t.getTime)), // start_date
-          d.workData.endDate.map(t => new Timestamp(t.getTime)),   // end_date
-          d.workData.paymentType.toString,                         // payment_type
-          d.workData.billed,                                       // billed
-          d.workData.hours,                                        // hours
-          d.workData.rate,                                         // rate
-          d.workData.freelancerFeedbackText,                       // freelancer_feedback_text
-          d.workData.freelancerFeedback,                           // freelancer_feedback
-          d.workData.freelancerName,                               // freelancer_name
-          d.workData.freelancerUrl,                                // freelancer_url
-          d.freelancerId,                                          // freelancer_id
-          d.workData.clientFeedback)}                              // client_feedback
+      if(ni){clientsWorksHistoryTable += buildClientsWorksHistoryRow(d, d.jobId)}
     ni})}
   def addFoundFreelancerRow(d:FoundFreelancerRow):Boolean = {    // Return true if row been insert, and false if row with given URL already exist
     if(db.isEmpty){throw new Exception("[DBProvider.addFoundFreelancerRow] No created DB.")}
@@ -406,12 +392,7 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
       //Check if job already exist
       val ni = foundFreelancersTable.filter(_.o_url === d.oUrl).firstOption.isEmpty
       //If not then insert
-      if(ni){
-        foundFreelancersTable += (
-          None,                          // id
-          d.oUrl,                        // o_url
-          new Timestamp(d.date.getTime), // create_date
-          d.priority)}                   // priority
+      if(ni){foundFreelancersTable += buildFoundFreelancerRow(d)}
       ni})}
   def getSetOfLastJobsURLoFundBy(size:Int, fb:FoundBy):Set[String] = {
     if(db.isEmpty || databaseName.isEmpty){throw new Exception("[DBProvider.getSetOfLastJobsURL] No created DB.")}
@@ -422,7 +403,7 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
       val mif = nln(cq("odesk_found_jobs").first)
       val mij = nln(cq("odesk_jobs").first)
       //Get last oURLs
-      val dqf = foundJobsTableTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
+      val dqf = foundJobsTable.filter(_.found_by ===  fb.toString).filter(_.id >= mif.toLong).map(_.o_url).list
       val dqj = jobTable.filter(_.found_by === fb.toString).filter(_.id >= mij.toLong ).map(_.o_url).list
       //Return set
       dqf.toSet ++ dqj.toSet})
@@ -431,8 +412,8 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
     if(db.isEmpty){throw new Exception("[DBProvider.getNOfOldFoundJobs] No created DB.")}
     db.get.withSession(implicit session => {
       //Gen older rows
-      val nr = foundJobsTableTable.length.run
-      val rs = foundJobsTableTable.filter(_.found_by === fb.toString).sortBy(_.priority).take(n).list.map{
+      val nr = foundJobsTable.length.run
+      val rs = foundJobsTable.filter(_.found_by === fb.toString).sortBy(_.priority).take(n).list.map{
         case(id:Option[Long], url:String, fb:String, d:Timestamp, p:Int, sks:String, nf:Option[Int]) => {
           FoundJobsRow(
             id = id.get,
@@ -464,7 +445,7 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
   def delFoundJobRow(id:Long) = {
     if(db.isEmpty){throw new Exception("[DBProvider.delFoundJobRow] No created DB.")}
     db.get.withSession(implicit session => {
-      val q = foundJobsTableTable.filter(_.id === id)
+      val q = foundJobsTable.filter(_.id === id)
       q.delete})}
   def loadParameters():ParametersMap = {
     if(db.isEmpty){throw new Exception("[DBProvider.loadParameters] No created DB.")}
@@ -486,33 +467,110 @@ class DBProvider(programParamTableName:String) extends LoggerDBProvider {
       excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value).firstOption match {
         case Some(v) => Update.formString(v) == Update.NeedUpdate
         case None => false}})}
-  def addAllJobDataAndDelFromFound(d:AllJobData):Option[(Int,Int,Int,Int,Int)] = { //If added return N added: Some(applicants,hired,clients works,found freelancer,found jobs)
+  def addAllJobDataAndDelFromFound(d:AllJobData):(Int,Int,Int,Int,Int) = { //If added return N added: applicants,hired,clients works,found freelancer,found jobs
+    if(db.isEmpty){throw new Exception("[DBProvider.addAllJobDataAndDelFromFound] No created DB.")}
+    db.get.withTransaction(implicit session => {
+      //Get existence jobs
+      val jus = (d.foundJobsRows.map(_.oUrl) ++ d.clientsWorksHistoryRows.flatMap(_.workData.oUrl)).toSet
+      val ejs = (jobTable.filter(_.o_url inSetBind jus).map(_.o_url) ++ foundJobsTable.filter(_.o_url inSetBind jus).map(_.o_url)).list.toSet
+      //Get existence freelancers(if non empty)
+      val fus = d.foundFreelancerRows.map(_.oUrl).toSet
+      val efs = foundFreelancersTable.filter(_.o_url inSetBind fus).map(_.o_url).list.toSet
+      //Insert job
+      jobTable += buildJobsRow(d.jobsRow)
+      val id = StaticQuery.queryNA[Long]("SELECT LAST_INSERT_ID();").first
+      //Isert additional data
+      jobsChangesTable += buildJobsChangesRow(d.jobsChangesRow, id)
+      clientsChangesTable += buildClientsChangesRow(d.clientsChangesRow, id)
+      //Insert applicants and hired
+      jobsApplicantsTable ++= d.jobsApplicantsRows.map(r => buildJobsApplicantsRows(r, id))
+      jobsHiredTable ++= d.jobsHiredRows.map(r => buildJobsHiredRows(r, id))
+      //Insert clients works history and found jobs
+      val wrs = d.clientsWorksHistoryRows.filter(r => {r.workData.oUrl.isEmpty || (! ejs.contains(r.workData.oUrl.get))})
+      clientsWorksHistoryTable ++= wrs.map(r => buildClientsWorksHistoryRow(r, id))
+      val jrs = d.foundJobsRows.filter(r => {! ejs.contains(r.oUrl)})
+      foundJobsTable ++= jrs.map(r => buildFoundJobsRow(r))
+      //Insert found freelancer
+      val frs = d.foundFreelancerRows.filter(r => {! efs.contains(r.oUrl)})
+      foundFreelancersTable ++= frs.map(r => buildFoundFreelancerRow(r))
+      //Delete job from found
+      foundJobsTable.filter(_.o_url === d.jobsRow.foundData.oUrl).delete
+      //Calc and return result
+      (d.jobsApplicantsRows.size, d.jobsHiredRows.size, wrs.size, frs.size, jrs.size)})}
 
-//  }
-//    d match{case ((jcr,ccr,ars,jhr,whr,ffr,fjr)) => {
-//
-//
-//    }
-//
-//      //Save
-//      try{
-//        db.addJobsChangesRow(jcr)
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added job changes, job id = " + jcr.jobId)
-//        db.addClientsChangesRow(ccr)
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added client changes, job id = " + jcr.jobId)
-//        ars.foreach(r => db.addJobsApplicantsRow(r))
-//
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + ars.size + " applicants, job id = " + jcr.jobId)
-//        jhr.foreach(r => db.addJobsHiredRow(r))
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + jhr.size + " jobs hired, job id = " + jcr.jobId)
-//        val ncw = whr.map(r => if(db.addClientsWorksHistoryRow(r)) 1 else 0).sum
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + ncw + " (of "  + whr.size + ") of clients works history, job id = " + jcr.jobId)
-//        val nfi = ffr.toList.map(r => if(db.addFoundFreelancerRow(r)) 1 else 0).sum
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + nfi + " (of " + ffr.size + ") of found freelancer, job id = " + jcr.jobId)
-//        val nji = fjr.toList.map(r => if(db.addFoundJobsRows(r)) 1 else 0).sum
-//        logger.info("[Saver.SaveJobAdditionalDataTask] Added " + nji + " (of " + fjr.size + ") of found jobs, job id = " + jcr.jobId)}
-    None
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

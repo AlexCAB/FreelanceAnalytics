@@ -34,6 +34,14 @@ class DBProviderTest extends WordSpecLike with Matchers {
     priority = 5,
     skills = List("A","B","C"),
     nFreelancers = Some(12))
+  val foundJobsRow3 = FoundJobsRow(
+    id = 0,
+    oUrl = "http//www.3",
+    foundBy = FoundBy.Search,
+    date = new Date(System.currentTimeMillis()),
+    priority = 5,
+    skills = List("A","B","C"),
+    nFreelancers = Some(12))
   def jobsRow(fjr:FoundJobsRow):JobsRow = JobsRow(
     id = 0,
     foundData = fjr,
@@ -135,6 +143,15 @@ class DBProviderTest extends WordSpecLike with Matchers {
     oUrl = "FoundFreelancerRow",
     date = new Date(System.currentTimeMillis()),
     priority = 10)
+  def allData(j:FoundJobsRow) = AllJobData(
+    jobsRow = jobsRow(j),
+    jobsChangesRow = jobsChangesRow,
+    clientsChangesRow = clientsChangesRow,
+    jobsApplicantsRows = List(jobsApplicantsRow),
+    jobsHiredRows = List(jobsHiredRow),
+    clientsWorksHistoryRows = List(clientsWorksHistoryRow(Some("some_url"))),
+    foundFreelancerRows = List(foundFreelancerRow),
+    foundJobsRows = List(j))
   //Provider
   val dbProvider = new DBProvider("odesk_job_excavators_param")
   //Tests
@@ -148,7 +165,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     dbProvider.addParsingErrorRow(parseError)}
   "add to odesk_found_jobs table" in {
     assert(dbProvider.addFoundJobsRows(List(foundJobsRow1)) == 1)
-    assert(dbProvider.addFoundJobsRows(List(foundJobsRow2,foundJobsRow1)) == 1)} //Non add with exist URL
+    assert(dbProvider.addFoundJobsRows(List(foundJobsRow2, foundJobsRow1, foundJobsRow3)) == 2)} //Non add with exist URL
   "add to odesk_jobs table" in {
     assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) != None)
     assert(dbProvider.addJobsRow(jobsRow(foundJobsRow1)) == None)}
@@ -197,6 +214,10 @@ class DBProviderTest extends WordSpecLike with Matchers {
     assert(tr.getOrElse("logoImageCoordinates", List(0)) == List(7,7,108,108))
     assert(tr.getOrElse("consoleLoggingLevel", List("")) == List("info","debug","worn","error"))
     assert(dbProvider.checkParametersUpdateFlag == false)}
+  "add all data" in{
+    val (na,nh,ncw,nff,nfj) = dbProvider.addAllJobDataAndDelFromFound(allData(foundJobsRow2))
+    println(na,nh,ncw,nff,nfj)
+    assert(Tuple5(na,nh,ncw,nff,nfj) == Tuple5(1,1,0,1,0))}
   "stop" in {
     dbProvider.halt()}}
 

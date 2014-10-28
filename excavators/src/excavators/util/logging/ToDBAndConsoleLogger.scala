@@ -29,7 +29,8 @@ class ToDBAndConsoleLogger(name:String) extends Logger{
       case _ => println(">> " + sd + ": " + msg)}
     db match{
       case Some(b) if (dbLoggingLevel.contains(tn)) => try{
-        b.addLogMessageRow(d, tn, name, msg)}
+        val pm = msg.filter(_ != '\n')
+        b.addLogMessageRow(d, tn, name, pm)}
         catch{case e:Exception => {
           val t = "[SimpleLogger] Exception on save to DB: " + e
           console match{

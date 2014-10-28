@@ -108,7 +108,6 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
           nFreelancers = None)})}
       //Return
     AllJobData(
-      foundJobsRow = j,
       jobsRow = jr,
       jobsChangesRow = jcr,
       clientsChangesRow = ccr,
@@ -121,32 +120,38 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
   case class SaveJobDataTask(j:FoundJobsRow, pj:ParsedJob, pq:Double, cd:Date, logo:Option[BufferedImage]) extends Task(1) {
     def execute() = {
       //Start
-      val ct = System.currentTimeMillis()
+      val st = System.currentTimeMillis()
       //Preparing data to save
       val d = prepareJobDataToSave(pj, cd, j, logo)
       //Save data
       val r = try{
-        db.addAllJobDataAndDelFromFound(d)} //Some(applicants,hired,clients works,found freelancer,found jobs)
+        Some(db.addAllJobDataAndDelFromFound(d))} //Some(applicants,hired,clients works,found freelancer,found jobs)
       catch{case e:Exception =>{
         logger.error("[Saver.SaveJobDataTask] Exception on save job data: " + e)
         None}}
       //Logging
       r match{
         case Some((na,nh,ncw,nff,nfj)) => {
-          logger.info("[Saver.SaveJobDataTask] Job added to DB, url: " + j.oUrl + ", with: "
+          logger.info("[Saver.SaveJobDataTask] Job added to DB,\n   url: " + j.oUrl + ",\n   with: "
             + na + "(of " + d.jobsApplicantsRows.size + ") applicants, "
             + nh + "(of " + d.jobsHiredRows.size + ") hired, "
             + ncw + "(of " + d.clientsWorksHistoryRows.size + ") clients works, "
             + nff + "(of " + d.foundFreelancerRows.size + ") found freelancer, "
             + nfj + "(of " + d.foundJobsRows.size + ") found jobs.")}
-        case None => logger.worn("[Saver.SaveJobDataTask] Job not added to DB, url: " + j.oUrl)}       //Save time
-      saveTime = System.currentTimeMillis() - ct}}
+        case None => logger.worn("[Saver.SaveJobDataTask] Job not added to DB, url: " + j.oUrl)}
+      //End
+      saveTime = System.currentTimeMillis() - st}}
   case class DelFoundJobTas(j:FoundJobsRow) extends Task(2) {
     def execute() = {
+      //Start
+      val st = System.currentTimeMillis()
+      //Del
       try{
         db.delFoundJobRow(j.id)}
       catch{case e:Exception => {
-        logger.error("[Saver.DelFoundJobTas] Exception on dell found job: " + e + ", url=" + j.oUrl)}}}}
+        logger.error("[Saver.DelFoundJobTas] Exception on dell found job: " + e + ", url=" + j.oUrl)}}
+      //End
+      saveTime = System.currentTimeMillis() - st}}
   //Methods
   def setParameters(p:ParametersMap) = {
     foundFreelancersPriority = p.getOrElse("foundFreelancersPriority", {
@@ -167,6 +172,7 @@ class Saver(logger:Logger, db:DBProvider) extends TaskExecutor{
   def addDelFoundJobTask(j:FoundJobsRow) = {
     checkOverload()
     addTask(new DelFoundJobTas(j))}
+  def isInProcess:Boolean = (queueSize != 0)
   def getMetrics:(Int,Long) = (queueSize, saveTime)} //Return: (queue size, save time)
 
 
