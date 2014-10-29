@@ -1,1 +1,0 @@
-java -cp lib\*;out\production\excavators excavators.odesk.ex_jods.ODeskJobsExcavator
