@@ -21,7 +21,7 @@ class TaskExecutorTest extends WordSpecLike with Matchers {
     Thread.sleep(100)
     assert(fl == true)
     ex.stop()}
-  "should execute task by priority" in {
+  "should execute task by priorityColumn" in {
     val ex = new TaskExecutor{}
     var fl = false
     val t1 = new Task(1){def execute() = {fl = true}}

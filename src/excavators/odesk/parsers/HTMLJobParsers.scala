@@ -6,8 +6,7 @@ import org.jsoup.select.Elements
 import java.util.Locale
 import java.util.Date
 import java.text.SimpleDateFormat
-import scala.collection.mutable.{Set => MutSet}
-import excavators.odesk.structures._
+import util.structures._
 
 /**
  * Set of HTML parsers for oDesk site

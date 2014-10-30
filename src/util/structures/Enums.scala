@@ -1,4 +1,4 @@
-package excavators.odesk.structures
+package util.structures
 
 /**
  * Set of enums

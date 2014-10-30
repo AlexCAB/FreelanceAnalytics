@@ -26,7 +26,7 @@ class TimedTaskExecutorTest extends WordSpecLike with Matchers {
     assert(fl == false)
     Thread.sleep(1100)
     assert(fl == true)}
-  "should execute task by priority" in {
+  "should execute task by priorityColumn" in {
     var fl = false
     val t = System.currentTimeMillis() + 100
     val t1 = new TimedTask(t, 1){def execute() = {fl = true}}

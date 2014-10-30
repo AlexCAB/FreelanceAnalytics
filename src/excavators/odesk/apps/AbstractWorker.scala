@@ -6,10 +6,10 @@ import java.util.Date
 import javax.imageio.ImageIO
 import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.parsers.HTMLJobParsers
-import excavators.odesk.structures.{FoundBy, FoundJobsRow, ParsedJob, ParsingErrorRow}
 import excavators.odesk.ui.{Browser, ManagedWorker}
 import excavators.util.logging.Logger
 import excavators.util.tasks.TimedTaskExecutor
+import util.structures.{ParsedJob, FoundJobsRow, ParsingErrorRow, FoundBy}
 
 /**
  * Base class to implement job excavator workers

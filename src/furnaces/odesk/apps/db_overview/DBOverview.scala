@@ -1,8 +1,10 @@
 package furnaces.odesk.apps.db_overview
 
 import java.text.SimpleDateFormat
+import java.util.Date
 
 import furnaces.odesk.db.ODeskFurnacesDBProvider
+import util.structures.FoundBy
 
 /**
  * Tool for overview of result of excavator works
@@ -10,7 +12,7 @@ import furnaces.odesk.db.ODeskFurnacesDBProvider
  */
 object DBOverview {def main(args:Array[String]) = {
   //Helpers
-  val dateFormat = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss")
+  val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   implicit class IntForm(i:Int){
     def toPercentOfAsString(n:Int):String ={
       "(" + ((i.toDouble / n) * 100).toString.toSize(7).dropRightSpaces + "%)"}}
@@ -48,7 +50,7 @@ object DBOverview {def main(args:Array[String]) = {
   db.init(hostName, userName, passwordName, dbName)
   //Table 'odesk_job_excavators_param'
   println("################ TABLE 'odesk_job_excavators_param' #################")
-  val numberOfParameters = db.countRows("odesk_job_excavators_param")
+  val numberOfParameters = db.countRowsBethInExcavatorsParamTable(None,None)
   val activeParameters = db.loadExcavatorsActiveParameters
   println("Total number of params = " + numberOfParameters + ", number of active = " + activeParameters.size)
   println("Active parameters:")
@@ -56,75 +58,79 @@ object DBOverview {def main(args:Array[String]) = {
   println("\n")
   //Table 'odesk_excavators_log'
   println("################ TABLE 'odesk_excavators_log' #######################")
-
-  //Не забыть про даты
-
-  val massages = List(("axc", "worn"),("axc2", "error"))                                                                 //<===
-  println("Total number of messages = " + massages.size)
+  val counts = db.countExcavatorsLogRows(startDate, endDate)
+  println("Total number of messages = " + db.countRowsBethInExcavatorsLogTable(startDate, endDate))
   println("Number of messages by component:")
-  massages.map(_._1).toSet[String].foreach(kn => {
-    val ni = massages.count(m => {m._1 == kn && m._2 == "info"})
-    val nd = massages.count(m => {m._1 == kn && m._2 == "debug"})
-    val nw = massages.count(m => {m._1 == kn && m._2 == "worn"})
-    val ne = massages.count(m => {m._1 == kn && m._2 == "error"})
-    println(" Component '" + kn + "': infos = " + ni + ", debugs = " + nd + ", worns = " + nw + ", errors = " + ne)})
+  counts.foreach{case (kn, ns) => {
+    println(" Component '" + kn + "': infos = " + ns("info") + ", debugs = " + ns("debug") +
+      ", worns = " + ns("worn") + ", errors = " + ns("error"))}}
   println("\n")
   //Table 'odesk_excavators_error_pages'
   println("################ TABLE 'odesk_excavators_error_pages' ###############")
-  val numberOfErrorPage = 10                                                                                             //<===
-  println("Total number of error parsed page = " + numberOfErrorPage)
+  println("Total number of error parsed page = " + db.countRowsBethInParsingErrorsTable(startDate, endDate))
   println("\n")
   //Table 'odesk_found_jobs'
   println("################ TABLE 'odesk_found_jobs' ###########################")
-  val (totalNumFoundJobs,bySearchNumFoundJobs,byAnalyseNumFoundJobs) = (1,2,3)                                           //<===
-  println("Total number of found job = " + totalNumFoundJobs)
-  println("Number found by search = " + bySearchNumFoundJobs + ", by analyse = " + byAnalyseNumFoundJobs)
+  println("Total number of found job = " + db.countRowsBethInFoundJobsTable(startDate, endDate))
+  val foundByCount = db.countFoundByJobsBeth(startDate, endDate)
+  println("Number job found by search = " + foundByCount(FoundBy.Search) +
+    ", by analyse = " + foundByCount(FoundBy.Analyse) +
+    ", by unknown = " + foundByCount(FoundBy.Unknown))
+  val byPriorityCount = db.countFoundByToScrapPriority(None, None)
+  println("Number job found group by priorityColumn:")
+  byPriorityCount.map{case(k,v) => (k.toString, v.toString)}.toList.formParam.foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_jobs'
   println("################ TABLE 'odesk_jobs' #################################")
-  val (numberOfJobs, numberOfClose, jobColumnOccupancy) = (10, 8, List(("col1",5),("col2",2)))                           //<===
+  val (numberOfJobs, numberOfClose) = db.countNumberOfAllAndClosedJobsBeth(startDate, endDate)
   println("Total number of job = " + numberOfJobs)
   println("Number of closed job = " + numberOfClose + " " + numberOfClose.toPercentOfAsString(numberOfJobs))
+  val jobColumnsOccupancy = db.jobColumnsOccupancy(startDate, endDate)
   println("Column occupancy:")
-  jobColumnOccupancy.formParamWithPercentOf(numberOfJobs).foreach(e => println("  " + e))
+  jobColumnsOccupancy.formParamWithPercentOf(numberOfJobs).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_jobs_changes'
   println("################ TABLE 'odesk_jobs_changes' #########################")
-  val (numberOfJobChanges, jobChangesColumnOccupancy) = (10, List(("col1",5),("col2",2)))                                //<===
+  val numberOfJobChanges = db.countRowsBethInJobsChangesTable(startDate, endDate)
+  val jobChangesColumnOccupancy = db.jobChangesColumnsOccupancy(startDate, endDate)
   println("Total number of job change row = " + numberOfJobChanges)
   println("Column occupancy:")
   jobChangesColumnOccupancy.formParamWithPercentOf(numberOfJobChanges).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_clients_changes'
   println("################ TABLE 'odesk_clients_changes' ######################")
-  val (numberOfClientsChanges, clientsChangesColumnOccupancy) = (10, List(("col1",5),("col2",2)))                        //<===
+  val numberOfClientsChanges = db.countRowsBethInClientChangesTable(startDate, endDate)
+  val clientsChangesColumnOccupancy = db.clientChangesColumnsOccupancy(startDate, endDate)
   println("Total number of client changes row = " + numberOfClientsChanges)
   println("Column occupancy:")
   clientsChangesColumnOccupancy.formParamWithPercentOf(numberOfClientsChanges).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_jobs_applicants'
   println("################ TABLE 'odesk_jobs_applicants' ######################")
-  val (numberOfApplicants, applicantsColumnOccupancy) = (10, List(("col1",5),("col2",2)))                                //<===
+  val numberOfApplicants = db.countRowsBethInJobsApplicantsTable(startDate, endDate)
+  val applicantsColumnOccupancy = db.applicantsColumnsOccupancy(startDate, endDate)
   println("Total number of applicants row = " + numberOfApplicants)
   println("Column occupancy:")
   applicantsColumnOccupancy.formParamWithPercentOf(numberOfApplicants).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_jobs_hired'
   println("################ TABLE 'odesk_jobs_hired' ###########################")
-  val (numberOfHired, hiredColumnOccupancy) = (10, List(("col1",5),("col2",2)))                                          //<===
+  val numberOfHired = db.countRowsBethInJobsHiredTable(startDate, endDate)
+  val hiredColumnOccupancy = db.hiredColumnsOccupancy(startDate, endDate)
   println("Total number of hired row = " + numberOfHired)
   println("Column occupancy:")
   hiredColumnOccupancy.formParamWithPercentOf(numberOfHired).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_clients_works_history'
   println("################ TABLE 'odesk_clients_works_history' ################")
-  val (numberOfWorksHistory, worksHistoryColumnOccupancy) = (10, List(("col1",5),("col2",2)))                            //<===
+  val numberOfWorksHistory = db.countRowsBethInClientsWorksHistoryTable(startDate, endDate)
+  val worksHistoryColumnOccupancy = db.worksHistoryColumnsOccupancy(startDate, endDate)
   println("Total number of works history row = " + numberOfWorksHistory)
   println("Column occupancy:")
   worksHistoryColumnOccupancy.formParamWithPercentOf(numberOfWorksHistory).foreach(e => println("  " + e))
   println("\n")
   //Table 'odesk_found_freelancers'
   println("################ TABLE 'odesk_found_freelancers' ####################")
-  val totalNumFoundFreelancers = 10                                                                                      //<===
+  val totalNumFoundFreelancers =  db.countRowsBethInFoundFreelancersTable(startDate, endDate)
   println("Total number of found freelancers = " + totalNumFoundFreelancers)
   println("\n")}}

@@ -4,6 +4,7 @@ import org.scalatest._
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
 import excavators.odesk.structures._
+import util.structures._
 
 
 /**
@@ -341,7 +342,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.jobChanges.nInterviewing == Some(0))
       assert(tr.jobChanges.interviewingAvg == None)
       assert(tr.jobChanges.nHires == None)
-      assert(tr.job.jobDescription.get.split(" ").take(10).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1 class=\"oH2\">Job Description</h1> \n <div name=\"sku\" enctype=\"multipart/form-data\"")
+      assert(tr.job.jobDescription.get.split(" ").take(10).mkString(" ") == "<section id=\"jobDescriptionSection\"> \n <h1 class=\"oH2\">Job Description</h1> \n <div nameColumn=\"sku\" enctype=\"multipart/form-data\"")
       //changes:ClientChanges
       assert(tr.clientChanges.name == None)
       assert(tr.clientChanges.logoUrl == None)

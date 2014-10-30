@@ -2,7 +2,7 @@ package excavators.util.tasks
 import scala.collection.mutable.{Set => MutSet}
 
 /**
- * Execute task form task queue by priority
+ * Execute task form task queue by priorityColumn
  * Created by CAB on 20.10.2014.
  */
 

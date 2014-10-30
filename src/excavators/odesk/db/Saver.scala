@@ -2,12 +2,11 @@ package excavators.odesk.db
 
 import java.awt.image.BufferedImage
 import java.util.Date
-
-import excavators.odesk.structures._
 import excavators.util.logging.Logger
 import excavators.util.parameters.ParametersMap
 import excavators.util.tasks.{Task, TaskExecutor}
 import util.db.DBProvider
+import util.structures._
 
 /**
 * Component responsible for parallel save data to DB.

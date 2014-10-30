@@ -2,10 +2,11 @@ package excavators.odesk.db
 
 import java.sql.Timestamp
 import java.util.Date
-import excavators.odesk.structures._
+import util.structures._
 import excavators.util.logging.LoggerDBProvider
 import excavators.util.parameters.ParametersMap
 import util.db.DBProvider
+import util.structures._
 import scala.slick.driver.H2Driver.simple._
 import scala.slick.jdbc.StaticQuery
 
@@ -94,7 +95,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       //Return set
       dqf.toSet ++ dqj.toSet})
     r}
-  def getNOfFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N rows with max priority, and total rows in table
+  def getNOfFoundByJobs(n:Int, fb:FoundBy):(List[FoundJobsRow], Int) = {  //Return list of N rows with max priorityColumn, and total rows in table
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getNOfOldFoundJobs] No created DB.")}
     db.get.withSession(implicit session => {
       //Gen older rows
@@ -141,7 +142,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       //Check if no two active
       val ks = prs.map(_._1)
       if(ks.size != ks.toSet.size){
-        throw new Exception("[ODeskExcavatorsDBProvider.loadParameters] Several ative params with same name: " + prs)}
+        throw new Exception("[ODeskExcavatorsDBProvider.loadParameters] Several ative params with same nameColumn: " + prs)}
       //Reset update flag
       if(ks.contains(need_update_param_name)){
         val q = excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value)

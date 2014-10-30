@@ -1,10 +1,13 @@
 package excavators.odesk.db
+
+import excavators.odesk.parsers._
 import org.scalatest._
 import java.util.Date
 import excavators.odesk.structures._
 import java.awt.image.BufferedImage
 
 import util.db.DBProvider
+import util.structures._
 
 /**
  * Test for ODeskExcavatorsDBProvider class
@@ -108,7 +111,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     applicantData = JobApplicant(
       createDate = new Date(System.currentTimeMillis()),
       upDate = Some(new Date(System.currentTimeMillis())),
-      name = Some("name"),
+      name = Some("nameColumn"),
       initiatedBy = InitiatedBy.Client,
       url = Some("url")),
     freelancerId = Some(1006L))
@@ -117,7 +120,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     jobId = 1L,
     hiredData = JobHired(
       createDate = new Date(System.currentTimeMillis()),
-      name = Some("name"),
+      name = Some("nameColumn"),
       freelancerUrl = Some("freelancerUrl")),
     freelancerId = None)
   def clientsWorksHistoryRow(url:Option[String]):ClientsWorksHistoryRow = ClientsWorksHistoryRow(

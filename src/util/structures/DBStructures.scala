@@ -1,6 +1,7 @@
-package excavators.odesk.structures
-import java.util.Date
+package util.structures
+
 import java.awt.image.BufferedImage
+import java.util.Date
 
 /**
  * Structures using in for DB interaction

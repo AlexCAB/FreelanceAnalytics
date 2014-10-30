@@ -3,11 +3,11 @@ package excavators.odesk.apps.old_job_excavator
 import java.util.Date
 import excavators.odesk.apps.AbstractWorker
 import excavators.odesk.db.{ODeskExcavatorsDBProvider, Saver}
-import excavators.odesk.structures._
 import excavators.util.parameters.ParametersMap
 import excavators.util.tasks.TimedTask
 import excavators.odesk.ui.Browser
 import excavators.util.logging.Logger
+import util.structures.{FoundJobsRow, FoundBy}
 
 /**
 * Class encapsulate work logic

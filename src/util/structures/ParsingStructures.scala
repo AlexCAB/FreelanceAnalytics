@@ -1,7 +1,7 @@
-package excavators.odesk.structures
+package util.structures
 
-import java.util.Date
 import java.awt.Image
+import java.util.Date
 
 /**
  * Contain set of data structures for parsing results
