@@ -3,7 +3,6 @@ package excavators.odesk.parsers
 import org.scalatest._
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
-import excavators.odesk.structures._
 import util.structures._
 
 

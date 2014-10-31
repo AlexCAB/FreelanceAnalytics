@@ -1,6 +1,5 @@
-package excavators.odesk.apps.new_job_excavator
+package excavators.odesk.apps.searcher
 
-import excavators.odesk.db.Saver
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 
 /**
@@ -8,7 +7,7 @@ import excavators.odesk.ui.{ExcavatorUI, Browser}
 * Created by CAB on 23.10.2014.
 */
 
-class Watcher(browser:Browser, worker:Worker, saver:Saver, ui:ExcavatorUI) {
+class Watcher(browser:Browser, worker:Worker, ui:ExcavatorUI) {
   //Parameters
   val updateTimeOut = 1000
   val stopTimeout = 2000
@@ -18,19 +17,12 @@ class Watcher(browser:Browser, worker:Worker, saver:Saver, ui:ExcavatorUI) {
   private val workerThread = new Thread{override def run():Unit = {while(work){
     //Get data
     val tl = browser.getMetrics
-    val (wqs,npj,nfj,nfb,pq,npf) = worker.getMetrics
-    val (sqs,ts) = saver.getMetrics
+    val (wqs,nfj) = worker.getMetrics
     //Build report
     val r = List(
       ("Worker q. size",wqs.toString),
-      ("Saver q. size",sqs.toString),
-      ("N proc job",npj.toString),
-      ("N found by search",nfj.toString),
-      ("N found in DB",nfb.toString),
-      ("Parsing q.",pq.toString),
-      ("N parsing fails", npf.toString),
-      ("T load",(tl.toDouble / 1000).toString),
-      ("T save",(ts.toDouble / 1000).toString))
+      ("N found job",nfj.toString),
+      ("T load",(tl.toDouble / 1000).toString))
     //Print report
     ui.printStatus(r)
     //Wait next update

@@ -142,7 +142,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       //Check if no two active
       val ks = prs.map(_._1)
       if(ks.size != ks.toSet.size){
-        throw new Exception("[ODeskExcavatorsDBProvider.loadParameters] Several ative params with same nameColumn: " + prs)}
+        throw new Exception("[ODeskExcavatorsDBProvider.loadParameters] Several ative params with same name: " + prs)}
       //Reset update flag
       if(ks.contains(need_update_param_name)){
         val q = excavatorsParamTable.filter(_.p_key === need_update_param_name).map(_.p_value)
@@ -184,71 +184,41 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       foundJobsTable.filter(_.o_url === d.jobsRow.foundData.oUrl).delete
       //Calc and return result
       (d.jobsApplicantsRows.size, d.jobsHiredRows.size, wrs.size, frs.size, jrs.size, id)})}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  def countFoundByToScrapPriority:Map[Int,Int] = { //Return: Map(priorityColumn -> count)
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFoundByToScrapPriority] No created DB.")}
+    db.get.withSession(implicit session => {
+      //Get priorityColumn list
+      val ps = StaticQuery.queryNA[Int]("select distinct(" + priorityColumn + ") from " + odesk_found_jobs).list
+      //Count for each priorityColumn
+      ps.map(p => {
+        val q = "select count(*) from " + odesk_found_jobs + " where " + priorityColumn + " = " + p
+        (p, StaticQuery.queryNA[Int](q).first)}).toMap})}
+  def getExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFoundByToScrapPriority] No created DB.")}
+    db.get.withTransaction(implicit session => {
+      //Read parameter
+      val p = excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).first
+      //Deserialize params
+      val pm = if(p._3 != ""){
+        p._3.split(";").map(_.split(",")).toList.flatMap(_.toList match{
+          case n :: w :: d :: Nil => List((n.toInt,((w == "W"),d.toDouble)))
+          case g => { println("-" + g); throw new Exception("Failure on deserialize params: " + p._3)}})}
+      else{
+        List()}
+      //Set locked if need
+      if(setLock){
+        excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.is_active).update(false)}
+      //Return data
+      (pm.toMap,(! p._4))})}
+  def updateExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean)= {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFoundByToScrapPriority] No created DB.")}
+    db.get.withTransaction(implicit session => {
+      //Serialize params
+      val p = param.map{case (n,(w,d)) => {n + "," + (if(w) "W" else "S") + "," + d}}.mkString(";")
+      //Update
+      excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.p_value).update(p)
+      //Set locked/unlocked
+      excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.is_active).update(! setLock)})}
 
 
 

@@ -127,7 +127,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       val r = try{
         Some(db.addAllJobDataAndDelFromFound(d))} //Some(applicants,hired,clients works,found freelancer,found jobs)
       catch{case e:Exception =>{
-        logger.error("[Saver.SaveJobDataTask] Exception on save job data: " + e)
+        logger.error("[Saver.SaveJobDataTask] Exception on save job data, url: " + j.oUrl + ", exeption: " + e)
         None}}
       //Logging
       r match{

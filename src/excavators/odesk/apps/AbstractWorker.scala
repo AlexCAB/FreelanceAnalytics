@@ -18,7 +18,6 @@ import util.structures.{ParsedJob, FoundJobsRow, ParsingErrorRow, FoundBy}
 
 class AbstractWorker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) extends ManagedWorker with TimedTaskExecutor {
   //Parameters
-  protected var runAfterStart = false
   protected val mainPageURL = "https://www.odesk.com"
   protected val saveFolder = System.getProperty("user.home") + "\\Desktop"
   protected val jobsFoundByAnaliseScrapTaskPriority = 1
@@ -28,6 +27,7 @@ class AbstractWorker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvide
   protected var scrapTryMaxNumber = 10
   protected var scrapTryTimeout = 5000
   //Variables
+  protected var runAfterStart = false
   protected var numberOfProcJob = 0
   protected var lastParsingQuality = 0.0
   protected var numberOfFailureParsed = 0

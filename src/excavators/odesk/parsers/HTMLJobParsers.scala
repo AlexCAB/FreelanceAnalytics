@@ -104,7 +104,7 @@ class HTMLJobParsers{
   private val newDeadLineP = List("col col2of6","oJobHeaderContent","oNull")
   private val newRequiredLevelP = List("col col3of6","oJobHeaderContent","oH4")
   private val newBudgetP = List("col col1of6","oJobHeaderContent","oH4")
-  private val notInUrlChars = List('\'','-','\"','&','_','~','%','/',',',':','!', '(',')','.','\\','+')
+  private val notInUrlChars = List('\'','-','\"','&','_','~','%','/',',',':','!', '(',')','.','\\','+','$','[',']','*','?','`')
   //Fields
   val logoImageCoordinates = List(7,7,108,108) //x,y,w,h
   val wornParsingQualityLevel = 0.8

@@ -1,23 +1,22 @@
-package excavators.odesk.apps.old_job_excavator
+package excavators.odesk.apps.searcher
 
-import excavators.odesk.db.{ODeskExcavatorsDBProvider, Saver}
+import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
-* oDesk job excavator - collect old jobs from analise
+* oDesk job excavator - collect new jobs from search
 * Created by CAB on 21.09.14.
 */
 
 object Main {
   //Create components
-  val l = new ToDBAndConsoleLogger("old_job_excavator")
+  val l = new ToDBAndConsoleLogger("searcher")
   val db = new ODeskExcavatorsDBProvider
   val b = new Browser(l)
-  val s = new Saver(l,db)
-  val w = new Worker(b,l,s,db)
-  val ui = new ExcavatorUI("Old job excavator ", b, w, l, loadAndSetParam, closing)
-  val wc = new Watcher(b,w,s,ui)
+  val w = new Worker(b,l,db)
+  val ui = new ExcavatorUI("oDesk job searcher and excavators manager", b, w, l, loadAndSetParam, closing)
+  val wc = new Watcher(b,w,ui)
   l.setConsole(ui)
   l.setDB(db)
   //Methods
@@ -36,7 +35,6 @@ object Main {
     //Load and set parameters
     loadAndSetParam()
     //Run
-    s.start()
     ui.init()
     w.init()
     wc.init()}
@@ -46,14 +44,12 @@ object Main {
     l.setParameters(ps)
     b.setParameters(ps)
     w.setParameters(ps)
-    s.setParameters(ps)
     l.info("[Main.loadAndSetParam] Parameters loaded and set.")}
   def closing():Unit = {
     //Stop
     wc.halt()
     w.halt()
     ui.halt()
-    s.stop()
     db.halt()
     //Exit
     System.exit(0)}}

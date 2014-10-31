@@ -48,6 +48,7 @@ object DBOverview {def main(args:Array[String]) = {
   val db = new ODeskFurnacesDBProvider
   println("Connect to: " + hostName +  ", user: " + userName + ", password: " + passwordName + ", DB: " + dbName)
   db.init(hostName, userName, passwordName, dbName)
+  println()
   //Table 'odesk_job_excavators_param'
   println("################ TABLE 'odesk_job_excavators_param' #################")
   val numberOfParameters = db.countRowsBethInExcavatorsParamTable(None,None)

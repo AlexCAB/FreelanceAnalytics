@@ -51,7 +51,6 @@ class ODeskFurnacesDBProvider extends DBProvider{
   def countRowsBethInClientChangesTable(from:Option[Date], to:Option[Date]):Int = {countRowsBeth(odesk_clients_changes,from,to)}
   def countRowsBethInClientsWorksHistoryTable(from:Option[Date], to:Option[Date]):Int = {countRowsBeth(odesk_clients_works_history,from,to)}
   def countRowsBethInFoundFreelancersTable(from:Option[Date], to:Option[Date]):Int = {countRowsBeth(odesk_found_freelancers,from,to)}
-
   def countExcavatorsLogRows(from:Option[Date], to:Option[Date]):Map[String,Map[String,Int]] = { //Return: Map(component -> Map(message type -> count))
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countExcavatorsLogRows] No created DB.")}
     db.get.withSession(implicit session => {

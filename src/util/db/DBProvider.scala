@@ -56,6 +56,8 @@ trait DBProvider extends LoggerDBProvider {
     "hours","rate","freelancer_feedback_text","freelancer_feedback","freelancer_name",
     "freelancer_url","freelancer_id","client_feedback")
   protected val worksHistoryUnknowableColumns = List("in_progress","payment_type")
+  //Fealds names
+  val excavatorsStatesParamName = "excavatorsStates"
   //Helpers
   private val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   //Schema
@@ -74,7 +76,7 @@ trait DBProvider extends LoggerDBProvider {
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def mType = column[String]("type", O.NotNull)
-    def name = column[String]("nameColumn", O.NotNull)
+    def name = column[String]("name", O.NotNull)
     def msg = column[String]("msg")
     def * = (id,create_date,mType, name, msg)}
   protected val excavatorsLogTable = TableQuery[ExcavatorsLog]
@@ -91,9 +93,9 @@ trait DBProvider extends LoggerDBProvider {
   protected class FoundJobs(tag: Tag) extends Table[FoundJobsRowType](tag, odesk_found_jobs){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def o_url = column[String]("o_url", O.NotNull)
-    def found_by = column[String]("foundByColumn", O.NotNull)
+    def found_by = column[String]("found_by", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def priority = column[Int]("priorityColumn", O.NotNull)
+    def priority = column[Int]("priority", O.NotNull)
     def job_skills = column[String]("job_skills", O.NotNull)
     def n_freelancers = column[Option[Int]]("n_freelancers")
     def * = (id,o_url,found_by,create_date,priority,job_skills,n_freelancers)}
@@ -105,12 +107,12 @@ trait DBProvider extends LoggerDBProvider {
   protected class Jobs(tag: Tag) extends Table[JobRowType](tag, odesk_jobs){
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def o_url = column[String]("o_url", O.NotNull)
-    def found_by = column[String]("foundByColumn", O.NotNull)
+    def found_by = column[String]("found_by", O.NotNull)
     def found_date = column[Timestamp]("found_date", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def post_date = column[Option[Timestamp]]("post_date")
     def deadline = column[Option[Timestamp]]("deadline")
-    def dae_date = column[Option[Timestamp]]("daeDateColumn")
+    def dae_date = column[Option[Timestamp]]("dae_date")
     def delete_date = column[Option[Timestamp]]("delete_date")
     def next_check_date = column[Option[Timestamp]]("next_check_date")
     def n_freelancers = column[Option[Int]]("n_freelancers")
@@ -154,7 +156,7 @@ trait DBProvider extends LoggerDBProvider {
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def name = column[Option[String]]("nameColumn")
+    def name = column[Option[String]]("name")
     def logo = column[Option[Array[Byte]]]("logo")
     def url = column[Option[String]]("url")
     def description = column[Option[String]]("description")
@@ -181,7 +183,7 @@ trait DBProvider extends LoggerDBProvider {
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def up_date = column[Option[Timestamp]]("up_date")
-    def name = column[Option[String]]("nameColumn")
+    def name = column[Option[String]]("name")
     def initiated_by = column[String]("initiated_by")
     def freelancer_url = column[Option[String]]("freelancer_url")
     def freelancer_id = column[Option[Long]]("freelancer_id")
@@ -192,7 +194,7 @@ trait DBProvider extends LoggerDBProvider {
     def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
     def job_id = column[Long]("job_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def name = column[Option[String]]("nameColumn")
+    def name = column[Option[String]]("name")
     def freelancer_url = column[Option[String]]("freelancer_url")
     def freelancer_id = column[Option[Long]]("freelancer_id")
     def * = (id,job_id,create_date,name,freelancer_url,freelancer_id)}
@@ -227,7 +229,7 @@ trait DBProvider extends LoggerDBProvider {
       def id = column[Option[Long]]("id",O.PrimaryKey, O.AutoInc)
       def o_url = column[String]("o_url", O.NotNull)
       def create_date = column[Timestamp]("create_date", O.NotNull)
-      def priority = column[Int]("priorityColumn", O.NotNull)
+      def priority = column[Int]("priority", O.NotNull)
       def * = (id,o_url,create_date,priority)}
   protected val foundFreelancersTable = TableQuery[FoundFreelancers]
   //Tables map
@@ -250,20 +252,20 @@ trait DBProvider extends LoggerDBProvider {
   protected def buildFoundJobsRow(d:FoundJobsRow):FoundJobsRowType = {(
     None,                          // id
     d.oUrl,                        // o_url
-    d.foundBy.toString,            // foundByColumn
+    d.foundBy.toString,            // found_by
     new Timestamp(d.date.getTime), // reate_date
-    d.priority,                    // priorityColumn
+    d.priority,                    // priority
     d.skills.mkString(","),        // job_skills
     d.nFreelancers)}               //n_freelancers
   protected def buildJobsRow(d:JobsRow):JobRowType = { (
     None,                                                   // id Option[Long]
     d.foundData.oUrl,                                       // o_url String
-    d.foundData.foundBy.toString,                           // foundByColumn String
+    d.foundData.foundBy.toString,                           // found_by String
     new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
     new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
     d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
     d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
-    d.daeDate.map(t => new Timestamp(t.getTime)),           // daeDateColumn Option[Timestamp]
+    d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
     d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
     d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
     d.foundData.nFreelancers,                               // n_freelancers Option[Int]
@@ -324,7 +326,7 @@ trait DBProvider extends LoggerDBProvider {
     jid,                                                       // job_id
     new Timestamp(d.applicantData.createDate.getTime),         // create_date
     d.applicantData.upDate.map(t => new Timestamp(t.getTime)), // up_date
-    d.applicantData.name,                                      // nameColumn
+    d.applicantData.name,                                      // name
     d.applicantData.initiatedBy.toString,                      // initiated_by
     d.applicantData.url,                                       // freelancer_url
     d.freelancerId)                                            // freelancer_id
@@ -332,7 +334,7 @@ trait DBProvider extends LoggerDBProvider {
     None,                                          // id
     jid,                                           // job_id
     new Timestamp(d.hiredData.createDate.getTime), // create_date
-    d.hiredData.name,                              // nameColumn
+    d.hiredData.name,                              // name
     d.hiredData.freelancerUrl,                     // freelancer_url
     d.freelancerId)                                // freelancer_id
   protected def buildClientsWorksHistoryRow(d:ClientsWorksHistoryRow, jid:Long):ClientsWorksHistoryRowType = (
@@ -358,10 +360,10 @@ trait DBProvider extends LoggerDBProvider {
     None,                          // id
     d.oUrl,                        // o_url
     new Timestamp(d.date.getTime), // create_date
-    d.priority)                    // priorityColumn
+    d.priority)                    // priority
   protected def countRows(tableName:String):Int = {
     if(db.isEmpty){throw new Exception("[DBProvider.countRows] No created DB.")}
-    if(! tablesByName.contains(tableName)){throw new Exception("[DBProvider.countRows] Unknow table nameColumn: " + tableName)}
+    if(! tablesByName.contains(tableName)){throw new Exception("[DBProvider.countRows] Unknown table name: " + tableName)}
     db.get.withSession(implicit session => {tablesByName(tableName).length.run})}
   protected def buildDateCondition(from:Option[Date], to:Option[Date]):Option[String] = {
     val mnd = from match{case Some(d) => "create_date >= '" + dateFormat.format(d) + "'"; case _ => ""}

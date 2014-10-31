@@ -1,12 +1,8 @@
 package excavators.odesk.db
 
-import excavators.odesk.parsers._
 import org.scalatest._
 import java.util.Date
-import excavators.odesk.structures._
 import java.awt.image.BufferedImage
-
-import util.db.DBProvider
 import util.structures._
 
 /**
@@ -161,7 +157,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
   val dbProvider = new ODeskExcavatorsDBProvider
   //Tests
   "initialize" in {
-    dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics")}
+    dbProvider.init("jdbc:mysql://127.0.0.1:3306", "root", "qwerty", "freelance_analytics_test")}
   "add to excavators_log table" in {
     val ct = System.currentTimeMillis()
     dbProvider.addLogMessageRow(new Date(ct), "error", "m1", "Some message 1")
@@ -223,6 +219,20 @@ class DBProviderTest extends WordSpecLike with Matchers {
     val (na,nh,ncw,nff,nfj,_) = dbProvider.addAllJobDataAndDelFromFound(allData(foundJobsRow2))
     println(na,nh,ncw,nff,nfj)
     assert(Tuple5(na,nh,ncw,nff,nfj) == Tuple5(1,1,0,1,0))}
+  "update and read work params" in {
+    val p = Map(1 -> (true,0.1),2 -> (false,0.2),3 -> (true,0.3))
+    dbProvider.updateExcavatorsStateParam(p, true)
+    val (tp, ts) = dbProvider.getExcavatorsStateParam(false)
+    assert(p == tp)
+    assert(ts == true)
+    dbProvider.updateExcavatorsStateParam(p, false)
+    val (_, ts2) = dbProvider.getExcavatorsStateParam(false)
+    assert(ts == true)
+
+  }
+
+
+
   "stop" in {
     dbProvider.halt()}}
 

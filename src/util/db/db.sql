@@ -1,6 +1,6 @@
 -- Build test database
 
--- open: cd src/excavators/odesk/db, mysql -u root -p
+-- open: cd src\util\db, mysql -u root -p
 -- run: source db.sql;
 
 -- select * from odesk_job_excavators_param;
@@ -36,6 +36,7 @@ create table odesk_job_excavators_param(
   comment varchar(255) default null);
 
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('param_need_update',                   'NeedUpdate',                     true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsStates',                    '1,W,0.0;2,S,0.0;3,W,0.0;4,W,0.0',        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('consoleLoggingLevel',                 'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('dbLoggingLevel',                      'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('runAfterStart',                       'false',                          true);

@@ -1,4 +1,4 @@
-package excavators.odesk.apps.old_job_excavator
+package excavators.odesk.apps.jobs_excavator
 
 import java.util.Date
 import excavators.odesk.apps.AbstractWorker

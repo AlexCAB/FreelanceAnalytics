@@ -1,22 +1,22 @@
-package excavators.odesk.apps.new_job_excavator
+package excavators.odesk.apps.jobs_excavator
 
 import excavators.odesk.db.{ODeskExcavatorsDBProvider, Saver}
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
-* oDesk job excavator - collect new jobs from search
+* oDesk job excavator - collect old jobs from analise
 * Created by CAB on 21.09.14.
 */
 
 object Main {
   //Create components
-  val l = new ToDBAndConsoleLogger("new_job_excavator")
+  val l = new ToDBAndConsoleLogger("jobs_excavator")
   val db = new ODeskExcavatorsDBProvider
   val b = new Browser(l)
   val s = new Saver(l,db)
   val w = new Worker(b,l,s,db)
-  val ui = new ExcavatorUI("oDesk new jobs excavator", b, w, l, loadAndSetParam, closing)
+  val ui = new ExcavatorUI("Old job excavator ", b, w, l, loadAndSetParam, closing)
   val wc = new Watcher(b,w,s,ui)
   l.setConsole(ui)
   l.setDB(db)
