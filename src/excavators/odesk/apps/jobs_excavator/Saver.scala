@@ -1,11 +1,12 @@
-package excavators.odesk.db
+package excavators.odesk.apps.jobs_excavator
 
 import java.awt.image.BufferedImage
 import java.util.Date
+
+import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.util.logging.Logger
 import excavators.util.parameters.ParametersMap
 import excavators.util.tasks.{Task, TaskExecutor}
-import util.db.DBProvider
 import util.structures._
 
 /**
@@ -15,11 +16,9 @@ import util.structures._
 
 class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
   //Parameters
-  val maxTaskQueueSize = 10000
+  val maxTaskQueueSize = 1000
   val overloadTimeout = 1000
   private var foundFreelancersPriority = 1
-  private var jobsFoundByAnalisePriority = 1
-  private var toTrackingJobPriority = 1
   private var nextJobCheckTimeout = 1000 * 60 * 60
   //Variables
   private var saveTime = 0L
@@ -127,7 +126,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       val r = try{
         Some(db.addAllJobDataAndDelFromFound(d))} //Some(applicants,hired,clients works,found freelancer,found jobs)
       catch{case e:Exception =>{
-        logger.error("[Saver.SaveJobDataTask] Exception on save job data, url: " + j.oUrl + ", exeption: " + e)
+        logger.error("[Saver.SaveJobDataTask] Exception on save job data, url: " + j.oUrl + ", exception: " + e)
         None}}
       //Logging
       r match{
@@ -160,12 +159,6 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
     foundFreelancersPriority = p.getOrElse("foundFreelancersPriority", {
       logger.worn("[Worker.setParameters] Parameter 'foundFreelancersPriority' not found.")
       foundFreelancersPriority})
-    jobsFoundByAnalisePriority = p.getOrElse("jobsFoundByAnalisePriority", {
-      logger.worn("[Worker.setParameters] Parameter 'jobsFoundByAnalisePriority' not found.")
-      jobsFoundByAnalisePriority})
-    toTrackingJobPriority = p.getOrElse("toTrackingJobPriority", {
-      logger.worn("[Worker.setParameters] Parameter 'toTrackingJobPriority' not found.")
-      toTrackingJobPriority})
     nextJobCheckTimeout = p.getOrElse("nextJobCheckTimeout", {
       logger.worn("[Worker.setParameters] Parameter 'nextJobCheckTimeout' not found.")
       nextJobCheckTimeout})}

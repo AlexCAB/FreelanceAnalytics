@@ -1,6 +1,6 @@
 package excavators.odesk.apps.jobs_excavator
 
-import excavators.odesk.db.Saver
+import excavators.odesk.apps.jobs_excavator.Saver
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 
 /**

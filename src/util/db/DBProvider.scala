@@ -249,12 +249,20 @@ trait DBProvider extends LoggerDBProvider {
   protected var db:Option[DatabaseDef] = None
   protected var databaseName:Option[String] = None
   //Functions
-  protected def buildFoundJobsRow(d:FoundJobsRow):FoundJobsRowType = {(
+  protected def buildFoundJobsRows(id:Option[Long], url:String, fb:String, d:Timestamp, p:Int, sks:String, nf:Option[Int]):FoundJobsRow = FoundJobsRow(
+    id = id.get,
+    oUrl = url,
+    foundBy = FoundBy.formString(fb),
+    date = new Date(d.getTime),
+    priority = p,
+    skills = sks.split(",").toList,
+    nFreelancers = nf)
+  protected def buildFoundJobsRow(d:FoundJobsRow,p:Int):FoundJobsRowType = {(
     None,                          // id
     d.oUrl,                        // o_url
     d.foundBy.toString,            // found_by
     new Timestamp(d.date.getTime), // reate_date
-    d.priority,                    // priority
+    p,                             // priority
     d.skills.mkString(","),        // job_skills
     d.nFreelancers)}               //n_freelancers
   protected def buildJobsRow(d:JobsRow):JobRowType = { (

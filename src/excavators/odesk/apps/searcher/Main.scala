@@ -5,7 +5,7 @@ import excavators.odesk.ui.{ExcavatorUI, Browser}
 import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
-* oDesk job excavator - collect new jobs from search
+* oDesk job searcher
 * Created by CAB on 21.09.14.
 */
 

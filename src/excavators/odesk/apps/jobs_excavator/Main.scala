@@ -1,15 +1,17 @@
 package excavators.odesk.apps.jobs_excavator
 
-import excavators.odesk.db.{ODeskExcavatorsDBProvider, Saver}
+import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
-* oDesk job excavator - collect old jobs from analise
+* oDesk job excavator
 * Created by CAB on 21.09.14.
 */
 
 object Main {
+  //Variables
+  private var en = -1
   //Create components
   val l = new ToDBAndConsoleLogger("jobs_excavator")
   val db = new ODeskExcavatorsDBProvider
@@ -35,11 +37,14 @@ object Main {
     db.init(dbAddress, dbUser, dbPassword, dbName)
     //Load and set parameters
     loadAndSetParam()
+    //Registration of self
+    en = db.registrateExcavator
     //Run
     s.start()
     ui.init()
-    w.init()
-    wc.init()}
+    w.init(en)
+    wc.init()
+    ui.title = "Old job excavator №" + en}
   def loadAndSetParam():Unit = {
     //Reload and set parameters
     val ps = db.loadParameters()
@@ -49,6 +54,8 @@ object Main {
     s.setParameters(ps)
     l.info("[Main.loadAndSetParam] Parameters loaded and set.")}
   def closing():Unit = {
+    //Unregistration of self
+    db.unregistrateExcavator(en)
     //Stop
     wc.halt()
     w.halt()

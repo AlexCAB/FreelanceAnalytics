@@ -36,7 +36,7 @@ create table odesk_job_excavators_param(
   comment varchar(255) default null);
 
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('param_need_update',                   'NeedUpdate',                     true);
-insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsStates',                    '1,W,0.0;2,S,0.0;3,W,0.0;4,W,0.0',        true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsStates',                    '',                               true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('consoleLoggingLevel',                 'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('dbLoggingLevel',                      'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('runAfterStart',                       'false',                          true);
@@ -52,7 +52,7 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('toTra
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('searchNewJobTimeout',                 '3000000',                        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskTimeout',        '1800000',                        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('nextJobCheckTimeout',                 '3600000',                        true);
-insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('numberOfJobToScripInIteration',       '200',                            true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('numberOfJobToScripInIteration',       '20',                             true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('maxNumberOfCheckedJob',               '30',                             true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('overloadFoundJobTableRowNumber',      '100000',                         true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active,comment) values ('logoImageCoordinates',        '7|7|108|108',                    true, '//x,y,w,h');
@@ -66,6 +66,9 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('loadP
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('loadTryMaxTime',                      '10000',                          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('confirmTimeOut',                      '2000',                           true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('retryTimeOut',                        '1000',                           true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('jobsFoundBySearchExcavatorNumber',    '1',                              true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsManagementTimeout',         '20000',                          true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildJobsScrapingTimeout',            '20000',                          true);
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
