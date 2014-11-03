@@ -486,7 +486,7 @@ class HTMLJobParsers{
         applicants = al,
         hires = hl,
         clientWorks = wl)})}
-  def compareJobURLAndTitle(url:String, title:String):Option[Boolean] = {
+  def compareJobURLAndTitle(url:String, title:String):Option[Boolean] = { //Return: Some(true) if match, Some(false) if no, None if unknown.
     val tws = title.map(c => {if(notInUrlChars.contains(c)) ' ' else c}).split(" ").toSet
     val pws = url.split("/").lastOption.flatMap(_ match{
       case s if s.contains('_') => s.split("_").headOption

@@ -74,19 +74,6 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
        d.oUrl,
        d.msg,
        d.html)})}
-  def addFoundJobsRows(ds:List[FoundJobsRow]):Int = {  //Return number of insert(not insert if already exist in jobTable or in foundJobsTableTable)
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.saveLogMessage] No created DB.")}
-    db.get.withSession(implicit session => {
-      //Filtering of exist
-      val us = ds.map(_.oUrl)
-      val ejs = (jobTable.filter(_.o_url inSetBind us).map(_.o_url) ++ foundJobsTable.filter(_.o_url inSetBind us).map(_.o_url)).list.toSet
-      val fds = ds.filter(u => {! ejs.contains(u.oUrl)})
-      //Prepare
-      val rs = fds.map(d => buildFoundJobsRow(d,d.priority))               //n_freelancers
-      //Insert
-      foundJobsTable ++= rs
-      //Return  number of insert
-      fds.size})}
   def addJobsRow(d:JobsRow):Option[Long] = { //Return ID of added job row, on None if job with given URL already exist
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.addJobsRow] No created DB.")}
     db.get.withSession(implicit session => {

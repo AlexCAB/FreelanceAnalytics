@@ -18,7 +18,7 @@ object Main {
   val b = new Browser(l)
   val s = new Saver(l,db)
   val w = new Worker(b,l,s,db)
-  val ui = new ExcavatorUI("Old job excavator ", b, w, l, loadAndSetParam, closing)
+  val ui = new ExcavatorUI("Jobs excavator ", b, w, l, loadAndSetParam, closing)
   val wc = new Watcher(b,w,s,ui)
   l.setConsole(ui)
   l.setDB(db)
@@ -44,7 +44,7 @@ object Main {
     ui.init()
     w.init(en)
     wc.init()
-    ui.title = "Old job excavator №" + en}
+    ui.title = "Jobs excavator №" + en}
   def loadAndSetParam():Unit = {
     //Reload and set parameters
     val ps = db.loadParameters()

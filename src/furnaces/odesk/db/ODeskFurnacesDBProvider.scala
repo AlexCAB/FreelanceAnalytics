@@ -7,7 +7,7 @@ import scala.slick.driver.H2Driver.simple._
 import scala.slick.jdbc.{StaticQuery => Q}
 
 /**
- * Provide DB access for oDesk excavators
+ * Provide DB access for oDesk furnaces
  * Created by CAB on 29.10.2014.
  */
 

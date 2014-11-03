@@ -134,4 +134,6 @@ object DBOverview {def main(args:Array[String]) = {
   println("################ TABLE 'odesk_found_freelancers' ####################")
   val totalNumFoundFreelancers =  db.countRowsBethInFoundFreelancersTable(startDate, endDate)
   println("Total number of found freelancers = " + totalNumFoundFreelancers)
-  println("\n")}}
+  println("\n")
+  //Halt DB
+  db.halt()}}
