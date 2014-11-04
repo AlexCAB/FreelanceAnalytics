@@ -38,7 +38,7 @@ case class Job(
 //Job changes data
 case class JobChanges(
   createDate:Date,
-  jobAvailable:JobAvailable, //No if found "This job is no longer available "
+  jobAvailable:Availability, //No if found "This job is no longer available "
   lastViewed:Option[Date],
   nApplicants:Option[Int],
   applicantsAvg:Option[Double],
@@ -113,27 +113,28 @@ case class ParsedJob(
   clientWorks:List[ClientWork])
 
 //Freelancer data
-case class Freelancer(
-  findDate:Option[Date],
-  deleteDate:Option[Date],
-  name:Option[String],
-  registrationDate:Option[Double])
+//case class Freelancer(
+//  createDate:Date,
+//  name:Option[String],
+//  registrationDate:Option[Double])
 
-//Freelancer application data
-case class FreelancerApplication(
-  createDate:Option[Date],
-  initiatedBy:InitiatedBy,
-  title:Option[String],
-  jobsId:Option[Long])
+////Freelancer application data
+//case class FreelancerApplication(
+//  createDate:Date,
+//  initiatedBy:InitiatedBy,
+//  title:Option[String],
+//  jobsId:Option[Long])
 
 //Freelancer changes data
 case class FreelancerChanges(
-  createDate:Option[Date],
+  createDate:Date,
+  name:Option[String],
   location:Option[String],
-  timeZone:Option[Int],
+  timeZone:Option[Int],  //Shift from +2
   languages:List[String],
-  lastWorkDate:Option[Date],
-  photo:Option[Image],
+//  lastWorkDate:Option[Date],
+  availability:Availability,
+  photoUrl:Option[String],
   title:Option[String],
   rate:Option[Double],
   rating:Option[Double],
@@ -144,9 +145,10 @@ case class FreelancerChanges(
   companyId:Option[Long])
 
 //Freelancer work data
-case class FreelancerWork(
+case class FreelancerWorkRecord(
   title:Option[String],
   jobId:Option[Long],
+  jobUrl:Option[String],
   startDate:Option[Date],
   endDate:Option[Date],
   paymentType:Payment,
@@ -163,6 +165,35 @@ case class FreelancerWork(
   feedbackText:Option[String],
   freelancerFeedbackRating:Option[Double],
   freelancerFeedbackTxt:Option[String])
+
+
+
+
+//
+//
+//
+//data-rel="P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D"
+//data-rel="P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D"
+//
+//http://www.odesk.com/job-description/P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D
+//
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Freelancer portfolio data
 case class FreelancerPortfolio(

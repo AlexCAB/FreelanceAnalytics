@@ -1,8 +1,9 @@
 package excavators.odesk.ui
 
 import java.awt.image.BufferedImage
+import java.util
 import excavators.util.logging.Logger
-import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser
+import chrriis.dj.nativeswing.swtimpl.components.{WebBrowserNavigationParameters, JWebBrowser}
 import javax.swing.SwingUtilities
 import excavators.util.parameters.ParametersMap
 
@@ -24,10 +25,30 @@ class Browser(logger:Logger) extends JWebBrowser {
   private var loadTime = 0L
   //Construction
   setMenuBarVisible(false)
-  //Function
+  //Function9
   private val getHTMLbyURLNavigateRunnable = new Runnable(){
     var url = ""
-    def run(){navigate(url)}}
+    def run(){
+      println(url)
+      val p = new WebBrowserNavigationParameters
+      val hs = new util.HashMap[String,String]()
+
+      hs.put("Referer","https://www.odesk.com/users/Senior-Scala-Java-Android-iOS-Developer_~013a6f352dc7034896")
+      hs.put("X-Odesk-Csrf-Token","dd181bc866f41bd96d451f5cda8d89c2")
+      hs.put("X-Odesk-User-Agent","oDesk LM")
+      hs.put("X-Requested-With","XMLHttpRequest")
+
+
+
+
+
+
+      p.setHeaders(hs)
+      url = "http://www.odesk.com/job-description/P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D"
+
+      navigate(url,p)
+
+    }}
   private val captureImageRunnable = new Runnable(){
     var result:BufferedImage = _
     def run() = {

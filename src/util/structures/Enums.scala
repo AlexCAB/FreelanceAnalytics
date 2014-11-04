@@ -60,12 +60,12 @@ object JobState{
   case object InProcess extends JobState
   case object End extends JobState}
 
-trait JobAvailable
-object JobAvailable{
-  case object Unknown extends JobAvailable
-  case object Yes extends JobAvailable
-  case object No extends JobAvailable
-  def formString(s:String):JobAvailable = s match{
+trait Availability
+object Availability{
+  case object Unknown extends Availability
+  case object Yes extends Availability
+  case object No extends Availability
+  def formString(s:String):Availability = s match{
     case "Unknown" => Unknown
     case "Yes" => Yes
     case "No" => No
