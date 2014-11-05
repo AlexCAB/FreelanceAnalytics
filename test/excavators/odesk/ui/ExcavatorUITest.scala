@@ -1,5 +1,5 @@
 package excavators.odesk.ui
-import excavators.helpers.{TestLogger, TestWorker}
+import helpers.{TestLogger, TestWorker}
 import javafx.concurrent.Worker
 
 /**

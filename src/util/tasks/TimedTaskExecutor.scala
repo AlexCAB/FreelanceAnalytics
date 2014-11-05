@@ -1,4 +1,4 @@
-package excavators.util.tasks
+package util.tasks
 import scala.collection.mutable.{Set => MutSet}
 
 /**

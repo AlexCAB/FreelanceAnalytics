@@ -5,10 +5,10 @@ import java.util.Date
 import javax.imageio.ImageIO
 import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.parsers.HTMLJobParsers
-import excavators.util.parameters.ParametersMap
-import excavators.util.tasks.{TimedTaskExecutor, TimedTask}
+import util.parameters.ParametersMap
+import util.tasks.{TimedTaskExecutor, TimedTask}
 import excavators.odesk.ui.{ManagedWorker, Browser}
-import excavators.util.logging.Logger
+import util.logging.Logger
 import util.structures.{FoundWork, FoundJobsRow, FoundBy}
 import scala.math.random
 

@@ -1,4 +1,4 @@
-package excavators.util.logging
+package util.logging
 
 /**
  * Logger interface

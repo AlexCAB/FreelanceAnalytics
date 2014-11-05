@@ -38,7 +38,7 @@ case class Job(
 //Job changes data
 case class JobChanges(
   createDate:Date,
-  jobAvailable:Availability, //No if found "This job is no longer available "
+  jobAvailable:JobAvailable, //No if found "This job is no longer available "
   lastViewed:Option[Date],
   nApplicants:Option[Int],
   applicantsAvg:Option[Double],
@@ -125,24 +125,39 @@ case class ParsedJob(
 //  title:Option[String],
 //  jobsId:Option[Long])
 
+case class FreelancerLanguage(
+  name:String,
+  level:Option[Int],
+  isVerified:Option[Boolean])
+
 //Freelancer changes data
 case class FreelancerChanges(
   createDate:Date,
   name:Option[String],
+  link:Option[String],
+  title:Option[String],
+  profileAccess:Option[String],
+  exposeFullName:Option[Int],
+  role:Option[String],
+  emailVerified:Option[Boolean],
+  videoUrl:Option[String],
+  isInviteInterviewAllowed:Option[Boolean],
+  availability:FreelancerAvailable,
+  availableAgain:Option[String],
+  responsivenessScore:Option[String],
+  overview:Option[String],
   location:Option[String],
   timeZone:Option[Int],  //Shift from +2
-  languages:List[String],
-//  lastWorkDate:Option[Date],
-  availability:Availability,
+  languages:List[FreelancerLanguage],
   photoUrl:Option[String],
-  title:Option[String],
   rate:Option[Double],
+  rentPercent:Option[Int],
   rating:Option[Double],
   allTimeJobs:Option[Int],
   allTimeHours:Option[Int],
   skills:List[String],
-  overview:Option[String],
-  companyId:Option[Long])
+  companyUrl:Option[String],
+  companyLogoUrl:Option[String])
 
 //Freelancer work data
 case class FreelancerWorkRecord(
@@ -165,35 +180,6 @@ case class FreelancerWorkRecord(
   feedbackText:Option[String],
   freelancerFeedbackRating:Option[Double],
   freelancerFeedbackTxt:Option[String])
-
-
-
-
-//
-//
-//
-//data-rel="P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D"
-//data-rel="P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D"
-//
-//http://www.odesk.com/job-description/P7ixB8zT6MLHRpWe0hrKvfs3WIVYxr%2BSTMEma%2FltSrw%3D
-//
-//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //Freelancer portfolio data
 case class FreelancerPortfolio(
@@ -241,6 +227,12 @@ case class FreelancerOtherExperience(
   title:Option[String],
   createDate:Option[Date],
   description:Option[String])
+
+case class FreelancerParsedData(
+  changes:FreelancerChanges
+
+                                 )
+
 
 //Company data
 case class Company(

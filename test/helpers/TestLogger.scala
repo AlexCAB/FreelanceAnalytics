@@ -1,6 +1,6 @@
-package excavators.helpers
+package helpers
 
-import excavators.util.logging.Logger
+import util.logging.Logger
 
 /**
  * Dummy logger for test

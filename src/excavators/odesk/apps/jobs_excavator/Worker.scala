@@ -6,11 +6,11 @@ import java.util.Date
 import javax.imageio.ImageIO
 import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.parsers.HTMLJobParsers
-import excavators.util.parameters.ParametersMap
-import excavators.util.tasks.{TimedTaskExecutor, TimedTask}
 import excavators.odesk.ui.{ManagedWorker, Browser}
-import excavators.util.logging.Logger
+import util.logging.Logger
+import util.parameters.ParametersMap
 import util.structures.{ParsedJob, ParsingErrorRow, FoundJobsRow}
+import util.tasks.{TimedTask, TimedTaskExecutor}
 
 /**
 * Class encapsulate work logic

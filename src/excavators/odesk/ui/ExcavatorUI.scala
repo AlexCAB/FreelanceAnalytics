@@ -6,7 +6,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, ListBuffer => Mut
 import chrriis.dj.nativeswing.swtimpl.NativeInterface
 import scala.swing._
 import scala.swing.event._
-import excavators.util.logging.{LoggerConsole, Logger}
+import util.logging.{LoggerConsole, Logger}
 import javax.swing.SwingUtilities
 import BorderPanel.Position._
 import FlowPanel.Alignment._

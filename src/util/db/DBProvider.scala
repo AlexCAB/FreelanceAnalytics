@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 import javax.imageio.ImageIO
-import excavators.util.logging.LoggerDBProvider
+import util.logging.LoggerDBProvider
 import util.structures._
 import scala.slick.driver.H2Driver.backend.DatabaseDef
 import scala.slick.driver.H2Driver.simple._

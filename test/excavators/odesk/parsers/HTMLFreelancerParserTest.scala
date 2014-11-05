@@ -22,9 +22,38 @@ class HTMLFreelancerParserTest extends WordSpecLike with Matchers {
   "Ivan_N_~015d8df4348d317d56.html" in { //https://www.odesk.com/users/Ivan_N_~015d8df4348d317d56
     val html = getHtml("html\\Ivan_N_~015d8df4348d317d56.html")
     //
-    val lw = htmlParser.parseFreelancerProfile(html)
-    //    //
-    //      assert(lw.works.size == 10)
+    val tr = htmlParser.parseFreelancerProfile(html)
+    //Freelancer changes data
+    val ct = new Date().getTime
+    assert(tr.changes.createDate.getTime <= ct && tr.changes.createDate.getTime > (ct - 1000))
+    assert(tr.changes.name == Some("Ivan N."))
+    assert(tr.changes.link == None)
+    assert(tr.changes.title == Some("Ivan_N"))
+    assert(tr.changes.profileAccess == Some("public"))
+    assert(tr.changes.exposeFullName == None)
+    assert(tr.changes.role == Some("contractor"))
+    assert(tr.changes.emailVerified == Some(true))
+    assert(tr.changes.videoUrl == None)
+    assert(tr.changes.isInviteInterviewAllowed == Some(true))
+    assert(tr.changes.availability == FreelancerAvailable.FullTime)
+    assert(tr.changes.availableAgain == None)
+    assert(tr.changes.responsivenessScore == Some("not_enough_invites"))
+    assert(tr.changes.overview.get.split("").take(3).mkString(" ") == "Certified java developer.")
+    assert(tr.changes.location == Some("Minks,  Belarus"))
+    assert(tr.changes.timeZone == Some(1))
+    assert(tr.changes.languages == List(FreelancerLanguage("English",Some(2),Some(false))))
+    assert(tr.changes.photoUrl == Some("https://odesk-prod-portraits.s3.amazonaws.com/Users:n_ivan:PortraitUrl_100?AWSAccessKeyId=1XVAX3FNQZAFC9GJCFR2&Expires=2147483647&Signature=t18gk1%2FK9qGUgOGdU2fZ%2FRpPESo%3D&1415180037"))
+    assert(tr.changes.rate == Some(17.22))
+    assert(tr.changes.rentPercent == Some(10))
+    assert(tr.changes.rating == Some(5.0))
+    assert(tr.changes.allTimeJobs == Some(2))
+    assert(tr.changes.allTimeHours == Some(3))
+    assert(tr.changes.skills == List("Java","Oracle Java EE","Web Services Development","Play Framework","Agile software developmennt","Automated Testing","Web scraping","XSLT","ORM","database programming"))
+    assert(tr.changes.companyId == None)
+
+
+
+
 
   }
 //  "Creator-Software-Made-order_~01aae5df549caa4620" in { //https://www.odesk.com/users/Creator-Software-Made-order_~01aae5df549caa4620

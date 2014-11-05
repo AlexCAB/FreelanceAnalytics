@@ -227,7 +227,7 @@ class HTMLJobParsers extends ParserHelpers{
         //Build changes data
         (JobChanges(
           createDate = cd,
-          jobAvailable = (if(ja) Availability.Yes else Availability.No),
+          jobAvailable = (if(ja) JobAvailable.Yes else JobAvailable.No),
           lastViewed = wda.findByKeyPart(lastW) match{
             case Some(s) => Some(s).parseTimeAgo(cd)
             case _ => None},

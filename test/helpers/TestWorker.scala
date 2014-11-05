@@ -1,4 +1,4 @@
-package excavators.helpers
+package helpers
 
 import javax.swing.{ImageIcon, JLabel, JDialog}
 import excavators.odesk.ui.{Browser, ManagedWorker}

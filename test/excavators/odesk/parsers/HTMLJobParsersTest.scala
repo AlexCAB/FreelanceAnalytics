@@ -79,7 +79,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       val fd2 = tr.jobChanges.createDate.getTime
       assert((fd2 < ct &&  fd2 > (ct - 1000)) == true)
       assert(tr.jobChanges.lastViewed == None)
-      assert(tr.jobChanges.jobAvailable == Availability.Yes)
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
       assert(tr.jobChanges.nApplicants == Some(46))
       assert(tr.jobChanges.rateMin == None)
       assert(tr.jobChanges.rateAvg == None)
@@ -182,7 +182,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       val lw = tr.jobChanges.lastViewed.get.getTime + (1000 * 60 * 60 * 10) //10 hours ago
       assert((lw < ct && lw > (ct - 1000)) == true)
       assert(tr.jobChanges.nApplicants == Some(4))
-      assert(tr.jobChanges.jobAvailable == Availability.Yes)
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
       assert(tr.jobChanges.applicantsAvg == Some(156.67))
       assert(tr.jobChanges.rateMin == None)
       assert(tr.jobChanges.rateAvg == None)
@@ -256,7 +256,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       assert(tr.job.postDate == Some(dateFormater.parse("2013.Jan.11 00:00:00")))
       assert(tr.job.jobType == Some("Video Production"))
       //changes:JobChanges
-      assert(tr.jobChanges.jobAvailable == Availability.No)
+      assert(tr.jobChanges.jobAvailable == JobAvailable.No)
       assert(tr.jobChanges.lastViewed == Some(dateFormater.parse("2013.Jan.28 00:00:00")))
       assert(tr.jobChanges.nApplicants == Some(55))
       assert(tr.jobChanges.rateMin == None)
@@ -333,7 +333,7 @@ class HTMLJobParsersTest extends WordSpecLike with Matchers {
       val lw = tr.jobChanges.lastViewed.get.getTime + (1000 * 60 * 60 * 24) //10 hours ago
       assert((lw < ct && lw > (ct - 1000)) == true)
       assert(tr.jobChanges.nApplicants == Some(12))
-      assert(tr.jobChanges.jobAvailable == Availability.Yes)
+      assert(tr.jobChanges.jobAvailable == JobAvailable.Yes)
       assert(tr.jobChanges.applicantsAvg == Some(518.7))
       assert(tr.jobChanges.rateMin == Some(180.0))
       assert(tr.jobChanges.rateAvg == Some(518.7))

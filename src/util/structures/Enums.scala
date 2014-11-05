@@ -60,15 +60,28 @@ object JobState{
   case object InProcess extends JobState
   case object End extends JobState}
 
-trait Availability
-object Availability{
-  case object Unknown extends Availability
-  case object Yes extends Availability
-  case object No extends Availability
-  def formString(s:String):Availability = s match{
+trait JobAvailable
+object JobAvailable{
+  case object Unknown extends JobAvailable
+  case object Yes extends JobAvailable
+  case object No extends JobAvailable
+  def formString(s:String):JobAvailable = s match{
     case "Unknown" => Unknown
     case "Yes" => Yes
     case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
+
+trait FreelancerAvailable
+object FreelancerAvailable{
+  case object Unknown extends FreelancerAvailable
+  case object FullTime extends FreelancerAvailable
+  case object PartTime extends FreelancerAvailable
+  case object LessThen extends FreelancerAvailable
+  def formString(s:String):FreelancerAvailable = s match{
+    case "Unknown" => Unknown
+    case "FullTime" => FullTime
+    case "PartTime" => PartTime
+    case "LessThen" => LessThen
     case _ => throw new Exception("Error on parse: " + s)}}
 
 trait Update

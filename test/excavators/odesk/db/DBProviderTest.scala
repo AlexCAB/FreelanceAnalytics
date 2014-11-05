@@ -67,7 +67,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     jobId = 1L,
     changeData = JobChanges(
       createDate = new Date(System.currentTimeMillis()),
-      jobAvailable = Availability.No,
+      jobAvailable = JobAvailable.No,
       lastViewed = Some(new Date(System.currentTimeMillis())),
       nApplicants = Some(2),
       applicantsAvg = Some(12.3),
@@ -199,7 +199,7 @@ class DBProviderTest extends WordSpecLike with Matchers {
     assert(tr.nonEmpty)
     assert(tr.map(_.oUrl).contains("http//www.2"))}
   "check existence url" in {
-    assert(dbProvider.isJobScraped("http//www.1") == Some(1L,Availability.No))
+    assert(dbProvider.isJobScraped("http//www.1") == Some(1L,JobAvailable.No))
     assert(dbProvider.isJobScraped("http//www.deewdew") == None)}
   "setNextJobCheckTime" in {
     dbProvider.setNextJobCheckTime(1L, Some(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 48))))}

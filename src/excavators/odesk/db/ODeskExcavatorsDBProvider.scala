@@ -2,10 +2,9 @@ package excavators.odesk.db
 
 import java.sql.Timestamp
 import java.util.Date
-import util.structures._
-import excavators.util.logging.LoggerDBProvider
-import excavators.util.parameters.ParametersMap
+import util.logging.LoggerDBProvider
 import util.db.DBProvider
+import util.parameters.ParametersMap
 import util.structures._
 import scala.slick.driver.H2Driver.simple._
 import scala.slick.jdbc.StaticQuery
@@ -154,13 +153,13 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
   def getFreelancerIdByURL(url:String):Option[Long] = { //Return row ID by freelancer page URL
     //!!! Non implemented
     None}
-  def isJobScraped(url:String):Option[(Long,Availability)] = { //Return ID if url in odesk_jobs
+  def isJobScraped(url:String):Option[(Long,JobAvailable)] = { //Return ID if url in odesk_jobs
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.isJobScraped] No created DB.")}
     db.get.withSession(implicit session => {
       jobTable.filter(_.o_url === url).list match{
         case e :: _ => e._1.flatMap(id => {
           jobsChangesTable.filter(_.id === id).list match{
-            case s :: _ => Some((id, Availability.formString(s._4)))
+            case s :: _ => Some((id, JobAvailable.formString(s._4)))
             case _ => None}})
         case _ => None}})}
   def setNextJobCheckTime(id:Long, d:Option[Date]) = {

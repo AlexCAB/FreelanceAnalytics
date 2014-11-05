@@ -2,7 +2,7 @@ package excavators.odesk.apps.searcher
 
 import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
-import excavators.util.logging.{ToDBAndConsoleLogger, SimpleLogger}
+import util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
 * oDesk job searcher

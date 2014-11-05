@@ -1,5 +1,4 @@
-package excavators.util.parameters
-import scala.collection.mutable.{Map => MutMap}
+package util.parameters
 import scala.reflect.runtime.universe._
 
 /**

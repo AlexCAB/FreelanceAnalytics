@@ -1,4 +1,4 @@
-package excavators.util.parameters
+package util.parameters
 import org.scalatest._
 
 /**

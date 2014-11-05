@@ -4,9 +4,9 @@ import java.awt.image.BufferedImage
 import java.util.Date
 
 import excavators.odesk.db.ODeskExcavatorsDBProvider
-import excavators.util.logging.Logger
-import excavators.util.parameters.ParametersMap
-import excavators.util.tasks.{Task, TaskExecutor}
+import util.logging.Logger
+import util.parameters.ParametersMap
+import util.tasks.{Task, TaskExecutor}
 import util.structures._
 
 /**
@@ -42,9 +42,9 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       JobsRow(
         id = 0,
         foundData = j,
-        daeDate = if(pj.jobChanges.jobAvailable == Availability.No){Some(cd)}else{None}, //If job not available set dae date
+        daeDate = if(pj.jobChanges.jobAvailable == JobAvailable.No){Some(cd)}else{None}, //If job not available set dae date
         deleteDate = None,
-        nextCheckDate = if(pj.jobChanges.jobAvailable != Availability.No){Some(ncd)}else{None}, //If job not available not add to tracking
+        nextCheckDate = if(pj.jobChanges.jobAvailable != JobAvailable.No){Some(ncd)}else{None}, //If job not available not add to tracking
         jabData = pj.job)}
     //Prepare JobsChangesRow structure
     val jcr = JobsChangesRow(

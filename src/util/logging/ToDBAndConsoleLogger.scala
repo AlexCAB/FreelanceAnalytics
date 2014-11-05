@@ -1,10 +1,10 @@
-package excavators.util.logging
+package util.logging
 
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import excavators.util.logging.LoggerConsole
-import excavators.util.parameters.ParametersMap
+import util.parameters.ParametersMap
+
 
 /**
  * Logger which log to console and to DB
