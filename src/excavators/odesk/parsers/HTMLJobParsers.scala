@@ -94,7 +94,7 @@ class HTMLJobParsers extends ParserHelpers{
     //Extract jobs data
     val b = Some(d.body)//.getAllElements.toListOpt
     val rl = b.getAllElemsByClass(jobClassName).map(j => {
-      //Ger values
+      //Get values
       val ds = j.getChildList.flatMap{
         case e:Some[Element] => e.get.className() match{
           case `titleClassName` => List(titleClassName -> e.getElemsByClass(linkClassName).getHead.getAttr(hrefAttr))

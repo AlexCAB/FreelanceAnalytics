@@ -95,3 +95,24 @@ object Update{
     case "Updated" => Updated
     case _ => throw new Exception("Error on parse: " + s)}}
 
+trait Access
+object Access{
+  case object Unknown extends Access
+  case object Pubic extends Access
+  case object Private extends Access
+  def formString(s:String):Access = s match{
+    case "Unknown" => Unknown
+    case "Pubic" => Pubic
+    case "Private" => Private
+    case _ => throw new Exception("Error on parse: " + s)}}
+
+trait Status
+object Status{
+  case object Unknown extends Status
+  case object Active extends Status
+  case object Closed extends Status
+  def formString(s:String):Status = s match{
+    case "Unknown" => Unknown
+    case "Active" => Active
+    case "Closed" => Closed
+    case _ => throw new Exception("Error on parse: " + s)}}

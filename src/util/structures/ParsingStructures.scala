@@ -112,7 +112,7 @@ case class ParsedJob(
   hires:List[JobHired],
   clientWorks:List[ClientWork])
 
-//Freelancer data
+////Freelancer data
 //case class Freelancer(
 //  createDate:Date,
 //  name:Option[String],
@@ -137,7 +137,7 @@ case class FreelancerChanges(
   link:Option[String],
   title:Option[String],
   profileAccess:Option[String],
-  exposeFullName:Option[Int],
+  exposeFullName:Option[String],
   role:Option[String],
   emailVerified:Option[Boolean],
   videoUrl:Option[String],
@@ -161,25 +161,68 @@ case class FreelancerChanges(
 
 //Freelancer work data
 case class FreelancerWorkRecord(
-  title:Option[String],
-  jobId:Option[Long],
-  jobUrl:Option[String],
+  jobKey:Option[String],
+  paymentType:Payment,
+  status:Status,
   startDate:Option[Date],
   endDate:Option[Date],
-  paymentType:Payment,
-  billed:Option[Double],
-  hours:Option[Int],
+  fromFull:Option[Date],
+  toFull:Option[Date],
+  openTitle:Option[String],
+  endTitle:Option[String],
+  skills:List[String],
+  openAccess:Access,
+  cnyStatus:Option[String],
+  financialPrivacy:Option[String],
+  isHidden:Option[Double],
+  agencyName:Option[String],
+  segmentationData:Option[String], //JSON Array
+  asType:Option[String],
+  totalHours:Option[Double],
   rate:Option[Double],
-  description:Option[String],
-  skillsRating:List[String],
-  qualityRating:Option[Double],
-  availabilityRating:Option[Double],
-  deadlinesRating:Option[Double],
-  communicationRating:Option[Double],
-  cooperationRating:Option[Double],
-  feedbackText:Option[String],
-  freelancerFeedbackRating:Option[Double],
-  freelancerFeedbackTxt:Option[String])
+  totalCost:Option[Double],
+  chargeRate:Option[Double],
+  amount:Option[Double],
+  totalHoursPrecise:Option[Double],
+  blendedRate:Option[Double],
+  totalCharge:Option[Double],
+  ffScores:Map[String,Int],
+  ffIsPublic:Option[String],
+  ffComment:Option[String],
+  ffPrivatePoint:Option[Int],
+  ffReasons:List[Int],
+  ffResponse:Option[String],
+  ffScore:Option[Double],
+  cfScores:Map[String,Int],
+  cfIsPublic:Option[Int],
+  cfComment:Option[String],
+  cfResponse:Option[String],
+  cfScore:Option[Double])
+
+case class FreelancerWorkData(
+  JobContractorTier:Option[Int],
+  JobSkills:List[String],
+  JobJobUrl:Option[String], // "/jobs/ + <ciphertext>"
+  JobIsPrivate:Option[Boolean],
+  JobDescription:Option[String],
+  JobCategory:Option[String],
+  JobEndDate:Option[Date],
+  JobEngagement:Option[String],
+  JobDuration:Option[String],
+  JobAmount:Option[Double],
+  clientFeedback:Option[Double],
+  clientScore:Option[Double],
+  clientTotalCharge:Option[Double],
+  clientTotalHires:Option[Int],
+  clientActiveContract:Option[Int],
+  clientCountry:Option[String],
+  clientCity:Option[String],
+  clientTime:Option[Int],      //Shift from +2
+  clientMemberSince:Option[Date])
+
+case class FreelancerWork(
+  record:FreelancerWorkRecord,
+  data:FreelancerWorkData)
 
 //Freelancer portfolio data
 case class FreelancerPortfolio(
@@ -229,7 +272,8 @@ case class FreelancerOtherExperience(
   description:Option[String])
 
 case class FreelancerParsedData(
-  changes:FreelancerChanges
+  changes:FreelancerChanges,
+  works:List[FreelancerWorkRecord]
 
                                  )
 
