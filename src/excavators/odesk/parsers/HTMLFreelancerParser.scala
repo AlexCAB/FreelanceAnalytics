@@ -11,56 +11,14 @@ import util.structures._
  */
 
 class HTMLFreelancerParser extends ParserHelpers {
-  //Helpers
-  implicit class TextEx(pt:Map[String, String]){
-    def getFirstWord(key:String):Option[String] = {
-      pt.getOrElse(key,"").takeWhile(_ != ';').filter(c => {c != '\"' && c != ' '}) match{
-        case "" => None
-        case s => Some(s)}}
-    def getBoolean(key:String):Option[Boolean] = {
-      pt.getOrElse(key,"").takeWhile(_ != ';').filter(c => {c != '\"' && c != ' '}) match{
-        case "true" => Some(true)
-        case "false" => Some(false)
-        case _ => None}}
-
-
-  }
-  implicit class JSONObjEx(pjo:Map[String, Option[JSONObject]]){
-    private def getString(oj:Option[JSONObject], key:String):Option[String] = oj.flatMap(j => {
-      (try{Some(j.getString(key))}catch{case _:Exception => None}).flatMap(_ match{case "" => None; case s =>Some(s)})})
-    private def getInt(oj:Option[JSONObject], key:String):Option[Int] = oj.flatMap(j => {
-      try{Some(j.getInt(key))}catch{case _:Exception => None}})
-    def getTopString(jsonName:String,key:String):Option[String] = getString(pjo.getOrElse(jsonName,None),key)
-    def getTopInt(jsonName:String,key:String):Option[Int] = getInt(pjo.getOrElse(jsonName,None),key)
-    def getTopDoubleFromString(jsonName:String,key:String):Option[Double] = getString(pjo.getOrElse(jsonName,None),key).parseDouble
-    def getTopIntFromString(jsonName:String,key:String):Option[Int] = getString(pjo.getOrElse(jsonName,None),key).parseInt
-    def getStringByPath(jsonName:String, keyPath:List[String]):Option[String] = {
-      def srh(oj:Option[JSONObject], ks:List[String]):Option[String] = (oj,ks) match{
-        case (oj:Some[JSONObject], k :: Nil) =>  getString(oj, k)
-        case (Some(j), k :: t) =>  srh(Some(j.getJSONObject(k)), t)
-        case _ => None}
-      srh(pjo.getOrElse(jsonName,None), keyPath)}
-    
-
-
-
-
-
-    }
-
-  implicit class JSONArrEx(pja:Map[String, Option[JSONArray]]) {
-    def getTopList(jsonName: String): List[JSONObject] = {
-      pja.getOrElse(jsonName, None) match {
-        case Some(jo) => try {
-          (0 until jo.length()).toList.map(i => jo.getJSONObject(i))}
-        case None => List()}}
-  }
   //Methods
   def parseFreelancerProfile(html:String):FreelancerParsedData = {
     //Current date
     val cd = new Date
     //Parsing of HTML
     val ph = try{Some(Jsoup.parse(html).body())}catch{case _:Exception => None}
+    val om = ph.getAllElemsByClass("oMain").headOption.flatMap(e => e)
+    val os = ph.getAllElemsByClass("oSide").headOption.flatMap(e => e)
     //Parsing of JSON
     val pt = html.split("odesk.pageConfig.").drop(1).map(s => {
       val k = s.takeWhile(_ != ' ')
@@ -72,10 +30,6 @@ class HTMLFreelancerParser extends ParserHelpers {
     val pja = pt.flatMap{
       case(k,v) if(v != "" && v.take(1) == "[") => Map(k -> (try{Some(new JSONArray(v))}catch{case _:Exception => None}))
       case _ => Map[String,Option[JSONArray]]()}
-
-    //Elements
-    val om = ph.getAllElemsByClass("oMain").headOption.flatMap(e => e)
-    val os = ph.getAllElemsByClass("oSide").headOption.flatMap(e => e)
     //FreelancerChanges
     val fcd = {
       //Preparing
@@ -88,7 +42,7 @@ class HTMLFreelancerParser extends ParserHelpers {
         val s = os.getElemsByTeg("section").find(e => {val s = e.getText.pSplit.take(2); s.contains("Associated")})
         val a = s.flatMap(e => e.getElemsByClassPath(p).headOption).flatMap(e => e)
         (a.getAttr("href"), a.getElemsByTeg("img").headOption.flatMap(_.getAttr("src")))}
-      //Build
+      //Building
       FreelancerChanges(
         createDate = cd,
         name =  pjo.getTopString("contractorTitleData","displayName"),
@@ -97,9 +51,15 @@ class HTMLFreelancerParser extends ParserHelpers {
         profileAccess = pjo.getStringByPath("contractorAvailability",List("data","profileAccess")),
         exposeFullName = pjo.getTopString("contractorTitleData","exposeFullName"),
         role = pt.getFirstWord("userRole"),
-        emailVerified = pt.getBoolean("emailVerified"),
+        emailVerified = pt.getFirstWord("emailVerified") match{
+          case Some("true") => Verified.Yes
+          case Some("false") => Verified.No
+          case _ => Verified.Unknown},
         videoUrl = pjo.getTopString("contractorOverviewData","videoUrl"),
-        isInviteInterviewAllowed = pt.getBoolean("isInviteInterviewAllowed"),
+        isInviteInterviewAllowed = pt.getFirstWord("isInviteInterviewAllowed") match{
+          case Some("true") => Allowed.Yes
+          case Some("false") => Allowed.No
+          case _ => Allowed.Unknown},
         availability =  pjo.getStringByPath("contractorAvailability",List("data","capacity")) match{
           case Some("fullTime") => FreelancerAvailable.FullTime
           case Some("partTime") => FreelancerAvailable.PartTime
@@ -122,14 +82,14 @@ class HTMLFreelancerParser extends ParserHelpers {
               case "Native" => Some(4)
               case _ => None}
             val pv = v match{
-              case "Self-Assessed" => Some(false)
-              case "Verified" => Some(true)
-              case _ => None}
+              case "Self-Assessed" => Verified.No
+              case "Verified" => Verified.Yes
+              case _ => Verified.Unknown}
             Some(FreelancerLanguage(n,pl,pv))}
           case _ => None}),
         photoUrl = {val p = List("oMed p","oContractorInfo oContractorInfoLarge","oMed","oLeft oPortraitLarge")
           om.getElemsByClassPath(p).headOption.flatMap(e => e).getElemsByTeg("img").headOption.flatMap(e => e).getAttr("src")},
-        rate = pjo.getTopDoubleFromString("contractorRateData","formattedRate"),
+        rate = pjo.getTopString("contractorRateData","formattedRate").parseDouble,
         rentPercent = pjo.getTopInt("contractorRateData","rentPercent"),
         rating = rw,
         allTimeJobs = njw,
@@ -138,6 +98,146 @@ class HTMLFreelancerParser extends ParserHelpers {
           om.getElemsByClassPath(p).headOption.flatMap(e => e).getElemsByTeg("li").flatMap(e => e.getAttr("data-skill"))},
         companyUrl = cu,
         companyLogoUrl = clu)}
+    //List[FreelancerWorkRecord]
+    val fws = pja.getTopList("assignments").map(ow => {
+      //Preparing
+      val ff = ow.getTopObject("feedback_given")
+      val cf = ow.getTopObject("feedback")
+      val lp = ow.getTopObject("linkedProject")
+      val lpc = lp.getTopObject("pi_category")
+      //Building
+      FreelancerWorkRecord(
+        jobKey = ow.getTopString("enc_job_key"),
+        paymentType = ow.getTopString("as_job_type") match{
+          case Some("Hourly") => Payment.Hourly
+          case Some("Fixed") => Payment.Budget
+          case _ => Payment.Unknown},
+        status = ow.getTopString("as_status") match{
+          case Some("Active") => Status.Active
+          case Some("Closed") => Status.Closed
+          case _ => Status.Unknown},
+        startDate = ow.getTopString("as_from").parseShortDate,
+        endDate = ow.getTopString("as_to").parseShortDate,
+        fromFull = ow.getTopString("as_from_full").parseJsonDate,
+        toFull = ow.getTopString("as_to_full").parseJsonDate,
+        openingTitle = ow.getTopString("as_opening_title_original"),
+        engagementTitle = ow.getTopString("as_engagement_title"),
+        skills =  ow.getTopString("as_skills") match{case Some(s) => s.split(",").toList; case None => List()},
+        openAccess = ow.getTopString("as_opening_access"),
+        cnyStatus = ow.getTopString("as_cny_status"),
+        financialPrivacy = ow.getTopString("as_financial_privacy"),
+        isHidden = ow.getTopBoolean("isHidden") match{
+          case Some(true) => Hidden.Yes
+          case Some(false) => Hidden.No
+          case _ => Hidden.Unknown},
+        agencyName = ow.getTopString("as_agency_name"),
+        segmentationData = ow.getTopString("as_segmentation_data"),
+        asType = ow.getTopString("as_type"),
+        totalHours = ow.getTopString("as_total_hours").parseDouble,
+        rate = ow.getTopString("as_rate").parseDouble,
+        totalCost = ow.getTopString("as_total_cost").parseDouble,
+        chargeRate = ow.getTopString("as_blended_charge_rate").parseDouble,
+        amount = ow.getTopString("as_amount").parseDouble,
+        totalHoursPrecise = ow.getTopString("as_total_hours_precise").parseDouble,
+        costRate = ow.getTopString("as_blended_cost_rate").parseDouble,
+        totalCharge = ow.getTopString("as_total_charge").parseDouble,
+        ffScores = ff.getTopList("scores").flatMap(e => {
+          (e.getTopString("label"), e.getTopString("score").parseInt) match{
+            case (Some(l),Some(s)) => List((l,s))
+            case _ => List()}}).toMap,
+        ffIsPublic = ff.getTopString("comment_is_public"),
+        ffComment = ff.getTopString("comment"),
+        ffPrivatePoint = ff.getTopString("11point_private_feedback").parseInt,
+        ffReasons = ff.getTopString("reasons") match{
+          case Some(s) => s.split(",").map(e => Some(e).parseInt).toList
+          case None => List()},
+        ffResponse = ff.getTopString("response_for_freelancer_feedback"),
+        ffScore = ff.getTopString("score").parseDouble,
+        cfScores = cf.getTopList("scores").flatMap(e => {
+          (e.getTopString("label"), e.getTopString("score").parseInt) match{
+            case (Some(l),Some(s)) => List((l,s))
+            case _ => List()}}).toMap,
+        cfIsPublic = cf.getTopString("comment_is_public"),
+        cfComment = cf.getTopString("comment"),
+        cfResponse = cf.getTopString("response_for_client_feedback"),
+        cfScore = cf.getTopString("score").parseDouble,
+        lpTitle = lp.getTopString("pi_title"),
+        lpThumbnail = lp.getTopString("pi_thumbnail"),
+        lpIsPublic = lp.getTopBoolean("pi_is_public") match{
+          case Some(true) => Public.Yes
+          case Some(false) => Public.No
+          case _ => Public.Unknown},
+        lpDescription = lp.getTopString("pi_description"),
+        lpRecno = lp.getTopString("pi_recno"),
+        lpCatLevel1 = lpc.getTopString("pi_category_level1"),
+        lpCatRecno = lpc.getTopInt("pi_category_recno"),
+        lpCatLevel2 = lpc.getTopString("pi_category_level2"),
+        lpCompleted = lp.getTopString("pi_completed"),
+        lpLargeThumbnail = lp.getTopString("pi_large_thumbnail"),
+        lpUrl = lp.getTopString("pi_url"),
+        lpProjectContractLinkState = lp.getTopString("pi_project_contract_link_state"))})
+    //List[FreelancerPortfolioRecord]
+    val ps = om.getAllElemsByClass("jsProfileProjectList").headOption.flatMap(e => e).getElemsByTeg("li").map(op => {
+      FreelancerPortfolioRecord(
+        dataId = op.getAttr("data-project-id"),
+        title = op.getAllElemsByClass("oRowTitle oProjectTitle oEllipsis").headOption.flatMap(_.getText),
+        imgUrl = op.getElemsByClass("oProjectThumbnail").headOption.flatMap(_.getElemsByTeg("img").headOption.flatMap(_.getAttr("src"))))})
+    //List[FreelancerTestRecord]
+    val tsh = om.getElemsByClassPath(List("jsHideWhenEditing","oTable")).headOption.flatMap(_.getElemsByTeg("tbody").headOption.flatMap(e => e))
+    val ts = tsh.getElemsByTeg("tr").map(ot => {
+      //Preparing
+      val (t,s,tm,u) = ot.getElemsByTeg("td") match{
+        case t :: s :: tm :: u :: _ => (t,s,tm,u)
+        case _ => (None,None,None,None)}
+      //Building
+      FreelancerTestRecord(
+        detailsUrl = u.getElemsByTeg("a").headOption.flatMap(_.getAttr("href")),
+        title = t.getText,
+        score = s.getText.pSplit.headOption.parseDouble,
+        timeComplete = tm.getText.pSplit.headOption.parseInt)})
+    //List[FreelancerCertification]
+    val cs = pjo.getTopArray("contractorCertifications","items").toListOfObj.map(jo => {
+      FreelancerCertification(
+        rid = jo.getTopString("rid"),
+        name = jo.getTopString("name"),
+        customData = jo.getTopString("customData"),
+        score = jo.getTopString("score"),
+        logoUrl = jo.getTopString("logo_url"),
+        certUrl = jo.getTopString("cert_url"),
+        isCertVerified = jo.getTopString("is_cert_verified"),
+        isVerified = jo.getTopString("is_verified"),
+        description = jo.getTopString("description"),
+        provider = jo.getTopString("provider"),
+        skills = jo.getTopListString("skills"),
+        dateEarned = jo.getTopString("date_earned"))})
+    //List[FreelancerEmployment]
+    val ems = pjo.getTopArray("employmentSection","items").toListOfObj.map(jo => {
+      FreelancerEmployment(
+        recordId = jo.getTopString("record_id"),
+        title = jo.getTopString("title"),
+        company = jo.getTopString("company"),
+        dateFrom = jo.getTopLong("start_date").map(d => new Date(d)),
+        dateTo = jo.getTopLong("end_date").map(d => new Date(d)),
+        role = jo.getTopString("role"),
+        companyCountry = jo.getTopString("CompanyCountry"),
+        companyCity = jo.getTopString("CompanyCity"),
+        description = jo.getTopString("description_html"))})
+    //List[FreelancerEducation]
+    val eds = pjo.getTopArray("educationSection","items").toListOfObj.map(jo => {
+      FreelancerEducation(
+        school = jo.getTopString("schoolName"),
+        areaOfStudy = jo.getTopString("areaOfStudy"),
+        degree = jo.getTopString("degree"),
+        dateFrom = jo.getTopString("fromYear").parseYear,
+        dateTo = jo.getTopString("toYear").parseYear,
+        comments = jo.getTopString("comments"))})
+    //List[FreelancerOtherExperience]
+    val exs = pjo.getTopArray("contractorOtherExperiencesSection","items").toListOfObj.map(jo => {
+      FreelancerOtherExperience(
+        subject = jo.getTopString("subject"),
+        description = jo.getTopString("description"))})
+    //Return result
+    FreelancerParsedData(fcd,fws,ps,ts,cs,ems,eds,exs)}
 
 
 
@@ -154,7 +254,7 @@ class HTMLFreelancerParser extends ParserHelpers {
 
 
 
-    FreelancerParsedData(fcd,null)}
+
 
 
 

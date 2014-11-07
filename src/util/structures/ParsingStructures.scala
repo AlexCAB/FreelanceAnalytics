@@ -128,7 +128,7 @@ case class ParsedJob(
 case class FreelancerLanguage(
   name:String,
   level:Option[Int],
-  isVerified:Option[Boolean])
+  isVerified:Verified)
 
 //Freelancer changes data
 case class FreelancerChanges(
@@ -139,9 +139,9 @@ case class FreelancerChanges(
   profileAccess:Option[String],
   exposeFullName:Option[String],
   role:Option[String],
-  emailVerified:Option[Boolean],
+  emailVerified:Verified,
   videoUrl:Option[String],
-  isInviteInterviewAllowed:Option[Boolean],
+  isInviteInterviewAllowed:Allowed,
   availability:FreelancerAvailable,
   availableAgain:Option[String],
   responsivenessScore:Option[String],
@@ -168,13 +168,13 @@ case class FreelancerWorkRecord(
   endDate:Option[Date],
   fromFull:Option[Date],
   toFull:Option[Date],
-  openTitle:Option[String],
-  endTitle:Option[String],
+  openingTitle:Option[String],
+  engagementTitle:Option[String],
   skills:List[String],
-  openAccess:Access,
+  openAccess:Option[String],
   cnyStatus:Option[String],
   financialPrivacy:Option[String],
-  isHidden:Option[Double],
+  isHidden:Hidden,
   agencyName:Option[String],
   segmentationData:Option[String], //JSON Array
   asType:Option[String],
@@ -184,26 +184,39 @@ case class FreelancerWorkRecord(
   chargeRate:Option[Double],
   amount:Option[Double],
   totalHoursPrecise:Option[Double],
-  blendedRate:Option[Double],
+  costRate:Option[Double],
   totalCharge:Option[Double],
   ffScores:Map[String,Int],
   ffIsPublic:Option[String],
   ffComment:Option[String],
   ffPrivatePoint:Option[Int],
-  ffReasons:List[Int],
+  ffReasons:List[Option[Int]],
   ffResponse:Option[String],
   ffScore:Option[Double],
   cfScores:Map[String,Int],
-  cfIsPublic:Option[Int],
+  cfIsPublic:Option[String],
   cfComment:Option[String],
   cfResponse:Option[String],
-  cfScore:Option[Double])
+  cfScore:Option[Double],
+  lpTitle:Option[String],
+  lpThumbnail:Option[String],
+  lpIsPublic:Public,
+  lpDescription:Option[String],
+  lpRecno:Option[String],
+  lpCatLevel1:Option[String],
+  lpCatRecno:Option[Int],
+  lpCatLevel2:Option[String],
+  lpCompleted:Option[String],
+  lpLargeThumbnail:Option[String],
+  lpUrl:Option[String],
+  lpProjectContractLinkState:Option[String])
 
 case class FreelancerWorkData(
+  createDate:Date,
   JobContractorTier:Option[Int],
   JobSkills:List[String],
-  JobJobUrl:Option[String], // "/jobs/ + <ciphertext>"
-  JobIsPrivate:Option[Boolean],
+  JobJobUrl:Option[String],   // "/jobs/ + <ciphertext>"
+  JobIsPublic:Public,         // originally isPrivate
   JobDescription:Option[String],
   JobCategory:Option[String],
   JobEndDate:Option[Date],
@@ -224,23 +237,39 @@ case class FreelancerWork(
   record:FreelancerWorkRecord,
   data:FreelancerWorkData)
 
+
 //Freelancer portfolio data
-case class FreelancerPortfolio(
-  oUrl:String,
-  createDate:Option[Date],
+case class FreelancerPortfolioRecord(
+  dataId:Option[String],
+  title:Option[String],
+  imgUrl:Option[String])
+
+case class FreelancerPortfolioData(
+  createDate:Date,
+  projectDate:Option[Date],
   title:Option[String],
   description:Option[String],
   img:Option[Image],
   category:Option[String],
   subCategory:Option[String],
   skills:List[String],
-  url:Option[String])
+  projectUrl:Option[String])
+
+case class FreelancerPortfolio(
+  record:FreelancerPortfolioRecord,
+  data:FreelancerPortfolioData)
 
 //Freelancer test data
-case class FreelancerTest(
-  oUrl:String,
+case class FreelancerTestRecord(
+  detailsUrl:Option[String],
   title:Option[String],
-  createDate:Option[Date],
+  score:Option[Double],
+  timeComplete:Option[Int])
+
+case class FreelancerTestData(
+  createDate:Date,
+  oUrl:String,              //Test URL
+  title:Option[String],
   scoreSize:Option[Double],
   score:Option[Double],
   time:Option[Int],
@@ -249,34 +278,60 @@ case class FreelancerTest(
   nTestTake:Option[Int],
   topics:Map[String,Int])
 
+case class FreelancerTest(
+  record:FreelancerTestRecord,
+  data:FreelancerTestData)
+
+//Freelancer certification data
+case class FreelancerCertification(
+  rid:Option[String],
+  name:Option[String],
+  customData:Option[String],
+  score:Option[String],
+  logoUrl:Option[String],
+  certUrl:Option[String],
+  isCertVerified:Option[String],
+  isVerified:Option[String],
+  description:Option[String],
+  provider:Option[String],
+  skills:List[String],
+  dateEarned:Option[String])
+
 //Freelancer employment data
 case class FreelancerEmployment(
+  recordId:Option[String],
   title:Option[String],
   company:Option[String],
   dateFrom:Option[Date],
   dateTo:Option[Date],
+  role:Option[String],
+  companyCountry:Option[String],
+  companyCity:Option[String],
   description:Option[String])
 
 //Freelancer education data
 case class FreelancerEducation(
-  title:Option[String],
   school:Option[String],
+  areaOfStudy:Option[String],
+  degree:Option[String],
   dateFrom:Option[Date],
   dateTo:Option[Date],
-  description:Option[String])
+  comments:Option[String])
 
 //Freelancer other experience data
 case class FreelancerOtherExperience(
-  title:Option[String],
-  createDate:Option[Date],
+  subject:Option[String],
   description:Option[String])
 
 case class FreelancerParsedData(
   changes:FreelancerChanges,
-  works:List[FreelancerWorkRecord]
-
-                                 )
-
+  works:List[FreelancerWorkRecord],
+  portfolio:List[FreelancerPortfolioRecord],
+  tests:List[FreelancerTestRecord],
+  certification:List[FreelancerCertification],
+  employment:List[FreelancerEmployment],
+  education:List[FreelancerEducation],
+  experience:List[FreelancerOtherExperience])
 
 //Company data
 case class Company(

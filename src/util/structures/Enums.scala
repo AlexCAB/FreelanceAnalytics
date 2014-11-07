@@ -71,6 +71,50 @@ object JobAvailable{
     case "No" => No
     case _ => throw new Exception("Error on parse: " + s)}}
 
+trait Verified
+object Verified{
+  case object Unknown extends Verified
+  case object Yes extends Verified
+  case object No extends Verified
+  def formString(s:String):Verified = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
+
+trait Allowed
+object Allowed{
+  case object Unknown extends Allowed
+  case object Yes extends Allowed
+  case object No extends Allowed
+  def formString(s:String):Allowed = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
+
+trait Hidden
+object Hidden{
+  case object Unknown extends Hidden
+  case object Yes extends Hidden
+  case object No extends Hidden
+  def formString(s:String):Hidden = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
+
+trait Public
+object Public{
+  case object Unknown extends Public
+  case object Yes extends Public
+  case object No extends Public
+  def formString(s:String):Public = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}
+
 trait FreelancerAvailable
 object FreelancerAvailable{
   case object Unknown extends FreelancerAvailable

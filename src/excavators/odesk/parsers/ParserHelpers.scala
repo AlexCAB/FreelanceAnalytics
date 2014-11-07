@@ -2,6 +2,7 @@ package excavators.odesk.parsers
 
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
+import org.json.{JSONArray, JSONObject}
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 
@@ -33,10 +34,11 @@ trait ParserHelpers {
   protected val liTeg = "li"
   protected val dataContentTeg = "data-content"
   protected val pTag = "p"
-  //Helpers
+  //Helpers HTML
   protected val oDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
   protected val oShortDateFormat = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
   protected val oFullDateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH)
+  protected val oYearFormat = new SimpleDateFormat("yyyy", Locale.ENGLISH)
   protected implicit class ElsHelper(es:Elements){
     def toListOpt:List[Option[Element]] = (for(i <- 0 until es.size())yield es.get(i)).toList.map(Some(_))
     def toList:List[Element] = (for(i <- 0 until es.size())yield es.get(i)).toList}
@@ -117,15 +119,18 @@ trait ParserHelpers {
         case n :: f :: _ if(f == "weeks") => nd(pi(n).map(_ * 60 * 24 * 7))
         case ws if(ws.contains("month")) => nd(Some(60 * 24 * 30))
         case n :: f :: _ if(f == "months") => nd(pi(n).map(_ * 60 * 24 * 30))
-        case s :: _ if(s.contains('/')) => try{Some(new Date(oFullDateFormat.parse(s).getTime))}catch{case _:Exception => None}
+        case s :: _ if(s.contains('/')) => try{Some(oFullDateFormat.parse(s))}catch{case _:Exception => None}
         case _ => None}}
     def parseDate:Option[Date] = os match{
-      case s:Some[String] => try{Some(new Date(oDateFormat.parse(s.pSplit.mkString(" ")).getTime))}catch{case _:Exception => None}
+      case s:Some[String] => try{Some(oDateFormat.parse(s.pSplit.mkString(" ")))}catch{case _:Exception => None}
+      case None => None}
+    def parseYear:Option[Date] = os match{
+      case s:Some[String] => try{Some(oYearFormat.parse(s.pSplit.mkString(" ")))}catch{case _:Exception => None}
       case None => None}
     def parseShortDate:Option[Date] = os match{
-      case s:Some[String] => try{
-        Some(new Date(oShortDateFormat.parse(s.pSplit.mkString(" ")).getTime))}catch{case e:Exception => None}
+      case s:Some[String] => try{Some(oShortDateFormat.parse(s.pSplit.mkString(" ")))}catch{case e:Exception => None}
       case None => None}
+    def parseJsonDate:Option[Date] = os.flatMap(s => try{Some(oFullDateFormat.parse(s))}catch{case e:Exception => None})
     def parseInt:Option[Int] = os match{
       case Some(s) => try{Some(getNum(s).toInt)}catch{case _:Exception => None}
       case None => None}
@@ -139,9 +144,69 @@ trait ParserHelpers {
       m.find{case (k,_) => Some(k).pSplit.contains(kp)}.map{case (_,v) => v}}}
   protected implicit class ElemListHelper(el:List[Option[Element]]){
     def getHead:Option[Element] = el.headOption.flatMap(e => e)}
+  //Helpers JSON
+  implicit class TextEx(pt:Map[String, String]){
+    def getFirstWord(key:String):Option[String] = {
+      pt.getOrElse(key,"").takeWhile(_ != ';').filter(c => {c != '\"' && c != ' '}) match{
+        case "" => None
+        case s => Some(s)}}}
+  implicit class JSONObjMapEx(pjo:Map[String, Option[JSONObject]]){
+    private def getString(oj:Option[JSONObject], key:String):Option[String] = oj.flatMap(j => {
+      (try{Some(j.getString(key))}catch{case _:Exception => None}).flatMap{case "" => None; case s =>Some(s)}})
+    private def getInt(oj:Option[JSONObject], key:String):Option[Int] = oj.flatMap(j => {
+      try{Some(j.getInt(key))}catch{case _:Exception => None}})
+    def getTopString(jsonName:String,key:String):Option[String] = getString(pjo.getOrElse(jsonName,None),key)
+    def getTopBoolean(jsonName:String,key:String):Option[Boolean] = pjo.getOrElse(jsonName,None).flatMap(j => {
+      try{Some(j.getBoolean(key))}catch{case _:Exception => None}})
+    def getTopInt(jsonName:String,key:String):Option[Int] = getInt(pjo.getOrElse(jsonName,None),key)
+    def getStringByPath(jsonName:String, keyPath:List[String]):Option[String] = {
+      def srh(oj:Option[JSONObject], ks:List[String]):Option[String] = (oj,ks) match{
+        case (oj:Some[JSONObject], k :: Nil) =>  getString(oj, k)
+        case (Some(j), k :: t) =>  srh(Some(j.getJSONObject(k)), t)
+        case _ => None}
+      srh(pjo.getOrElse(jsonName,None), keyPath)}
+    def getTopArray(jsonName:String,key:String):Option[JSONArray] = pjo.getOrElse(jsonName,None).flatMap(jo => {
+      try{Some(jo.getJSONArray(key))}catch{case _:Exception => None}})}
+  implicit class JSONArrMapEx(pja:Map[String, Option[JSONArray]]) {
+    def getTopList(jsonName: String):List[JSONObject] = {
+      pja.getOrElse(jsonName, None) match {
+        case Some(jo) => try{(0 until jo.length()).toList.map(i => jo.getJSONObject(i))}catch{case _:Exception => List()}
+        case None => List()}}}
+  implicit class JSONEx(jo:JSONObject) {
+    def getTopString(key:String):Option[String] = {
+      try{
+        jo.getString(key) match{case "" => None; case s => Some(s)}}
+      catch{
+        case _:Exception => None}}
+    def getTopObject(key:String):Option[JSONObject] = try{Some(jo.getJSONObject(key))}catch{case _:Exception => None}
+    def getTopBoolean(key:String):Option[Boolean] = try{Some(jo.getBoolean(key))}catch{case _:Exception => None}
+    def getTopLong(key:String):Option[Long] = try{Some(jo.getLong(key))}catch{case _:Exception => None}
+    def getTopList(key:String):List[JSONObject] = {
+      try{
+        val a = jo.getJSONArray(key); (0 until a.length()).toList.map(i => a.getJSONObject(i))}
+      catch{
+        case _:Exception => List()}}
+    def getTopListString(key:String):List[String] = {
+      try{
+        val a = jo.getJSONArray(key); (0 until a.length()).toList.map(i => a.getString(i))}
+      catch{
+        case _:Exception => List()}}}
+  implicit class JSONOptEx(ojo:Option[JSONObject]) {
+    def getTopString(key:String):Option[String] = ojo.flatMap(jo => {
+      (try{Some(jo.getString(key))}catch{case _:Exception => None}).flatMap{case "" => None; case s =>Some(s)}})
+    def getTopObject(key:String):Option[JSONObject] = ojo.flatMap(jo => try{Some(jo.getJSONObject(key))}catch{case _:Exception => None})
+    def getTopBoolean(key:String):Option[Boolean] = ojo.flatMap(jo => try{Some(jo.getBoolean(key))}catch{case _:Exception => None})
+    def getTopInt(key:String):Option[Int] = ojo.flatMap(jo => try{Some(jo.getInt(key))}catch{case _:Exception => None})
+    def getTopList(key:String):List[JSONObject] = ojo match{
+      case Some(jo) => {
+        try{
+          val a = jo.getJSONArray(key)
+          (0 until a.length()).toList.map(i => a.getJSONObject(i))}
+        catch{
+          case _:Exception => List()}}
+      case None => List()}}
 
-
-
-
-
-}
+  implicit class JSONArrEx(oja:Option[JSONArray]) {
+    def toListOfObj:List[JSONObject] = oja match {
+      case Some(ja) => try{(0 until ja.length()).toList.map(i => ja.getJSONObject(i))}catch{case _:Exception => List()}
+      case None => List()}}}
