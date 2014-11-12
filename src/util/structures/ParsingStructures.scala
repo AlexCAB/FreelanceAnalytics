@@ -213,30 +213,34 @@ case class FreelancerWorkRecord(
 
 case class FreelancerWorkData(
   createDate:Date,
-  JobContractorTier:Option[Int],
-  JobSkills:List[String],
-  JobJobUrl:Option[String],   // "/jobs/ + <ciphertext>"
-  JobIsPublic:Public,         // originally isPrivate
-  JobDescription:Option[String],
-  JobCategory:Option[String],
-  JobEndDate:Option[Date],
-  JobEngagement:Option[String],
-  JobDuration:Option[String],
-  JobAmount:Option[Double],
-  clientFeedback:Option[Double],
+  rawJson:String,
+  jobContractorTier:Option[Int],
+  jobSkills:List[String],
+  jobUrl:Option[String],   // "/jobs/ + <ciphertext>"
+  jobIsPublic:Public,         // originally isPrivate
+  jobDescription:Option[String],
+  jobCategory:Option[String],
+  jobEndDate:Option[Date],
+  jobEngagement:Option[String],
+  jobDuration:Option[String],
+  jobAmount:Option[Double],
+  clientTotalFeedback:Option[Int],
   clientScore:Option[Double],
   clientTotalCharge:Option[Double],
   clientTotalHires:Option[Int],
   clientActiveContract:Option[Int],
   clientCountry:Option[String],
   clientCity:Option[String],
-  clientTime:Option[Int],      //Shift from +2
-  clientMemberSince:Option[Date])
+  clientTime:Option[String],
+  clientMemberSince:Option[Date],
+  clientProfileLogo:Option[String],
+  clientProfileName:Option[String],
+  clientProfileUrl:Option[String],
+  clientProfileSummary:Option[String])
 
 case class FreelancerWork(
   record:FreelancerWorkRecord,
   data:FreelancerWorkData)
-
 
 //Freelancer portfolio data
 case class FreelancerPortfolioRecord(
@@ -246,13 +250,19 @@ case class FreelancerPortfolioRecord(
 
 case class FreelancerPortfolioData(
   createDate:Date,
+  rawJson:String,
   projectDate:Option[Date],
   title:Option[String],
   description:Option[String],
-  img:Option[Image],
+  imgUrl:Option[String],
+  isPublic:Public,
+  attachments:List[String],
+  creationTs:Option[Date],
   category:Option[String],
   subCategory:Option[String],
   skills:List[String],
+  isClient:Client,
+  flagComment:Option[String],
   projectUrl:Option[String])
 
 case class FreelancerPortfolio(
@@ -324,6 +334,7 @@ case class FreelancerOtherExperience(
   description:Option[String])
 
 case class FreelancerParsedData(
+  rawHtml:String,
   changes:FreelancerChanges,
   works:List[FreelancerWorkRecord],
   portfolio:List[FreelancerPortfolioRecord],

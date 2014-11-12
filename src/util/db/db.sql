@@ -199,6 +199,293 @@ create table odesk_found_freelancers(
   priority integer not null);
 
 
+create table odesk_freelancers(
+  id bigint primary key auto_increment,
+  create_date datetime not null,
+  o_url varchar(255) not null unique);
+
+create table odesk_freelancers_raw_html(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  html mediumtext not null);
+
+create table odesk_freelancers_raw_job_json(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  json mediumtext not null);
+
+create table odesk_freelancers_raw_portfolio_json(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  json mediumtext not null);
+
+create table odesk_freelancers_main_change(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  name varchar(500) default null,
+  profile_access varchar(100) default null,
+  link varchar(500) default null,
+  expose_full_name varchar(20) default null,
+  role varchar(100) default null,
+  video_url varchar(500) default null,
+  is_invite_interview_allowed varchar(20) default null,
+  location varchar(100) default null,
+  time_zone int default null,
+  email_verified varchar(20) default null,
+  photo blob default null,
+  company_url varchar(500) default null,
+  company_logo blob default null);
+
+create table odesk_freelancers_additional_change(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  title varchar(200) default null,
+  availability varchar(20) default null,
+  available_again varchar(100) default null,
+  responsiveness_score varchar(100) default null,
+  overview varchar(5000) default null,
+  languages varchar(4000) default null,
+  rate float(53) default null,
+  rent_percent int default null,
+  rating float(53) default null,
+  all_time_jobs int default null,
+  all_time_hours int default null,
+  skills varchar(4000) default null);
+
+create table odesk_freelancers_work(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  payment_type varchar(20) default null,
+  status varchar(20) default null,
+  start_date datetime default null,
+  end_date datetime default null,
+  from_full datetime default null,
+  to_full datetime default null,
+  opening_title varchar(500) default null,
+  engagement_title varchar(500) default null,
+  skills varchar(4000) default null,
+  open_access varchar(20) default null,
+  cny_status varchar(100) default null,
+  financial_privacy varchar(100) default null,
+  is_hidden varchar(20) default null,
+  agency_name varchar(500) default null,
+  segmentation_data varchar(4000) default null);
+
+create table odesk_freelancers_work_additional_data(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  as_type varchar(100) default null,
+  total_hours int default null,
+  rate float(53) default null,
+  total_cost float(53) default null,
+  charge_rate float(53) default null,
+  amount float(53) default null,
+  total_hours_precise float(53) default null,
+  cost_rate float(53) default null,
+  total_charge float(53) default null,
+  Job_contractor_tier int default null,
+  job_url varchar(500) default null,
+  job_description varchar(5000) default null,
+  job_category varchar(100) default null,
+  job_engagement varchar(100) default null,
+  job_duration varchar(100) default null,
+  job_amount float(53) default null);
+
+create table odesk_freelancers_work_feedback(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  ff_scores varchar(4000) default null,
+  ff_is_public varchar(20) default null,
+  ff_comment varchar(1000) default null,
+  ff_private_point int default null,
+  ff_reasons varchar(4000) default null,
+  ff_response varchar(100) default null,
+  ff_score float(53) default null,
+  cf_scores varchar(4000) default null,
+  cf_is_public varchar(20) default null,
+  cf_comment varchar(1000) default null,
+  cf_response varchar(1000) default null,
+  cf_score float(53) default null);
+
+create table odesk_freelancers_work_linked_project_data(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  lp_title varchar(1000) default null,
+  lp_thumbnail varchar(500) default null,
+  lp_is_public varchar(20) default null,
+  lp_description varchar(5000) default null,
+  lp_recno varchar(100) default null,
+  lp_cat_level_1 varchar(100) default null,
+  lp_cat_recno varchar(100) default null,
+  lp_cat_level_2 varchar(100) default null,
+  lp_completed varchar(100) default null,
+  lp_large_thumbnail varchar(500) default null,
+  lp_url varchar(500) default null,
+  lp_project_contract_link_state varchar(100) default null);
+
+create table odesk_freelancers_work_clients(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  client_total_feedback int default null,
+  client_score float(53) default null,
+  client_total_charge float(53) default null,
+  client_total_hires int default null,
+  client_active_contract int default null,
+  client_country varchar(100) default null,
+  client_city varchar(100) default null,
+  client_time varchar(100) default null,
+  client_member_since datetime not null,
+  client_profile_logo blob default null,
+  client_profile_name varchar(500) default null,
+  client_profile_url varchar(500) default null,
+  client_profile_summary varchar(1000) default null);
+
+create table odesk_freelancers_portfolio(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  project_date datetime not null,
+  title varchar(1000) default null,
+  description varchar(5000) default null,
+  is_public varchar(20) default null,
+  attachments varchar(4000) default null,
+  creation_ts datetime not null,
+  category varchar(100) default null,
+  sub_category varchar(100) default null,
+  skills varchar(4000) default null,
+  is_client varchar(20) default null,
+  flag_comment varchar(1000) default null,
+  project_url varchar(500) default null,
+  img_url blob default null);
+
+create table odesk_freelancers_tests(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  title varchar(1000) default null,
+  score float(53) default null,
+  time_complete int default null);
+
+create table odesk_freelancers_certification(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  rid varchar(100) default null,
+  name varchar(100) default null,
+  custom_data varchar(1000) default null,
+  score varchar(100) default null,
+  logo_url varchar(500) default null,
+  cert_url varchar(500) default null,
+  is_cert_verified varchar(20) default null,
+  is_verified varchar(20) default null,
+  description varchar(5000) default null,
+  provider varchar(500) default null,
+  skills varchar(4000) default null,
+  date_earned varchar(100) default null);
+
+create table odesk_freelancers_employment(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  record_id varchar(100) default null,
+  title varchar(1000) default null,
+  company varchar(1000) default null,
+  date_from datetime default null,
+  date_to datetime default null,
+  role varchar(100) default null,
+  company_country varchar(100) default null,
+  company_city varchar(100) default null,
+  description varchar(5000) default null);
+
+create table odesk_freelancers_education(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  school varchar(1000) default null,
+  area_of_study varchar(1000) default null,
+  degree varchar(100) default null,
+  date_from datetime default null,
+  date_to datetime default null,
+  comments varchar(5000) default null);
+
+create table odesk_freelancers_other_experience(
+  id bigint primary key auto_increment,
+  freelancer_id bigint not null,
+  create_date datetime not null,
+  subject varchar(1000) default null,
+  description varchar(5000) default null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

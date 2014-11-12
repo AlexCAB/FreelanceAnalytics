@@ -21,9 +21,9 @@ class TestWorker(b:Browser) extends ManagedWorker {
 //    d.getContentPane.add(new JLabel(new ImageIcon(img)));
 //    d.pack()
 //    d.setVisible(true)
-    println(b.getJSONByUrl("/job-description/MCvz%2FBa3TC50m2eYSC0ycHN0bzOgPtAcc5EQJcp%2BaE0%3D"))}
+    println(b.getJSONByUrl("/job-description/MCvz%2FBa3TC50m2eYSC0ycHN0bzOgPtAcc5EQJcp%2BaE0%3D"))
+    println(b.getJSONByUrl("/fwh-api/project/id/517305105032445952/key/~015d8df4348d317d56"))}
   def setPaused(s:Boolean) = {println("TestWorker.setWork = " + s); w = s}
   def isPaused:Boolean = w}
-//
-//Key	Value
-//Request	GET /job-description/MCvz%2FBa3TC50m2eYSC0ycHN0bzOgPtAcc5EQJcp%2BaE0%3D HTTP/1.1
+
+

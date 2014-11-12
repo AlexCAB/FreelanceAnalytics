@@ -160,3 +160,14 @@ object Status{
     case "Active" => Active
     case "Closed" => Closed
     case _ => throw new Exception("Error on parse: " + s)}}
+
+trait Client
+object Client{
+  case object Unknown extends Client
+  case object Yes extends Client
+  case object No extends Client
+  def formString(s:String):Client = s match{
+    case "Unknown" => Unknown
+    case "Yes" => Yes
+    case "No" => No
+    case _ => throw new Exception("Error on parse: " + s)}}

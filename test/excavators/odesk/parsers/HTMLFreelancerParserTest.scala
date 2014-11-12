@@ -155,99 +155,58 @@ class HTMLFreelancerParserTest extends WordSpecLike with Matchers {
     assert(ted0.dateTo == Some(dateFormater.parse("2009.Jan.01 00:00:00")))
     assert(ted0.comments == None)
     //List[FreelancerOtherExperience]
-    assert(tr.experience.size == 0)
-
-
-
-
-
-
-
-  }
-//  "Creator-Software-Made-order_~01aae5df549caa4620" in { //https://www.odesk.com/users/Creator-Software-Made-order_~01aae5df549caa4620
-//    val html = getHtml("html\\Creator-Software-Made-order_~01aae5df549caa4620.html")
-//    //
-//    val tr = htmlParser.parseFreelancerProfile(html)
-//    //Freelancer changes data
-//    assert(tr.changes.name == Some("Applicius SAS"))
-//    assert(tr.changes.link == None)
-//    assert(tr.changes.title == Some("Creator of Software &quot;Made to order&quot;"))
-//    assert(tr.changes.profileAccess == Some("public"))
-//    assert(tr.changes.exposeFullName == None)
-//    assert(tr.changes.role == Some("contractor"))
-//    assert(tr.changes.emailVerified == Some(true))
-//    assert(tr.changes.videoUrl == None)
-//    assert(tr.changes.isInviteInterviewAllowed == Some(true))
-//    assert(tr.changes.availability == FreelancerAvailable.Unknown)
-//    assert(tr.changes.availableAgain == None)
-//    assert(tr.changes.responsivenessScore == None)
-//    assert(tr.changes.overview.get.split(" ").take(2).mkString(" ") == "GitHub organization:")
-//    assert(tr.changes.location == Some("Paris, France"))
-//    assert(tr.changes.timeZone == Some(-1))
-//    assert(tr.changes.languages == List(FreelancerLanguage("English",Some(2),Some(false))))
-//    assert(tr.changes.photoUrl == Some("https://odesk-prod-portraits.s3.amazonaws.com/Users:applicius:PortraitUrl_100?" +
-//      "AWSAccessKeyId=1XVAX3FNQZAFC9GJCFR2&Expires=2147483647&Signature=WjuKJ%2B5A87mes9CmU4KYqibEKpU%3D&1415091989"))
-//    assert(tr.changes.rate == Some(100.0))
-//    assert(tr.changes.rentPercent == Some(10))
-//    assert(tr.changes.rating == None)
-//    assert(tr.changes.allTimeJobs == None)
-//    assert(tr.changes.allTimeHours == None)
-//    assert(tr.changes.skills == List("scala", "play-framework", "haskell", "functional-testing", "java"))
-//    assert(tr.changes.companyUrl == Some("/companies/Applicius_~01a930e032cd85f14a"))
-//    assert(tr.changes.companyLogoUrl == Some("https://odesk-prod-portraits.s3.amazonaws.com/Companies:1295078:CompanyLo" +
-//      "goURL?AWSAccessKeyId=1XVAX3FNQZAFC9GJCFR2&Expires=2147483647&Signature=gCL7FiHRqy4MBcWBWPzOZxWKL%2FU%3D"))
-//    //
-//
-//  }
-//  "Maths-Phd-Java-Scala-Software-Engineer_~019c948a9320f6e9e9" in { //https://www.odesk.com/users/Maths-Phd-Java-Scala-Software-Engineer_~019c948a9320f6e9e9
-//    val html = getHtml("html\\Maths-Phd-Java-Scala-Software-Engineer_~019c948a9320f6e9e9.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//  "Scala-trainer-consultant_~01963f82fbf707f2d0" in { //https://www.odesk.com/users/Scala-trainer-consultant_~01963f82fbf707f2d0
-//    val html = getHtml("html\\Scala-trainer-consultant_~01963f82fbf707f2d0.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//  "Senior-Scala-Java-Android-iOS-Developer_~013a6f352dc7034896" in { //https://www.odesk.com/users/Senior-Scala-Java-Android-iOS-Developer_~013a6f352dc7034896
-//    val html = getHtml("html\\Senior-Scala-Java-Android-iOS-Developer_~013a6f352dc7034896.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//  "Java-Scala-Clojure-JavaScript-expert_~0164f352a473869d64" in { //https://www.odesk.com/users/Java-Scala-Clojure-JavaScript-expert_~0164f352a473869d64
-//    val html = getHtml("html\\Java-Scala-Clojure-JavaScript-expert_~0164f352a473869d64.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//  "Play-Framework-Developer-with-Ajax-jQuery-experience_~01e85edc5fec21632f" in { //https://www.odesk.com/users/Play-Framework-Developer-with-Ajax-jQuery-experience_~01e85edc5fec21632f
-//    val html = getHtml("html\\Play-Framework-Developer-with-Ajax-jQuery-experience_~01e85edc5fec21632f.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//  "Scala-Java-Groovy-developer-Full-Stack-Engineer-Consultant_~01de607007b5965edf" in { //https://www.odesk.com/users/Scala-Java-Groovy-developer-Full-Stack-Engineer-Consultant_~01de607007b5965edf
-//    val html = getHtml("html\\Scala-Java-Groovy-developer-Full-Stack-Engineer-Consultant_~01de607007b5965edf.html")
-//    //
-//    //    val lw = htmlParser.parseWorkSearchResult(html)
-//    //    //
-//    //      assert(lw.works.size == 10)
-//
-//  }
-//
-
-
-  }
+    assert(tr.experience.size == 0)}
+  "Ivan_N_~015d8df4348d317d56.html/Job1.json" in {
+    val json = getHtml("html\\Job1.json")
+    //
+    val otr = htmlParser.parseJobJson(json)
+    val tr = otr
+    //
+    val ct = new Date().getTime
+    assert(tr.createDate.getTime <= ct && tr.createDate.getTime > (ct - 1000))
+    assert(tr.rawJson.split("\"").take(3).mkString("\"") == "{\"client\":{")
+    assert(tr.jobContractorTier == None)
+    assert(tr.jobSkills == List("ejb","java","jboss","xml"))
+    assert(tr.jobUrl == Some("/jobs/~0172db7fc65ddb6a50"))
+    assert(tr.jobIsPublic == Public.Yes)
+    assert(tr.jobDescription.get.split(" ").take(3).mkString(" ") == "We have some")
+    assert(tr.jobCategory == Some("Other - Software Development"))
+    assert(tr.jobEndDate == Some(dateFormater.parse("2014.Aug.21 00:00:00")))
+    assert(tr.jobEngagement == Some("Full-time - 30+ hrs/week"))
+    assert(tr.jobDuration == None)
+    assert(tr.jobAmount == Some(150.0))
+    assert(tr.clientTotalFeedback == Some(17))
+    assert(tr.clientScore == Some(4.76932314193289))
+    assert(tr.clientTotalCharge == Some(6601.85))
+    assert(tr.clientTotalHires == Some(30))
+    assert(tr.clientActiveContract == Some(3))
+    assert(tr.clientCountry == Some("New Zealand"))
+    assert(tr.clientCity == Some("Auckland"))
+    assert(tr.clientTime == Some("7:50 AM (UTC)"))
+    assert(tr.clientMemberSince == Some(dateFormater.parse("2012.Mar.24 00:00:00")))
+    assert(tr.clientProfileLogo == None)
+    assert(tr.clientProfileName == Some("Flip Desk"))
+    assert(tr.clientProfileUrl == None)
+    assert(tr.clientProfileSummary == None)}
+  "Ivan_N_~015d8df4348d317d56.html/Portfolio1.json" in {
+    val json = getHtml("html\\Portfolio1.json")
+    //
+    val otr = htmlParser.parsePortfolioJson(json)
+    val tr = otr
+    //
+    val ct = new Date().getTime
+    assert(tr.createDate.getTime <= ct && tr.createDate.getTime > (ct - 1000))
+    assert(tr.rawJson.split("\"").take(3).mkString("\"") == "{\"code\":200,")
+    assert(tr.projectDate == Some(dateFormater.parse("2014.Aug.19 00:00:00")))
+    assert(tr.title == Some("Web user EJB"))
+    assert(tr.description.get.split(" ").take(3).mkString(" ") == "Ejb remote client")
+    assert(tr.imgUrl == None)
+    assert(tr.isPublic == Public.Yes)
+    assert(tr.attachments == List())
+    assert(tr.creationTs == Some(dateFormater.parse("2014.Oct.01 13:28:42")))
+    assert(tr.category == Some("Software Development"))
+    assert(tr.subCategory == Some("Scripts & Utilities"))
+    assert(tr.skills == List("XSLT","Java"))
+    assert(tr.isClient == Client.No)
+    assert(tr.flagComment == None)
+    assert(tr.projectUrl == None)}}

@@ -237,26 +237,69 @@ class HTMLFreelancerParser extends ParserHelpers {
         subject = jo.getTopString("subject"),
         description = jo.getTopString("description"))})
     //Return result
-    FreelancerParsedData(fcd,fws,ps,ts,cs,ems,eds,exs)}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
+    FreelancerParsedData(html,fcd,fws,ps,ts,cs,ems,eds,exs)}
+  def parseJobJson(json:String):FreelancerWorkData = {
+    //Current date
+    val cd = new Date
+    //Parse
+    val pj = try{Some(new JSONObject(json))}catch{case _:Exception ⇒ None}
+    val co = pj.getTopObject("client")
+    val cpo = co.getTopObject("profile")
+    //Build
+    FreelancerWorkData(
+      createDate = cd,
+      rawJson = json,
+      jobContractorTier = pj.getTopString("contractorTier").parseInt,
+      jobSkills = pj match{case Some(j) ⇒ j.getTopListString("skills"); case None => List()},
+      jobUrl = pj.getTopString("ciphertext").map(t ⇒ "/jobs/" + t),   // ""/jobs/ + <ciphertext>"
+      jobIsPublic = pj.getTopBoolean("isPrivate") match{
+        case Some(true) ⇒ Public.No
+        case Some(false) ⇒ Public.Yes
+        case _ ⇒ Public.Unknown},
+      jobDescription = pj.getTopString("description"),
+      jobCategory = pj.getTopString("category"),
+      jobEndDate = pj.getTopString("endDate").parseDate,
+      jobEngagement = pj.getTopString("engagement"),
+      jobDuration = pj.getTopString("duration"),
+      jobAmount = pj.getTopString("amount").parseDouble,
+      clientTotalFeedback = co.getTopString("totalFeedback").parseInt,
+      clientScore = co.getTopString("score").parseDouble,
+      clientTotalCharge = co.getTopDouble("totalCharge"),
+      clientTotalHires = co.getTopString("totalHires").parseInt,
+      clientActiveContract = co.getTopInt("activeContract"),
+      clientCountry = co.getTopString("country"),
+      clientCity = co.getTopString("city"),
+      clientTime = co.getTopString("time"),
+      clientMemberSince = co.getTopString("memberSince").parseDate,
+      clientProfileLogo = cpo.getTopString("logo"),
+      clientProfileName = cpo.getTopString("name"),
+      clientProfileUrl = cpo.getTopString("url"),
+      clientProfileSummary = cpo.getTopString("summary"))}
+  def parsePortfolioJson(json:String):FreelancerPortfolioData = {
+    //Current date
+    val cd = new Date
+    //Parse
+    val pj = (try{Some(new JSONObject(json))}catch{case _:Exception ⇒ None}).getTopObject("projects")
+    //Build
+    FreelancerPortfolioData(
+      createDate = cd,
+      rawJson = json,
+      projectDate = pj.getTopString("completionDate").parseJsonShortDate,
+      title = pj.getTopString("title"),
+      description = pj.getTopString("description"),
+      imgUrl = pj.getTopString("thumbnailOriginal"),
+      isPublic = pj.getTopBoolean("isPublic") match{
+        case Some(false) ⇒ Public.No
+        case Some(true) ⇒ Public.Yes
+        case _ ⇒ Public.Unknown},
+      attachments = pj match{case Some(j) ⇒ j.getTopListString("attachments"); case None => List()},  //<-- ???
+      creationTs = pj.getTopString("creationTs").parseJsonFullDate,
+      category = pj.getTopString("category"),
+      subCategory = pj.getTopString("subcategory"),
+      skills =  pj match{case Some(j) ⇒ j.getTopListString("skills"); case None => List()},
+      isClient = pj.getTopBoolean("isClient") match{
+        case Some(false) ⇒ Client.No
+        case Some(true) ⇒ Client.Yes
+        case _ ⇒ Client.Unknown},
+      flagComment = pj.getTopString("flagComment"),
+      projectUrl = pj.getTopString("projectUrl"))}}

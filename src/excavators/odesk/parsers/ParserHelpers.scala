@@ -39,6 +39,8 @@ trait ParserHelpers {
   protected val oShortDateFormat = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
   protected val oFullDateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH)
   protected val oYearFormat = new SimpleDateFormat("yyyy", Locale.ENGLISH)
+  protected val oJsonShortDate = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+  protected val oJsonFullDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ", Locale.ENGLISH)
   protected implicit class ElsHelper(es:Elements){
     def toListOpt:List[Option[Element]] = (for(i <- 0 until es.size())yield es.get(i)).toList.map(Some(_))
     def toList:List[Element] = (for(i <- 0 until es.size())yield es.get(i)).toList}
@@ -131,6 +133,10 @@ trait ParserHelpers {
       case s:Some[String] => try{Some(oShortDateFormat.parse(s.pSplit.mkString(" ")))}catch{case e:Exception => None}
       case None => None}
     def parseJsonDate:Option[Date] = os.flatMap(s => try{Some(oFullDateFormat.parse(s))}catch{case e:Exception => None})
+    def parseJsonShortDate:Option[Date] = os.flatMap(s => try{Some(oJsonShortDate.parse(s))}catch{case e:Exception => None})
+    def parseJsonFullDate:Option[Date] = os.flatMap(s => {
+      val ps = s.replace('T',' ').replace('Z',' ')
+      try{Some(oJsonFullDate.parse(ps))}catch{case e:Exception => None}})
     def parseInt:Option[Int] = os match{
       case Some(s) => try{Some(getNum(s).toInt)}catch{case _:Exception => None}
       case None => None}
@@ -197,6 +203,7 @@ trait ParserHelpers {
     def getTopObject(key:String):Option[JSONObject] = ojo.flatMap(jo => try{Some(jo.getJSONObject(key))}catch{case _:Exception => None})
     def getTopBoolean(key:String):Option[Boolean] = ojo.flatMap(jo => try{Some(jo.getBoolean(key))}catch{case _:Exception => None})
     def getTopInt(key:String):Option[Int] = ojo.flatMap(jo => try{Some(jo.getInt(key))}catch{case _:Exception => None})
+    def getTopDouble(key:String):Option[Double] = ojo.flatMap(jo => try{Some(jo.getDouble(key))}catch{case _:Exception => None})
     def getTopList(key:String):List[JSONObject] = ojo match{
       case Some(jo) => {
         try{

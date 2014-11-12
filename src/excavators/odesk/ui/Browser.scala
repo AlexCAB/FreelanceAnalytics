@@ -78,7 +78,7 @@ class Browser(logger:Logger) extends JWebBrowser {
         var i = 0
         while(i < jsonLoadMaxTry && result.isEmpty){
           webBrowser.executeJavascriptWithResult("return jsonBuffer;") match{
-            case s:String if (s != "" && s.head == '{') ⇒ {result = Some(s)}
+            case s:String if (s != "" && (s.head == '{' || s.head == '[')) ⇒ {result = Some(s)}
             case _ => Thread.sleep(jsonLoadTimeOut)}
         i += 1}}}}
   private val getHTMLbyURLStatusRunnable = new Runnable(){
