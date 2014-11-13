@@ -292,9 +292,19 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.unregistrateExcavator] No created DB.")}
     editExcavatorsParams(ps => {
       (ps.map{case(e,(w,d)) => if(e == en){(e,(false,0.0))}else{(e,(w,d))}},0)})}
+  def addAllFreelancerDataAndDelFromFound(d:AllFreelancerData) = {
 
 
 
+
+
+
+
+
+
+
+
+  }
 
 
 

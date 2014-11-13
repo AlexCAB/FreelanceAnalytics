@@ -65,12 +65,6 @@ case class ClientsWorksHistoryRow(
   workData:ClientWork,
   freelancerId:Option[Long])
 
-case class FoundFreelancerRow(
-  id:Long,
-  oUrl:String,
-  date:Date,
-  priority:Int)
-
 case class ToTrackingJob(
   id:Long,
   oUrl:String,
@@ -88,6 +82,12 @@ case class AllJobData(
   foundJobsRows:List[FoundJobsRow])
 
 //Freelances
+
+case class FoundFreelancerRow(
+  id:Long,
+  oUrl:String,
+  date:Date,
+  priority:Int)
 
 case class FreelancerRow(
   id:Long,
@@ -323,7 +323,24 @@ case class FreelancerOtherExperienceRow(
   subject:Option[String],
   description:Option[String])
 
-
+case class AllFreelancerData(
+  freelancerRow:FreelancerRow,
+  rawHtmlRow:FreelancerRawHtmlRow,
+  rawJobJsonRow:FreelancerRawJobJsonRow,
+  rawPortfolioJsonRow:FreelancerRawPortfolioJsonRow,
+  mainChangeRow:FreelancerMainChangeRow,
+  additionalChangeRow:FreelancerAdditionalChangeRow,
+  workRows:List[FreelancerWorkRow],
+  workAdditionalDataRows:List[FreelancerWorkAdditionalDataRow],
+  workFeedbackRows:List[FreelancerWorkFeedbackRow],
+  linkedProjectDataRows:List[FreelancerLinkedProjectDataRow],
+  workClientRows:List[FreelancerWorkClientRow],
+  portfolioRows:List[FreelancerPortfolioRow],
+  testRows:List[FreelancerTestRow],
+  certificationRows:List[FreelancerCertificationRow],
+  employmentRows:List[FreelancerEmploymentRow],
+  educationRows:List[FreelancerEducationRow],
+  otherExperienceRows:List[FreelancerOtherExperienceRow])
 
 
 
