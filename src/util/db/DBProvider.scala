@@ -235,6 +235,460 @@ trait DBProvider extends LoggerDBProvider {
       def priority = column[Int](priorityColumn, O.NotNull)
       def * = (id,o_url,create_date,priority)}
   protected val foundFreelancersTable = TableQuery[FoundFreelancers]
+
+
+
+
+
+  protected type FreelancersRowType = (Option[Long],Timestamp,String)
+  protected class Freelancers (tag: Tag) extends Table[FreelancersRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def o_url = column[String]("o_url", O.NotNull)
+    def * = (id,create_date,o_url)}
+  protected val freelancersTable = TableQuery[Freelancers]
+
+
+
+
+
+  protected type FreelancersRawHtmlRowType = (Option[Long],Long,Timestamp,String)
+  protected class FreelancersRawHtml (tag: Tag) extends Table[FreelancersRawHtmlRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def html = column[String]("html", O.NotNull)
+    def * = (id,freelancer_id,create_date,html)}
+  protected val freelancersRawHtmlTable = TableQuery[FreelancersRawHtml]
+
+
+
+  protected type FreelancersRawJobJsonRowType = (Option[Long],Long,Timestamp,String)
+  protected class FreelancersRawJob (tag: Tag) extends Table[FreelancersRawJobJsonRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def json = column[String]("json", O.NotNull)
+    def * = (id,freelancer_id,create_date,json)}
+  protected val freelancersRawJobTable = TableQuery[FreelancersRawJob]
+
+  protected type FreelancersRawPortfolioRowType = (Option[Long],Long,Timestamp,String)
+  protected class FreelancersRawPortfolio (tag: Tag) extends Table[FreelancersRawPortfolioRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def json = column[String]("json", O.NotNull)
+    def * = (id,freelancer_id,create_date,json)}
+  protected val freelancersRawPortfolioTable = TableQuery[FreelancersRawPortfolio]
+
+
+  protected type FreelancersMainChangeRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
+    Option[String],Option[String],Option[String],Option[String],String,Option[String],Option[Int],String,
+    Option[Array[Byte]],Option[String],Option[String])
+  protected class FreelancersMainChange(tag: Tag) extends Table[FreelancersMainChangeRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def name = column[Option[String]]("name")
+    def profile_access = column[Option[String]]("profile_access")
+    def link = column[Option[String]]("link")
+    def expose_full_name = column[Option[String]]("expose_full_name")
+    def role = column[Option[String]]("role")
+    def video_url = column[Option[String]]("video_url")
+    def is_invite_interview_allowed = column[String]("is_invite_interview_allowed", O.NotNull)
+    def location = column[Option[String]]("location")
+    def time_zone = column[Option[Int]]("time_zone")
+    def email_verified = column[String]("email_verified", O.NotNull)
+    def photo = column[Option[Array[Byte]]]("photo")
+    def company_url = column[Option[String]]("company_url")
+    def company_logo = column[Option[String]]("company_logo")
+    def * = (id,freelancer_id,create_date,name,profile_access,link,expose_full_name,role,video_url,
+      is_invite_interview_allowed,location,time_zone,email_verified,photo,company_url,company_logo)}
+  protected val freelancersMainChangeTable = TableQuery[FreelancersMainChange]
+
+  protected type FreelancersAdditionalChangeRowType = (Option[Long],Long,Timestamp,Option[String],String,Option[String],
+    Option[String],Option[String],String,Option[Double],Option[Int],Option[Double],Option[Int],Option[Int],String)
+  protected class FreelancersAdditionalChange (tag: Tag) extends Table[FreelancersAdditionalChangeRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def title = column[Option[String]]("title")
+    def availability = column[String]("availability", O.NotNull))
+    def available_again = column[Option[String]]("available_again")
+    def responsiveness_score = column[Option[String]]("responsiveness_score")
+    def overview = column[Option[String]]("overview")
+    def languages = column[String]("languages", O.NotNull)
+    def rate = column[Option[Double]]("rate")
+    def rent_percent = column[Option[Int]]("rent_percent")
+    def rating = column[Option[Double]]("rating", O.NotNull)
+    def all_time_jobs = column[Option[Int]]("all_time_jobs")
+    def all_time_hours = column[Option[Int]]("all_time_hours")
+    def skills = column[String]("skills", O.NotNull)
+    def * = (id,freelancer_id,create_date,title,availability,available_again,responsiveness_score,overview,
+      languages,rate,rent_percent,rating,all_time_jobs,all_time_hours,skills)}
+  protected val freelancersAdditionalChangeTable = TableQuery[FreelancersAdditionalChange]
+
+
+
+  protected type FreelancersWorkRowType = (Option[Long],Long,Timestamp,String,String,Option[Timestamp],Option[Timestamp],
+    Option[Timestamp],Option[Timestamp],Option[String],Option[String],
+    String,String,
+    Option[String],Option[String],String,Option[String],String)
+  protected class FreelancersWork (tag: Tag) extends Table[FreelancersWorkRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def payment_type = column[String]("payment_type", O.NotNull)
+    def status = column[String]("status", O.NotNull)
+    def start_date = column[Option[Timestamp]]("start_date")
+    def end_date = column[Option[Timestamp]]("end_date")
+    def from_full = column[Option[Timestamp]]("from_full")
+    def to_full = column[Option[Timestamp]]("to_full")
+    def opening_title = column[Option[String]]("opening_title")
+    def engagement_title = column[Option[String]]("opening_title")
+    def skills = column[String]("skills", O.NotNull)
+    def open_access = column[String]("open_access", O.NotNull)
+    def cny_status = column[Option[String]]("cny_status")
+    def financial_privacy = column[Option[String]]("financial_privacy")
+    def is_hidden = column[String]("is_hidden", O.NotNull)
+    def agency_name = column[Option[String]]("agency_name")
+    def segmentation_data = column[String]("segmentation_data", O.NotNull)
+    def * = (id,freelancer_id,create_date,payment_type,status,start_date,end_date,from_full,to_full,engagement_title,
+      opening_title,skills,open_access,cny_status,financial_privacy,is_hidden,agency_name,segmentation_data)}
+  protected val freelancersWorkTable = TableQuery[FreelancersWork]
+
+
+  protected type FreelancersWorkAdditionalDataRowType = (Option[Long],Long,Long,Timestamp,
+    Option[String],Option[Int],Option[Double],Option[Double],Option[Double],Option[Double],Option[Double],
+    Option[Double],Option[Double],Option[Int],Option[String], Option[String],Option[String],Option[String],
+    Option[String],Option[Double])
+  protected class FreelancersWorkAdditionalData (tag: Tag) extends Table[FreelancersWorkAdditionalDataRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def work_id = column[Long]("work_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+    def as_type = column[Option[String]]("as_type")
+    def total_hours = column[Option[Int]]("total_hours")
+    def rate = column[Option[Double]]("rate")
+    def total_cost = column[Option[Double]]("total_cost")
+    def charge_rate = column[Option[Double]]("charge_rate")
+    def amount = column[Option[Double]]("amount")
+    def total_hours_precise = column[Option[Double]]("total_hours_precise")
+    def cost_rate = column[Option[Double]]("cost_rate")
+    def total_charge = column[Option[Double]]("total_charge")
+    def job_contractor_tier = column[Option[Int]]("job_contractor_tier")
+    def job_url = column[Option[String]]("job_url")
+    def job_description = column[Option[String]]("job_description")
+    def job_category = column[Option[String]]("job_category")
+    def job_engagement = column[Option[String]]("job_engagement")
+    def job_duration = column[Option[String]]("job_duration")
+    def job_amount = column[Option[Double]]("job_amount")
+    def * = (id,freelancer_id,work_id,create_date,as_type,total_hours,rate,total_cost,charge_rate,amount,total_hours_precise,
+      cost_rate,total_charge,job_contractor_tier,job_url,job_description,job_category,job_engagement,job_duration,job_amount)}
+  protected val freelancersWorkAdditionalDataTable = TableQuery[FreelancersWorkAdditionalData]
+
+
+
+
+  protected type FreelancersWorkFeedbackRowType = (Option[Long],Long,Long,Timestamp)
+  protected class FreelancersWorkFeedback(tag: Tag) extends Table[FreelancersWorkFeedbackRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def work_id = column[Long]("work_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,work_id,create_date)}
+  protected val freelancersWorkFeedbackTable = TableQuery[FreelancersWorkFeedback]
+
+
+
+  create table odesk_freelancers_work_feedback(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  ff_scores varchar(4000) default null,
+  ff_is_public varchar(20) default null,
+  ff_comment varchar(1000) default null,
+  ff_private_point int default null,
+  ff_reasons varchar(4000) default null,
+  ff_response varchar(100) default null,
+  ff_score float(53) default null,
+  cf_scores varchar(4000) default null,
+  cf_is_public varchar(20) default null,
+  cf_comment varchar(1000) default null,
+  cf_response varchar(1000) default null,
+  cf_score float(53) default null);
+
+
+  protected type FreelancersWorkLinkedProjectDataRowType = (Option[Long],Long,Long,Timestamp)
+  protected class FreelancersWorkLinkedProjectData(tag: Tag) extends Table[FreelancersWorkLinkedProjectDataRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def work_id = column[Long]("work_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,work_id,create_date)}
+  protected val freelancersWorkLinkedProjectDataTable = TableQuery[FreelancersWorkLinkedProjectData]
+
+
+
+  create table odesk_freelancers_work_linked_project_data(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  lp_title varchar(1000) default null,
+  lp_thumbnail varchar(500) default null,
+  lp_is_public varchar(20) default null,
+  lp_description varchar(5000) default null,
+  lp_recno varchar(100) default null,
+  lp_cat_level_1 varchar(100) default null,
+  lp_cat_recno varchar(100) default null,
+  lp_cat_level_2 varchar(100) default null,
+  lp_completed varchar(100) default null,
+  lp_large_thumbnail varchar(500) default null,
+  lp_url varchar(500) default null,
+  lp_project_contract_link_state varchar(100) default null);
+
+  protected type FreelancersWorkClientsRowType = (Option[Long],Long,Long,Timestamp)
+  protected class FreelancersWorkClients(tag: Tag) extends Table[FreelancersWorkClientsRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def work_id = column[Long]("work_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,work_id,create_date)}
+  protected val freelancersWorkClientsTable = TableQuery[FreelancersWorkClients]
+
+
+  create table odesk_freelancers_work_clients(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  work_id bigint not null,
+  create_date datetime not null,
+  client_total_feedback int default null,
+  client_score float(53) default null,
+  client_total_charge float(53) default null,
+  client_total_hires int default null,
+  client_active_contract int default null,
+  client_country varchar(100) default null,
+  client_city varchar(100) default null,
+  client_time varchar(100) default null,
+  client_member_since datetime not null,
+  client_profile_logo blob default null,
+  client_profile_name varchar(500) default null,
+  client_profile_url varchar(500) default null,
+  client_profile_summary varchar(1000) default null);
+
+
+  protected type FreelancersPortfolioRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersPortfolio(tag: Tag) extends Table[FreelancersPortfolioRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersPortfolioTable = TableQuery[FreelancersPortfolio]
+
+
+  create table odesk_freelancers_portfolio(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  project_date datetime not null,
+  title varchar(1000) default null,
+  description varchar(5000) default null,
+  is_public varchar(20) default null,
+  attachments varchar(4000) default null,
+  creation_ts datetime not null,
+  category varchar(100) default null,
+  sub_category varchar(100) default null,
+  skills varchar(4000) default null,
+  is_client varchar(20) default null,
+  flag_comment varchar(1000) default null,
+  project_url varchar(500) default null,
+  img_url blob default null);
+
+
+  protected type FreelancersTestsRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersTests(tag: Tag) extends Table[RowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersTestsTable = TableQuery[FreelancersTests]
+
+  create table odesk_freelancers_tests(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  title varchar(1000) default null,
+  score float(53) default null,
+  time_complete int default null);
+
+  protected type FreelancersCertificationRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersCertification(tag: Tag) extends Table[FreelancersCertificationRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersCertificationTable = TableQuery[FreelancersCertification]
+
+
+  create table odesk_freelancers_certification(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  rid varchar(100) default null,
+  name varchar(100) default null,
+  custom_data varchar(1000) default null,
+  score varchar(100) default null,
+  logo_url varchar(500) default null,
+  cert_url varchar(500) default null,
+  is_cert_verified varchar(20) default null,
+  is_verified varchar(20) default null,
+  description varchar(5000) default null,
+  provider varchar(500) default null,
+  skills varchar(4000) default null,
+  date_earned varchar(100) default null);
+
+  protected type FreelancersEmploymentRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersEmployment(tag: Tag) extends Table[FreelancersEmploymentRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersEmploymentTable = TableQuery[FreelancersEmployment]
+
+
+  create table odesk_freelancers_employment(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  record_id varchar(100) default null,
+  title varchar(1000) default null,
+  company varchar(1000) default null,
+  date_from datetime default null,
+  date_to datetime default null,
+  role varchar(100) default null,
+  company_country varchar(100) default null,
+  company_city varchar(100) default null,
+  description varchar(5000) default null);
+
+  protected type FreelancersEducationRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersEducation(tag: Tag) extends Table[FreelancersEducationRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersEducationTable = TableQuery[FreelancersEducation]
+
+
+  create table odesk_freelancers_education(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  details_url varchar(500) default null,
+  school varchar(1000) default null,
+  area_of_study varchar(1000) default null,
+  degree varchar(100) default null,
+  date_from datetime default null,
+  date_to datetime default null,
+  comments varchar(5000) default null);
+
+  protected type FreelancersOtherExperienceRowType = (Option[Long],Long,Timestamp)
+  protected class FreelancersOtherExperience(tag: Tag) extends Table[FreelancersOtherExperienceRowType](tag, odesk_found_freelancers){
+    def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
+    def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
+
+    def  = column[Option[]]("")
+
+
+
+    def * = (id,freelancer_id,create_date)}
+  protected val freelancersOtherExperienceTable = TableQuery[FreelancersOtherExperience]
+
+
+  create table odesk_freelancers_other_experience(
+    id bigint primary key auto_increment,
+    freelancer_id bigint not null,
+  create_date datetime not null,
+  subject varchar(1000) default null,
+  description varchar(5000) default null);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   //Tables map
   protected val tablesByName = Map(
     odesk_job_excavators_param -> excavatorsParamTable,
@@ -267,7 +721,7 @@ trait DBProvider extends LoggerDBProvider {
     new Timestamp(d.date.getTime), // reate_date
     p,                             // priority
     d.skills.mkString(","),        // job_skills
-    d.nFreelancers)}               //n_freelancers
+    d.nFreelancers)}               // n_freelancers
   protected def buildJobsRow(d:JobsRow):JobRowType = { (
     None,                                                   // id Option[Long]
     d.foundData.oUrl,                                       // o_url String

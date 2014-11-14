@@ -16,7 +16,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
   val freelancerRow = FreelancerRow(
     id = -1,
     createDate = cd,
-    oUrl = "http.free.url")
+    oUrl = "http.test.freelancer")
   val freelancerRawHtmlRow = FreelancerRawHtmlRow(
     id = -1,
     freelancerId = 1,
@@ -238,6 +238,14 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     createDate = cd,
     subject = Some("subject"),
     description = Some("description"))
+  val foundJobsRow = FoundJobsRow(
+    id = -1,
+    oUrl = "http.test.job",
+    foundBy = FoundBy.Analyse,
+    date = cd,
+    priority = 0,
+    skills = List(),
+    nFreelancers = None)
   val allFreelancerData = AllFreelancerData(
     freelancerRow = freelancerRow,
     rawHtmlRow = freelancerRawHtmlRow,
@@ -255,10 +263,11 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     certificationRows = List(freelancerCertificationRow),
     employmentRows = List(freelancerEmploymentRow),
     educationRows = List(freelancerEducationRow),
-    otherExperienceRows = List(freelancerOtherExperienceRow))
+    otherExperienceRows = List(freelancerOtherExperienceRow),
+    foundJobsRows = List(foundJobsRow))
   val foundFreelancerRow = FoundFreelancerRow(
     id = -1,
-    oUrl = "http.free.url",
+    oUrl = "http.test.freelancer",
     date = cd,
     priority = 1)
   //Provider

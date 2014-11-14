@@ -340,7 +340,10 @@ case class AllFreelancerData(
   certificationRows:List[FreelancerCertificationRow],
   employmentRows:List[FreelancerEmploymentRow],
   educationRows:List[FreelancerEducationRow],
-  otherExperienceRows:List[FreelancerOtherExperienceRow])
+  otherExperienceRows:List[FreelancerOtherExperienceRow],
+  foundJobsRows:List[FoundJobsRow])
+
+
 
 
 
