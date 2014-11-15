@@ -83,6 +83,17 @@ case class AllJobData(
 
 //Freelances
 
+case class FreelancerRowHeader(
+  id:Long,
+  freelancerId:Long,
+  createDate:Date)
+
+case class FreelancerWorkRowHeader(
+  id:Long,
+  freelancerId:Long,
+  workId:Long,
+  createDate:Date)
+
 case class FoundFreelancerRow(
   id:Long,
   oUrl:String,
@@ -95,27 +106,19 @@ case class FreelancerRow(
   oUrl:String)
 
 case class FreelancerRawHtmlRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   html:String)
 
 case class FreelancerRawJobJsonRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   json:String)
 
 case class FreelancerRawPortfolioJsonRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   json:String)
 
 case class FreelancerMainChangeRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   name:Option[String],
   profileAccess:Option[String],
   link:Option[String],
@@ -131,9 +134,7 @@ case class FreelancerMainChangeRow(
   companyLogo:Option[BufferedImage])
 
 case class FreelancerAdditionalChangeRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   title:Option[String],
   availability:FreelancerAvailable,
   availableAgain:Option[String],
@@ -148,9 +149,7 @@ case class FreelancerAdditionalChangeRow(
   skills:List[String])
 
 case class FreelancerWorkRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   paymentType:Payment,
   status:Status,
   startDate:Option[Date],
@@ -168,10 +167,7 @@ case class FreelancerWorkRow(
   segmentationData:Option[String]) //JSON Array
 
 case class FreelancerWorkAdditionalDataRow(
-  id:Long,
-  freelancerId:Long,
-  freelancerWorkId:Long,
-  createDate:Date,
+  header:FreelancerWorkRowHeader,
   asType:Option[String],
   totalHours:Option[Int],
   rate:Option[Double],
@@ -190,10 +186,7 @@ case class FreelancerWorkAdditionalDataRow(
   jobAmount:Option[Double])
 
 case class FreelancerWorkFeedbackRow(
-  id:Long,
-  freelancerId:Long,
-  freelancerWorkId:Long,
-  createDate:Date,
+  header:FreelancerWorkRowHeader,
   ffScores:Map[String,Int],
   ffIsPublic:Option[String],
   ffComment:Option[String],
@@ -208,10 +201,7 @@ case class FreelancerWorkFeedbackRow(
   cfScore:Option[Double])
 
 case class FreelancerLinkedProjectDataRow(
-  id:Long,
-  freelancerId:Long,
-  freelancerWorkId:Long,
-  createDate:Date,
+  header:FreelancerWorkRowHeader,
   lpTitle:Option[String],
   lpThumbnail:Option[String],
   lpIsPublic:Public,
@@ -226,10 +216,7 @@ case class FreelancerLinkedProjectDataRow(
   lpProjectContractLinkState:Option[String])
 
 case class FreelancerWorkClientRow(
-  id:Long,
-  freelancerId:Long,
-  freelancerWorkId:Long,
-  createDate:Date,
+  header:FreelancerWorkRowHeader,
   clientTotalFeedback:Option[Int],
   clientScore:Option[Double],
   clientTotalCharge:Option[Double],
@@ -245,9 +232,7 @@ case class FreelancerWorkClientRow(
   clientProfileSummary:Option[String])
 
 case class FreelancerPortfolioRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
+  header:FreelancerRowHeader,
   projectDate:Option[Date],
   title:Option[String],
   description:Option[String],
@@ -263,65 +248,24 @@ case class FreelancerPortfolioRow(
   img:Option[BufferedImage])
 
 case class FreelancerTestRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
-  detailsUrl:Option[String],
-  title:Option[String],
-  score:Option[Double],
-  timeComplete:Option[Int])
+  header:FreelancerRowHeader,
+  data:FreelancerTestRecord)
 
 case class FreelancerCertificationRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
-  detailsUrl:Option[String],
-  rid:Option[String],
-  name:Option[String],
-  customData:Option[String],
-  score:Option[String],
-  logoUrl:Option[String],
-  certUrl:Option[String],
-  isCertVerified:Option[String],
-  isVerified:Option[String],
-  description:Option[String],
-  provider:Option[String],
-  skills:List[String],
-  dateEarned:Option[String])
+  header:FreelancerRowHeader,
+  data:FreelancerCertification)
 
 case class FreelancerEmploymentRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
-  detailsUrl:Option[String],
-  recordId:Option[String],
-  title:Option[String],
-  company:Option[String],
-  dateFrom:Option[Date],
-  dateTo:Option[Date],
-  role:Option[String],
-  companyCountry:Option[String],
-  companyCity:Option[String],
-  description:Option[String])
+  header:FreelancerRowHeader,
+  data:FreelancerEmployment)
 
 case class FreelancerEducationRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
-  detailsUrl:Option[String],
-  school:Option[String],
-  areaOfStudy:Option[String],
-  degree:Option[String],
-  dateFrom:Option[Date],
-  dateTo:Option[Date],
-  comments:Option[String])
+  header:FreelancerRowHeader,
+  data:FreelancerEducation)
 
 case class FreelancerOtherExperienceRow(
-  id:Long,
-  freelancerId:Long,
-  createDate:Date,
-  subject:Option[String],
-  description:Option[String])
+  header:FreelancerRowHeader,
+  data:FreelancerOtherExperience)
 
 case class AllFreelancerData(
   freelancerRow:FreelancerRow,
