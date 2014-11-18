@@ -93,8 +93,8 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     header = freelancerWorkRowHeader,
     asType = Some("asType"),
     totalHours = Some(123),
-    rate = Some(0.0),
-    totalCost = Some(0.0),
+    rate = Some(0.1),
+    totalCost = Some(0.2),
     chargeRate = Some(0.12),
     amount = Some(0.22),
     totalHoursPrecise = Some(0.99),
@@ -226,6 +226,12 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     priority = 0,
     skills = List(),
     nFreelancers = None)
+  val freelancerWorkDataRow = FreelancerWorkDataRow(
+    workRow = freelancerWorkRow,
+    workAdditionalDataRow = freelancerWorkAdditionalDataRow,
+    workFeedbackRow = freelancerWorkFeedbackRow,
+    linkedProjectDataRow = freelancerLinkedProjectDataRow,
+    workClientRow = freelancerWorkClientRow)
   val allFreelancerData = AllFreelancerData(
     freelancerRow = freelancerRow,
     rawHtmlRow = freelancerRawHtmlRow,
@@ -233,11 +239,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     rawPortfolioJsonRow = freelancerRawPortfolioJsonRow,
     mainChangeRow = freelancerMainChangeRow,
     additionalChangeRow = freelancerAdditionalChangeRow,
-    workRows = List(freelancerWorkRow),
-    workAdditionalDataRows = List(freelancerWorkAdditionalDataRow),
-    workFeedbackRows = List(freelancerWorkFeedbackRow),
-    linkedProjectDataRows = List(freelancerLinkedProjectDataRow),
-    workClientRows = List(freelancerWorkClientRow),
+    works = List(freelancerWorkDataRow),
     portfolioRows = List(freelancerPortfolioRow),
     testRows = List(freelancerTestRow),
     certificationRows = List(freelancerCertificationRow),
@@ -258,10 +260,8 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
   "add found freelancer" in {
     dbProvider.addFoundFreelancerRow(foundFreelancerRow)}
   "save all freelancer data and delete from found" in {
-    dbProvider.addAllFreelancerDataAndDelFromFound(allFreelancerData)
-
-
-  }
+    val tr = dbProvider.addAllFreelancerDataAndDelFromFound(allFreelancerData)
+    assert(tr == 1)}
   "stop" in {
     dbProvider.halt()}}
 

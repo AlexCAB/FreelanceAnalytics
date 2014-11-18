@@ -267,6 +267,13 @@ case class FreelancerOtherExperienceRow(
   header:FreelancerRowHeader,
   data:FreelancerOtherExperience)
 
+case class FreelancerWorkDataRow(
+  workRow:FreelancerWorkRow,
+  workAdditionalDataRow:FreelancerWorkAdditionalDataRow,
+  workFeedbackRow:FreelancerWorkFeedbackRow,
+  linkedProjectDataRow:FreelancerLinkedProjectDataRow,
+  workClientRow:FreelancerWorkClientRow)
+
 case class AllFreelancerData(
   freelancerRow:FreelancerRow,
   rawHtmlRow:FreelancerRawHtmlRow,
@@ -274,11 +281,7 @@ case class AllFreelancerData(
   rawPortfolioJsonRow:FreelancerRawPortfolioJsonRow,
   mainChangeRow:FreelancerMainChangeRow,
   additionalChangeRow:FreelancerAdditionalChangeRow,
-  workRows:List[FreelancerWorkRow],
-  workAdditionalDataRows:List[FreelancerWorkAdditionalDataRow],
-  workFeedbackRows:List[FreelancerWorkFeedbackRow],
-  linkedProjectDataRows:List[FreelancerLinkedProjectDataRow],
-  workClientRows:List[FreelancerWorkClientRow],
+  works:List[FreelancerWorkDataRow],
   portfolioRows:List[FreelancerPortfolioRow],
   testRows:List[FreelancerTestRow],
   certificationRows:List[FreelancerCertificationRow],

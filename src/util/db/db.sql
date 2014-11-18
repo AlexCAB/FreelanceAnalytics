@@ -20,9 +20,26 @@
 -- select * from odesk_jobs_hired;
 -- select * from odesk_clients_works_history;
 -- select * from odesk_found_freelancers;
+--
+-- select * from odesk_freelancers;
+-- select * from odesk_freelancers_raw_html;
+-- select * from odesk_freelancers_raw_job_json;
+-- select * from odesk_freelancers_raw_portfolio_json;
+-- select * from odesk_freelancers_main_change;
+-- select * from odesk_freelancers_additional_change;
+-- select * from odesk_freelancers_work;
+-- select * from odesk_freelancers_work_additional_data;
+-- select * from odesk_freelancers_work_feedback;
+-- select * from odesk_freelancers_work_linked_project_data;
+-- select * from odesk_freelancers_work_clients;
+-- select * from odesk_freelancers_portfolio;
+-- select * from odesk_freelancers_tests;
+-- select * from odesk_freelancers_certification;
+-- select * from odesk_freelancers_employment;
+-- select * from odesk_freelancers_education;
+-- select * from odesk_freelancers_other_experience;
 
-
--- drop database freelance_analytics_test;
+drop database freelance_analytics_test;
 
 create database freelance_analytics_test;
 use freelance_analytics_test;
@@ -269,12 +286,12 @@ create table odesk_freelancers_work(
   opening_title varchar(500) default null,
   engagement_title varchar(500) default null,
   skills varchar(4000) not null,
-  open_access varchar(20) not null,
+  open_access varchar(100) default null,
   cny_status varchar(100) default null,
   financial_privacy varchar(100) default null,
   is_hidden varchar(20) not null,
   agency_name varchar(500) default null,
-  segmentation_data varchar(4000) not null);
+  segmentation_data varchar(5000) default null);
 
 create table odesk_freelancers_work_additional_data(
   id bigint primary key auto_increment,
@@ -327,7 +344,7 @@ create table odesk_freelancers_work_linked_project_data(
   lp_description varchar(5000) default null,
   lp_recno varchar(100) default null,
   lp_cat_level_1 varchar(100) default null,
-  lp_cat_recno varchar(100) default null,
+  lp_cat_recno int default null,
   lp_cat_level_2 varchar(100) default null,
   lp_completed varchar(100) default null,
   lp_large_thumbnail varchar(500) default null,
@@ -369,7 +386,7 @@ create table odesk_freelancers_portfolio(
   is_client varchar(20) not null,
   flag_comment varchar(1000) default null,
   project_url varchar(500) default null,
-  img_url blob default null);
+  img blob default null);
 
 create table odesk_freelancers_tests(
   id bigint primary key auto_increment,
@@ -384,7 +401,6 @@ create table odesk_freelancers_certification(
   id bigint primary key auto_increment,
   freelancer_id bigint not null,
   create_date datetime not null,
-  details_url varchar(500) default null,
   rid varchar(100) default null,
   name varchar(100) default null,
   custom_data varchar(1000) default null,
@@ -402,7 +418,6 @@ create table odesk_freelancers_employment(
   id bigint primary key auto_increment,
   freelancer_id bigint not null,
   create_date datetime not null,
-  details_url varchar(500) default null,
   record_id varchar(100) default null,
   title varchar(1000) default null,
   company varchar(1000) default null,
@@ -417,7 +432,6 @@ create table odesk_freelancers_education(
   id bigint primary key auto_increment,
   freelancer_id bigint not null,
   create_date datetime not null,
-  details_url varchar(500) default null,
   school varchar(1000) default null,
   area_of_study varchar(1000) default null,
   degree varchar(100) default null,

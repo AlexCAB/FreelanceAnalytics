@@ -1,5 +1,6 @@
 package util.db
 
+import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -30,6 +31,23 @@ trait DBProvider extends LoggerDBProvider {
   protected val odesk_clients_changes = "odesk_clients_changes"
   protected val odesk_clients_works_history = "odesk_clients_works_history"
   protected val odesk_found_freelancers = "odesk_found_freelancers"
+  protected val odesk_freelancers = "odesk_freelancers"
+  protected val odesk_freelancers_raw_html = "odesk_freelancers_raw_html"
+  protected val odesk_freelancers_raw_job_json = "odesk_freelancers_raw_job_json"
+  protected val odesk_freelancers_raw_portfolio_json = "odesk_freelancers_raw_portfolio_json"
+  protected val odesk_freelancers_main_change = "odesk_freelancers_main_change"
+  protected val odesk_freelancers_additional_change = "odesk_freelancers_additional_change"
+  protected val odesk_freelancers_work = "odesk_freelancers_work"
+  protected val odesk_freelancers_work_additional_data = "odesk_freelancers_work_additional_data"
+  protected val odesk_freelancers_work_feedback = "odesk_freelancers_work_feedback"
+  protected val odesk_freelancers_work_linked_project_data = "odesk_freelancers_work_linked_project_data"
+  protected val odesk_freelancers_work_clients = "odesk_freelancers_work_clients"
+  protected val odesk_freelancers_portfolio = "odesk_freelancers_portfolio"
+  protected val odesk_freelancers_tests = "odesk_freelancers_tests"
+  protected val odesk_freelancers_certification = "odesk_freelancers_certification"
+  protected val odesk_freelancers_employment = "odesk_freelancers_employment"
+  protected val odesk_freelancers_education = "odesk_freelancers_education"
+  protected val odesk_freelancers_other_experience = "odesk_freelancers_other_experience"
   //Columns names
   protected val daeDateColumn = "dae_date"
   protected val priorityColumn = "priority"
@@ -63,6 +81,15 @@ trait DBProvider extends LoggerDBProvider {
   val excavatorsStatesParamName = "excavatorsStates"
   //Helpers
   private val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+  private implicit class ExOpDate(od:Option[Date]) {
+    def toTimestamp:Option[Timestamp] = od.map(t => new Timestamp(t.getTime))}
+  private implicit class ExDate(d:Date) {
+    def toTimestamp:Timestamp = new Timestamp(d.getTime)}
+  private implicit class ExOpImage(d:Option[BufferedImage]) {
+    def toArray:Option[Array[Byte]] = d.map(i => {
+    val ib = new ByteArrayOutputStream()
+    ImageIO.write(i, "jpg", ib )
+    ib.toByteArray})}
   //Schema
   protected type ParamRowType = (Option[Long],String,String,Boolean,Timestamp,Option[String])
   protected class ExcavatorsParam(tag: Tag) extends Table[ParamRowType](tag, odesk_job_excavators_param){
@@ -235,20 +262,15 @@ trait DBProvider extends LoggerDBProvider {
       def priority = column[Int](priorityColumn, O.NotNull)
       def * = (id,o_url,create_date,priority)}
   protected val foundFreelancersTable = TableQuery[FoundFreelancers]
-
-
-
-
-
   protected type FreelancersRowType = (Option[Long],Timestamp,String)
-  protected class Freelancers (tag: Tag) extends Table[FreelancersRowType](tag, odesk_found_freelancers){
+  protected class Freelancers (tag: Tag) extends Table[FreelancersRowType](tag, odesk_freelancers){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def o_url = column[String]("o_url", O.NotNull)
     def * = (id,create_date,o_url)}
   protected val freelancersTable = TableQuery[Freelancers]
   protected type FreelancersRawHtmlRowType = (Option[Long],Long,Timestamp,String)
-  protected class FreelancersRawHtml (tag: Tag) extends Table[FreelancersRawHtmlRowType](tag, odesk_found_freelancers){
+  protected class FreelancersRawHtml (tag: Tag) extends Table[FreelancersRawHtmlRowType](tag, odesk_freelancers_raw_html){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -256,7 +278,7 @@ trait DBProvider extends LoggerDBProvider {
     def * = (id,freelancer_id,create_date,html)}
   protected val freelancersRawHtmlTable = TableQuery[FreelancersRawHtml]
   protected type FreelancersRawJobJsonRowType = (Option[Long],Long,Timestamp,String)
-  protected class FreelancersRawJob (tag: Tag) extends Table[FreelancersRawJobJsonRowType](tag, odesk_found_freelancers){
+  protected class FreelancersRawJob (tag: Tag) extends Table[FreelancersRawJobJsonRowType](tag, odesk_freelancers_raw_job_json){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -264,7 +286,7 @@ trait DBProvider extends LoggerDBProvider {
     def * = (id,freelancer_id,create_date,json)}
   protected val freelancersRawJobTable = TableQuery[FreelancersRawJob]
   protected type FreelancersRawPortfolioRowType = (Option[Long],Long,Timestamp,String)
-  protected class FreelancersRawPortfolio (tag: Tag) extends Table[FreelancersRawPortfolioRowType](tag, odesk_found_freelancers){
+  protected class FreelancersRawPortfolio (tag: Tag) extends Table[FreelancersRawPortfolioRowType](tag, odesk_freelancers_raw_portfolio_json){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -273,8 +295,8 @@ trait DBProvider extends LoggerDBProvider {
   protected val freelancersRawPortfolioTable = TableQuery[FreelancersRawPortfolio]
   protected type FreelancersMainChangeRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
     Option[String],Option[String],Option[String],Option[String],String,Option[String],Option[Int],String,
-    Option[Array[Byte]],Option[String],Option[String])
-  protected class FreelancersMainChange(tag: Tag) extends Table[FreelancersMainChangeRowType](tag, odesk_found_freelancers){
+    Option[Array[Byte]],Option[String],Option[Array[Byte]])
+  protected class FreelancersMainChange(tag: Tag) extends Table[FreelancersMainChangeRowType](tag, odesk_freelancers_main_change){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -290,18 +312,18 @@ trait DBProvider extends LoggerDBProvider {
     def email_verified = column[String]("email_verified", O.NotNull)
     def photo = column[Option[Array[Byte]]]("photo")
     def company_url = column[Option[String]]("company_url")
-    def company_logo = column[Option[String]]("company_logo")
+    def company_logo = column[Option[Array[Byte]]]("company_logo")
     def * = (id,freelancer_id,create_date,name,profile_access,link,expose_full_name,role,video_url,
       is_invite_interview_allowed,location,time_zone,email_verified,photo,company_url,company_logo)}
   protected val freelancersMainChangeTable = TableQuery[FreelancersMainChange]
   protected type FreelancersAdditionalChangeRowType = (Option[Long],Long,Timestamp,Option[String],String,Option[String],
     Option[String],Option[String],String,Option[Double],Option[Int],Option[Double],Option[Int],Option[Int],String)
-  protected class FreelancersAdditionalChange (tag: Tag) extends Table[FreelancersAdditionalChangeRowType](tag, odesk_found_freelancers){
+  protected class FreelancersAdditionalChange (tag: Tag) extends Table[FreelancersAdditionalChangeRowType](tag, odesk_freelancers_additional_change){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
-    def create_date = column[Timestamp]("create_date", O.NotNull)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
+    def create_date = column[Timestamp]("create_date", O.NotNull)
     def title = column[Option[String]]("title")
-    def availability = column[String]("availability", O.NotNull))
+    def availability = column[String]("availability", O.NotNull)
     def available_again = column[Option[String]]("available_again")
     def responsiveness_score = column[Option[String]]("responsiveness_score")
     def overview = column[Option[String]]("overview")
@@ -317,9 +339,8 @@ trait DBProvider extends LoggerDBProvider {
   protected val freelancersAdditionalChangeTable = TableQuery[FreelancersAdditionalChange]
   protected type FreelancersWorkRowType = (Option[Long],Long,Timestamp,String,String,Option[Timestamp],Option[Timestamp],
     Option[Timestamp],Option[Timestamp],Option[String],Option[String],
-    String,String,
-    Option[String],Option[String],String,Option[String],String)
-  protected class FreelancersWork (tag: Tag) extends Table[FreelancersWorkRowType](tag, odesk_found_freelancers){
+    String,Option[String],Option[String],Option[String],String,Option[String],Option[String])
+  protected class FreelancersWork (tag: Tag) extends Table[FreelancersWorkRowType](tag, odesk_freelancers_work){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -330,22 +351,22 @@ trait DBProvider extends LoggerDBProvider {
     def from_full = column[Option[Timestamp]]("from_full")
     def to_full = column[Option[Timestamp]]("to_full")
     def opening_title = column[Option[String]]("opening_title")
-    def engagement_title = column[Option[String]]("opening_title")
+    def engagement_title = column[Option[String]]("engagement_title")
     def skills = column[String]("skills", O.NotNull)
-    def open_access = column[String]("open_access", O.NotNull)
+    def open_access = column[Option[String]]("open_access", O.NotNull)
     def cny_status = column[Option[String]]("cny_status")
     def financial_privacy = column[Option[String]]("financial_privacy")
     def is_hidden = column[String]("is_hidden", O.NotNull)
     def agency_name = column[Option[String]]("agency_name")
-    def segmentation_data = column[String]("segmentation_data", O.NotNull)
-    def * = (id,freelancer_id,create_date,payment_type,status,start_date,end_date,from_full,to_full,engagement_title,
-      opening_title,skills,open_access,cny_status,financial_privacy,is_hidden,agency_name,segmentation_data)}
+    def segmentation_data = column[Option[String]]("segmentation_data", O.NotNull)
+    def * = (id,freelancer_id,create_date,payment_type,status,start_date,end_date,from_full,to_full,
+      opening_title,engagement_title,skills,open_access,cny_status,financial_privacy,is_hidden,agency_name,segmentation_data)}
   protected val freelancersWorkTable = TableQuery[FreelancersWork]
   protected type FreelancersWorkAdditionalDataRowType = (Option[Long],Long,Long,Timestamp,
     Option[String],Option[Int],Option[Double],Option[Double],Option[Double],Option[Double],Option[Double],
     Option[Double],Option[Double],Option[Int],Option[String], Option[String],Option[String],Option[String],
     Option[String],Option[Double])
-  protected class FreelancersWorkAdditionalData (tag: Tag) extends Table[FreelancersWorkAdditionalDataRowType](tag, odesk_found_freelancers){
+  protected class FreelancersWorkAdditionalData (tag: Tag) extends Table[FreelancersWorkAdditionalDataRowType](tag, odesk_freelancers_work_additional_data){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def work_id = column[Long]("work_id", O.NotNull)
@@ -369,22 +390,22 @@ trait DBProvider extends LoggerDBProvider {
     def * = (id,freelancer_id,work_id,create_date,as_type,total_hours,rate,total_cost,charge_rate,amount,total_hours_precise,
       cost_rate,total_charge,job_contractor_tier,job_url,job_description,job_category,job_engagement,job_duration,job_amount)}
   protected val freelancersWorkAdditionalDataTable = TableQuery[FreelancersWorkAdditionalData]
-  protected type FreelancersWorkFeedbackRowType = (Option[Long],Long,Long,Timestamp,String,String,Option[String],
-    Option[Int],String,Option[String],Option[Double],String,String,Option[String],Option[String],Option[Double])
-  protected class FreelancersWorkFeedback(tag: Tag) extends Table[FreelancersWorkFeedbackRowType](tag, odesk_found_freelancers){
+  protected type FreelancersWorkFeedbackRowType = (Option[Long],Long,Long,Timestamp,String,Option[String],Option[String],
+    Option[Int],String,Option[String],Option[Double],String,Option[String],Option[String],Option[String],Option[Double])
+  protected class FreelancersWorkFeedback(tag: Tag) extends Table[FreelancersWorkFeedbackRowType](tag, odesk_freelancers_work_feedback){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def work_id = column[Long]("work_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def ff_scores = column[String]("ff_scores", O.NotNull)
-    def ff_is_public = column[String]("ff_is_public", O.NotNull)
+    def ff_is_public = column[Option[String]]("ff_is_public", O.NotNull)
     def ff_comment = column[Option[String]]("ff_comment")
     def ff_private_point = column[Option[Int]]("ff_private_point")
     def ff_reasons = column[String]("ff_reasons", O.NotNull)
     def ff_response = column[Option[String]]("ff_response")
     def ff_score = column[Option[Double]]("ff_score")
     def cf_scores = column[String]("cf_scores", O.NotNull)
-    def cf_is_public = column[String]("cf_is_public", O.NotNull)
+    def cf_is_public = column[Option[String]]("cf_is_public", O.NotNull)
     def cf_comment = column[Option[String]]("cf_comment")
     def cf_response = column[Option[String]]("cf_response")
     def cf_score = column[Option[Double]]("cf_score")
@@ -392,8 +413,8 @@ trait DBProvider extends LoggerDBProvider {
       ff_response,ff_score,cf_scores,cf_is_public,cf_comment,cf_response,cf_score)}
   protected val freelancersWorkFeedbackTable = TableQuery[FreelancersWorkFeedback]
   protected type FreelancersWorkLinkedProjectDataRowType = (Option[Long],Long,Long,Timestamp,Option[String],Option[String],
-    String,Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],Option[String])
-  protected class FreelancersWorkLinkedProjectData(tag: Tag) extends Table[FreelancersWorkLinkedProjectDataRowType](tag, odesk_found_freelancers){
+    String,Option[String],Option[String],Option[String],Option[Int],Option[String],Option[String],Option[String],Option[String],Option[String])
+  protected class FreelancersWorkLinkedProjectData(tag: Tag) extends Table[FreelancersWorkLinkedProjectDataRowType](tag, odesk_freelancers_work_linked_project_data){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def work_id = column[Long]("work_id", O.NotNull)
@@ -404,19 +425,19 @@ trait DBProvider extends LoggerDBProvider {
     def lp_description = column[Option[String]]("lp_description")
     def lp_recno = column[Option[String]]("lp_recno")
     def lp_cat_level_1 = column[Option[String]]("lp_cat_level_1")
-    def lp_cat_recno = column[Option[String]]("lp_cat_recno")
+    def lp_cat_recno = column[Option[Int]]("lp_cat_recno")
     def lp_cat_level_2 = column[Option[String]]("lp_cat_level_2")
     def lp_completed = column[Option[String]]("lp_completed")
     def lp_large_thumbnail = column[Option[String]]("lp_large_thumbnail")
     def lp_url = column[Option[String]]("lp_url")
     def lp_project_contract_link_state = column[Option[String]]("lp_project_contract_link_state")
     def * = (id,freelancer_id,work_id,create_date,lp_title,lp_thumbnail,lp_is_public,lp_description,
-      lp_recno,lp_cat_level_1,lp_cat_recno,lp_completed,lp_large_thumbnail,lp_url,lp_project_contract_link_state)}
+      lp_recno,lp_cat_level_1,lp_cat_recno,lp_cat_level_2,lp_completed,lp_large_thumbnail,lp_url,lp_project_contract_link_state)}
   protected val freelancersWorkLinkedProjectDataTable = TableQuery[FreelancersWorkLinkedProjectData]
   protected type FreelancersWorkClientsRowType = (Option[Long],Long,Long,Timestamp,Option[Int],Option[Double],Option[Double],
     Option[Int],Option[Int],Option[String],Option[String],Option[String],Option[Timestamp],Option[Array[Byte]],
     Option[String],Option[String],Option[String])
-  protected class FreelancersWorkClients(tag: Tag) extends Table[FreelancersWorkClientsRowType](tag, odesk_found_freelancers){
+  protected class FreelancersWorkClients(tag: Tag) extends Table[FreelancersWorkClientsRowType](tag, odesk_freelancers_work_clients){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def work_id = column[Long]("work_id", O.NotNull)
@@ -438,14 +459,14 @@ trait DBProvider extends LoggerDBProvider {
       client_total_hires,client_active_contract,client_country,client_city,client_time,client_member_since,
       client_profile_logo,client_profile_name,client_profile_url,client_profile_summary)}
   protected val freelancersWorkClientsTable = TableQuery[FreelancersWorkClients]
-  protected type FreelancersPortfolioRowType = (Option[Long],Long,Timestamp,Option[Timestamp],String,Option[String],
+  protected type FreelancersPortfolioRowType = (Option[Long],Long,Timestamp,Option[Timestamp],Option[String],Option[String],
     String,String,Option[Timestamp],Option[String],Option[String],String,String,Option[String],Option[String],Option[Array[Byte]])
-  protected class FreelancersPortfolio(tag: Tag) extends Table[FreelancersPortfolioRowType](tag, odesk_found_freelancers){
+  protected class FreelancersPortfolio(tag: Tag) extends Table[FreelancersPortfolioRowType](tag, odesk_freelancers_portfolio){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def project_date = column[Option[Timestamp]]("project_date")
-    def title = column[String]("title")
+    def title = column[Option[String]]("title")
     def description = column[Option[String]]("description")
     def is_public = column[String]("is_public")
     def attachments = column[String]("attachments")
@@ -456,12 +477,12 @@ trait DBProvider extends LoggerDBProvider {
     def is_client = column[String]("is_client")
     def flag_comment = column[Option[String]]("flag_comment")
     def project_url = column[Option[String]]("project_url")
-    def img_url = column[Option[Array[Byte]]]("img_url")
+    def img = column[Option[Array[Byte]]]("img")
     def * = (id,freelancer_id,create_date,project_date,title,description,is_public,attachments,creation_ts,category,
-      sub_category,skills,is_client,flag_comment,project_url,img_url)}
+      sub_category,skills,is_client,flag_comment,project_url,img)}
   protected val freelancersPortfolioTable = TableQuery[FreelancersPortfolio]
   protected type FreelancersTestsRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],Option[Double],Option[Int])
-  protected class FreelancersTests(tag: Tag) extends Table[FreelancersTestsRowType](tag, odesk_found_freelancers){
+  protected class FreelancersTests(tag: Tag) extends Table[FreelancersTestsRowType](tag, odesk_freelancers_tests){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -471,37 +492,35 @@ trait DBProvider extends LoggerDBProvider {
     def time_complete = column[Option[Int]]("time_complete")
     def * = (id,freelancer_id,create_date,details_url,title,score,time_complete)}
   protected val freelancersTestsTable = TableQuery[FreelancersTests]
-  protected type FreelancersCertificationRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
-    Option[String],Option[String],Option[String],Option[String],Option[String],String,String,Option[String],Option[String],
-    String,Option[String])
-  protected class FreelancersCertification(tag: Tag) extends Table[FreelancersCertificationRowType](tag, odesk_found_freelancers){
+  protected type FreelancersCertificationRowType = (Option[Long],Long,Timestamp,Option[String],
+    Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],
+    Option[String],Option[String],Option[String],String,Option[String])
+  protected class FreelancersCertification(tag: Tag) extends Table[FreelancersCertificationRowType](tag, odesk_freelancers_certification){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def details_url = column[Option[String]]("details_url")
     def rid = column[Option[String]]("rid")
     def name = column[Option[String]]("name")
     def custom_data = column[Option[String]]("custom_data")
     def score = column[Option[String]]("score")
     def logo_url = column[Option[String]]("logo_url")
     def cert_url = column[Option[String]]("cert_url")
-    def is_cert_verified = column[String]("is_cert_verified", O.NotNull)
-    def is_verified = column[String]("is_verified", O.NotNull)
+    def is_cert_verified = column[Option[String]]("is_cert_verified", O.NotNull)
+    def is_verified = column[Option[String]]("is_verified", O.NotNull)
     def description = column[Option[String]]("description")
     def provider = column[Option[String]]("provider")
     def skills = column[String]("skills", O.NotNull)
     def date_earned = column[Option[String]]("date_earned")
-    def * = (id,freelancer_id,create_date,details_url,rid,name,custom_data,score,logo_url,cert_url,is_cert_verified,
+    def * = (id,freelancer_id,create_date,rid,name,custom_data,score,logo_url,cert_url,is_cert_verified,
       is_verified,description,provider,skills,date_earned)}
   protected val freelancersCertificationTable = TableQuery[FreelancersCertification]
-  protected type FreelancersEmploymentRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
+  protected type FreelancersEmploymentRowType = (Option[Long],Long,Timestamp,Option[String],
     Option[String],Option[String],Option[Timestamp],Option[Timestamp],Option[String],Option[String],Option[String],
     Option[String])
-  protected class FreelancersEmployment(tag: Tag) extends Table[FreelancersEmploymentRowType](tag, odesk_found_freelancers){
+  protected class FreelancersEmployment(tag: Tag) extends Table[FreelancersEmploymentRowType](tag, odesk_freelancers_employment){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def details_url = column[Option[String]]("details_url")
     def record_id = column[Option[String]]("record_id")
     def title = column[Option[String]]("title")
     def company = column[Option[String]]("company")
@@ -511,26 +530,25 @@ trait DBProvider extends LoggerDBProvider {
     def company_country = column[Option[String]]("company_country")
     def company_city = column[Option[String]]("company_city")
     def description = column[Option[String]]("description")
-    def * = (id,freelancer_id,create_date,details_url,record_id,title,company,date_from,date_to,role,company_country,
+    def * = (id,freelancer_id,create_date,record_id,title,company,date_from,date_to,role,company_country,
       company_city,description)}
   protected val freelancersEmploymentTable = TableQuery[FreelancersEmployment]
-  protected type FreelancersEducationRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],Option[String],
+  protected type FreelancersEducationRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
     Option[String],Option[Timestamp],Option[Timestamp],Option[String])
-  protected class FreelancersEducation(tag: Tag) extends Table[FreelancersEducationRowType](tag, odesk_found_freelancers){
+  protected class FreelancersEducation(tag: Tag) extends Table[FreelancersEducationRowType](tag, odesk_freelancers_education){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
-    def details_url = column[Option[String]]("details_url")
     def school = column[Option[String]]("school")
     def area_of_study = column[Option[String]]("area_of_study")
     def degree = column[Option[String]]("degree")
     def date_from = column[Option[Timestamp]]("date_from")
     def date_to = column[Option[Timestamp]]("date_to")
     def comments = column[Option[String]]("comments")
-    def * = (id,freelancer_id,create_date,details_url,school,area_of_study,degree,date_from,date_to,comments)}
+    def * = (id,freelancer_id,create_date,school,area_of_study,degree,date_from,date_to,comments)}
   protected val freelancersEducationTable = TableQuery[FreelancersEducation]
   protected type FreelancersOtherExperienceRowType = (Option[Long],Long,Timestamp,Option[String],Option[String])
-  protected class FreelancersOtherExperience(tag: Tag) extends Table[FreelancersOtherExperienceRowType](tag, odesk_found_freelancers){
+  protected class FreelancersOtherExperience(tag: Tag) extends Table[FreelancersOtherExperienceRowType](tag, odesk_freelancers_other_experience){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
@@ -564,416 +582,326 @@ trait DBProvider extends LoggerDBProvider {
     skills = sks.split(",").toList,
     nFreelancers = nf)
   protected def buildFoundJobsRow(d:FoundJobsRow,p:Int):FoundJobsRowType = {(
-    None,                          // id
-    d.oUrl,                        // o_url
-    d.foundBy.toString,            // found_by
-    new Timestamp(d.date.getTime), // reate_date
-    p,                             // priority
-    d.skills.mkString(","),        // job_skills
-    d.nFreelancers)}               // n_freelancers
+    None,                   // id
+    d.oUrl,                 // o_url
+    d.foundBy.toString,     // found_by
+    d.date.toTimestamp,     // reate_date
+    p,                      // priority
+    d.skills.mkString(","), // job_skills
+    d.nFreelancers)}        // n_freelancers
   protected def buildJobsRow(d:JobsRow):JobRowType = { (
-    None,                                                   // id Option[Long]
-    d.foundData.oUrl,                                       // o_url String
-    d.foundData.foundBy.toString,                           // found_by String
-    new Timestamp(d.foundData.date.getTime),                // found_date Timestamp
-    new Timestamp(d.jabData.createDate.getTime),            // create_date Timestamp
-    d.jabData.postDate.map(t => new Timestamp(t.getTime)),  // post_date Option[Timestamp]
-    d.jabData.deadline.map(t => new Timestamp(t.getTime)),  // deadline Option[Timestamp]
-    d.daeDate.map(t => new Timestamp(t.getTime)),           // dae_date Option[Timestamp]
-    d.deleteDate.map(t => new Timestamp(t.getTime)),        // delete_date Option[Timestamp]
-    d.nextCheckDate.map(t => new Timestamp(t.getTime)),     // next_check_date Option[Timestamp]
-    d.foundData.nFreelancers,                               // n_freelancers Option[Int]
-    d.jabData.jobTitle,                                     // job_title Option[String]
-    d.jabData.jobType,                                      // job_type Option[String]
-    d.jabData.jobPaymentType.toString,                      // job_payment_type Option[String]
-    d.jabData.jobPrice,                                     // job_price Option[Double]
-    d.jabData.jobEmployment.toString,                       // job_employment Option[String]
-    d.jabData.jobLength,                                    // job_length Option[String]
-    d.jabData.jobRequiredLevel.toString,                    // job_required_level Option[String]
-    d.foundData.skills.mkString(","),                       // job_skills Option[String]
+    None,                                // id Option[Long]
+    d.foundData.oUrl,                    // o_url String
+    d.foundData.foundBy.toString,        // found_by String
+    d.foundData.date.toTimestamp,        // found_date Timestamp
+    d.jabData.createDate.toTimestamp,    // create_date Timestamp
+    d.jabData.postDate.toTimestamp,      // post_date Option[Timestamp]
+    d.jabData.deadline.toTimestamp,      // deadline Option[Timestamp]
+    d.daeDate.toTimestamp,               // dae_date Option[Timestamp]
+    d.deleteDate.toTimestamp,            // delete_date Option[Timestamp]
+    d.nextCheckDate.toTimestamp,         // next_check_date Option[Timestamp]
+    d.foundData.nFreelancers,            // n_freelancers Option[Int]
+    d.jabData.jobTitle,                  // job_title Option[String]
+    d.jabData.jobType,                   // job_type Option[String]
+    d.jabData.jobPaymentType.toString,   // job_payment_type Option[String]
+    d.jabData.jobPrice,                  // job_price Option[Double]
+    d.jabData.jobEmployment.toString,    // job_employment Option[String]
+    d.jabData.jobLength,                 // job_length Option[String]
+    d.jabData.jobRequiredLevel.toString, // job_required_level Option[String]
+    d.foundData.skills.mkString(","),    // job_skills Option[String]
     d.jabData.jobQualifications.map{case (k,v) => {k + "$" + v}}.mkString("|"), // job_qualifications Option[String]
     d.jabData.jobDescription)}                              // job_description Option[String]
   protected def buildJobsChangesRow(d:JobsChangesRow, jid:Long):JobsChangesRowType = {(
-    None, // id
-    jid, // job_id
-    new Timestamp(d.changeData.createDate.getTime),             // create_date
-    d.changeData.jobAvailable.toString,                         // available
-    d.changeData.lastViewed.map(t => new Timestamp(t.getTime)), // last_viewed
-    d.changeData.nApplicants,                                   // n_applicants
-    d.changeData.applicantsAvg,                                 // applicants_avg
-    d.changeData.rateMin,                                       // rate_min
-    d.changeData.rateAvg,                                       // rate_avg
-    d.changeData.rateMax,                                       // rate_max
-    d.changeData.nInterviewing,                                 // n_interviewing
-    d.changeData.interviewingAvg,                               // interviewing_avg
-    d.changeData.nHires)}                                       // n_hires
-  protected def buildClientsChangesRow(d:ClientsChangesRow, jid:Long):ClientsChangesRowType = {
-    //Prepare
-    val ib = d.logo.map(i => {
-      val ib = new ByteArrayOutputStream()
-      ImageIO.write(i, "jpg", ib )
-      ib.toByteArray})
-    //Build
-    ( None,                                           // id
-      jid,                                        // job_id
-      new Timestamp(d.changeData.createDate.getTime), // create_date
-      d.changeData.name,                              // client_name
-      ib,                                             // client_logo
-      d.changeData.url,                               // client_url
-      d.changeData.description,                       // client_description
-      d.changeData.paymentMethod.toString,            // client_payment_method
-      d.changeData.rating,                            // client_rating
-      d.changeData.nReviews,                          // client_n_reviews
-      d.changeData.location,                          // client_location
-      d.changeData.time,                              // client_time
-      d.changeData.nJobs,                             // client_n_jobs
-      d.changeData.hireRate,                          // client_hire_rate
-      d.changeData.nOpenJobs,                         // client_n_open_jobs
-      d.changeData.totalSpend,                        // client_total_spend
-      d.changeData.nHires,                            // client_n_hires
-      d.changeData.nActive,                           // client_n_active
-      d.changeData.avgRate,                           // client_avg_rate
-      d.changeData.hours,                             // client_hours
-      d.changeData.registrationDate.map(t => new Timestamp(t.getTime)))} // client_registration_date
+    None,                                // id
+    jid,                                 // job_id
+    d.changeData.createDate.toTimestamp, // create_date
+    d.changeData.jobAvailable.toString,  // available
+    d.changeData.lastViewed.toTimestamp, // last_viewed
+    d.changeData.nApplicants,            // n_applicants
+    d.changeData.applicantsAvg,          // applicants_avg
+    d.changeData.rateMin,                // rate_min
+    d.changeData.rateAvg,                // rate_avg
+    d.changeData.rateMax,                // rate_max
+    d.changeData.nInterviewing,          // n_interviewing
+    d.changeData.interviewingAvg,        // interviewing_avg
+    d.changeData.nHires)}                // n_hires
+  protected def buildClientsChangesRow(d:ClientsChangesRow, jid:Long):ClientsChangesRowType = (
+    None,                                 // id
+    jid,                                  // job_id
+    d.changeData.createDate.toTimestamp,  // create_date
+    d.changeData.name,                    // client_name
+    d.logo.toArray ,                      // client_logo
+    d.changeData.url,                     // client_url
+    d.changeData.description,             // client_description
+    d.changeData.paymentMethod.toString,  // client_payment_method
+    d.changeData.rating,                  // client_rating
+    d.changeData.nReviews,                // client_n_reviews
+    d.changeData.location,                // client_location
+    d.changeData.time,                    // client_time
+    d.changeData.nJobs,                   // client_n_jobs
+    d.changeData.hireRate,                // client_hire_rate
+    d.changeData.nOpenJobs,               // client_n_open_jobs
+    d.changeData.totalSpend,              // client_total_spend
+    d.changeData.nHires,                  // client_n_hires
+    d.changeData.nActive,                 // client_n_active
+    d.changeData.avgRate,                 // client_avg_rate
+    d.changeData.hours,                   // client_hours
+    d.changeData.registrationDate.toTimestamp)      // client_registration_date
   protected def buildJobsApplicantsRows(d:JobsApplicantsRow, jid:Long):JobsApplicantsRowType = (
-    None,                                                      // id
-    jid,                                                       // job_id
-    new Timestamp(d.applicantData.createDate.getTime),         // create_date
-    d.applicantData.upDate.map(t => new Timestamp(t.getTime)), // up_date
-    d.applicantData.name,                                      // name
-    d.applicantData.initiatedBy.toString,                      // initiated_by
-    d.applicantData.url,                                       // freelancer_url
-    d.freelancerId)                                            // freelancer_id
+    None,                                   // id
+    jid,                                    // job_id
+    d.applicantData.createDate.toTimestamp, // create_date
+    d.applicantData.upDate.toTimestamp,     // up_date
+    d.applicantData.name,                   // name
+    d.applicantData.initiatedBy.toString,   // initiated_by
+    d.applicantData.url,                    // freelancer_url
+    d.freelancerId)                         // freelancer_id
   protected def buildJobsHiredRows(d:JobsHiredRow, jid:Long):JobsHiredRowType = (
-    None,                                          // id
-    jid,                                           // job_id
-    new Timestamp(d.hiredData.createDate.getTime), // create_date
-    d.hiredData.name,                              // name
-    d.hiredData.freelancerUrl,                     // freelancer_url
-    d.freelancerId)                                // freelancer_id
+    None,                               // id
+    jid,                                // job_id
+    d.hiredData.createDate.toTimestamp, // create_date
+    d.hiredData.name,                   // name
+    d.hiredData.freelancerUrl,          // freelancer_url
+    d.freelancerId)                     // freelancer_id
   protected def buildClientsWorksHistoryRow(d:ClientsWorksHistoryRow, jid:Long):ClientsWorksHistoryRowType = (
-    None,                                                    // id
-    jid,                                                     // job_id
-    new Timestamp(d.workData.createDate.getTime),            // create_date
-    d.workData.oUrl,                                         // o_url
-    d.workData.title,                                        // title
-    d.workData.inProgress.toString,                          // in_progress
-    d.workData.startDate.map(t => new Timestamp(t.getTime)), // start_date
-    d.workData.endDate.map(t => new Timestamp(t.getTime)),   // end_date
-    d.workData.paymentType.toString,                         // payment_type
-    d.workData.billed,                                       // billed
-    d.workData.hours,                                        // hours
-    d.workData.rate,                                         // rate
-    d.workData.freelancerFeedbackText,                       // freelancer_feedback_text
-    d.workData.freelancerFeedback,                           // freelancer_feedback
-    d.workData.freelancerName,                               // freelancer_name
-    d.workData.freelancerUrl,                                // freelancer_url
-    d.freelancerId,                                          // freelancer_id
-    d.workData.clientFeedback)                               // client_feedback
+    None,                              // id
+    jid,                               // job_id
+    d.workData.createDate.toTimestamp, // create_date
+    d.workData.oUrl,                   // o_url
+    d.workData.title,                  // title
+    d.workData.inProgress.toString,    // in_progress
+    d.workData.startDate.toTimestamp,  // start_date
+    d.workData.endDate.toTimestamp,    // end_date
+    d.workData.paymentType.toString,   // payment_type
+    d.workData.billed,                 // billed
+    d.workData.hours,                  // hours
+    d.workData.rate,                   // rate
+    d.workData.freelancerFeedbackText, // freelancer_feedback_text
+    d.workData.freelancerFeedback,     // freelancer_feedback
+    d.workData.freelancerName,         // freelancer_name
+    d.workData.freelancerUrl,          // freelancer_url
+    d.freelancerId,                    // freelancer_id
+    d.workData.clientFeedback)         // client_feedback
   protected def buildFoundFreelancerRow(d:FoundFreelancerRow):FoundFreelancersRowType = (
-    None,                          // id
-    d.oUrl,                        // o_url
-    new Timestamp(d.date.getTime), // create_date
-    d.priority)                    // priority
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  protected def buildFreelancersRowType:FreelancersRowType = (
-    , // id
-    , // create_date
-    , // o_url
-    )
-
-  protected def buildFreelancersRawHtmlRowType(d:, fId:Long):FreelancersRawHtmlRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // html
-    )
-
-
-  protected def buildFreelancersRawJobJsonRowType(d:, fId:Long):FreelancersRawJobJsonRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // json
-    )
-
-
-  protected def buildFreelancersRawPortfolioRowType(d:, fId:Long):FreelancersRawPortfolioRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // json
-    )
-
-
-  protected def buildFreelancersMainChangeRowType(d:, fId:Long):FreelancersMainChangeRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // name
-    , // profile_access
-    , // link
-    , // expose_full_name
-    , // role
-    , // video_url
-    , // is_invite_interview_allowed
-    , // location
-    , // time_zone
-    , // email_verified
-    , // photo
-    , // company_url
-    , // company_logo
-    )
-
-
-  protected def buildFreelancersAdditionalChangeRowType(d:, fId:Long):FreelancersAdditionalChangeRowType = (
-    , // id
-    , // create_date
-    , // freelancer_id
-    , // title
-    , // availability
-    , // available_again
-    , // responsiveness_score
-    , // overview
-    , // languages
-    , // rate
-    , // rent_percent
-    , // rating
-    , // all_time_jobs
-    , // all_time_hours
-    , // skills
-    )
-
-
-  protected def buildFreelancersWorkRowType(d:, fId:Long):FreelancersWorkRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // payment_type
-    , // status
-    , // start_date
-    , // end_date =
-    , // from_full
-    , // to_full
-    , // opening_title
-    , // engagement_title
-    , // skills
-    , // open_access
-    , // cny_status
-    , // financial_privacy
-    , // is_hidden
-    , // agency_name
-    , // segmentation_data
-    )
-
-
-  protected def buildFreelancersWorkAdditionalDataRowType(d:, fId:Long, wId:Long):FreelancersWorkAdditionalDataRowType = (
-    , // id
-    , // freelancer_id
-    , // work_id
-    , // create_date
-    , // as_type
-    , // total_hours
-    , // rate
-    , // total_cost
-    , // charge_rate
-    , // amount
-    , // total_hours_precise
-    , // cost_rate
-    , // total_charge
-    , // job_contractor_tier
-    , // job_url
-    , // job_description
-    , // job_category
-    , // job_engagement
-    , // job_duration
-    , // job_amount
-    )
-
-
-  protected def buildFreelancersWorkFeedbackRowType(d:, fId:Long, wId:Long):FreelancersWorkFeedbackRowType = (
-    , // id
-    , // freelancer_id
-    , // work_id
-    , // create_date
-    , // ff_scores
-    , // ff_is_public
-    , // ff_comment
-    , // ff_private_point
-    , // ff_reasons
-    , // ff_response
-    , // ff_score
-    , // cf_scores
-    , // cf_is_public
-    , // cf_comment
-    , // cf_response
-    , // cf_score
-    )
-
-
-  protected def buildFreelancersWorkLinkedProjectDataRowType(d:, fId:Long, wId:Long):FreelancersWorkLinkedProjectDataRowType = (
-    , // id
-    , // freelancer_id
-    , // work_id
-    , // create_date
-    , // lp_title
-    , // lp_thumbnail
-    , // lp_is_public
-    , // lp_description
-    , // lp_recno
-    , // lp_cat_level_1
-    , // lp_cat_recno
-    , // lp_cat_level_2
-    , // lp_completed
-    , // lp_large_thumbnail
-    , // lp_url
-    , // lp_project_contract_link_state
-    )
-
-
-  protected def buildFreelancersWorkClientsRowType(d:, fId:Long, wId:Long):FreelancersWorkClientsRowType = (
-    , // id
-    , // freelancer_id
-    , // work_id
-    , // create_date
-    , // client_total_feedback
-    , // client_score
-    , // client_total_charge
-    , // client_total_hires
-    , // client_active_contract
-    , // client_country
-    , // client_city
-    , // client_time
-    , // client_member_since
-    , // client_profile_logo
-    , // client_profile_name
-    , // client_profile_url
-    , // client_profile_summary
-    )
-
-
-  protected def buildFreelancersPortfolioRowType(d:, fId:Long):FreelancersPortfolioRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // project_date
-    , // title
-    , // description
-    , // is_public
-    , // attachments
-    , // creation_ts
-    , // category
-    , // sub_category
-    , // skills
-    , // is_client
-    , // flag_comment
-    , // project_url
-    , // img_url
-    )
-
-
-  protected def buildFreelancersTestsRowType(d:, fId:Long):FreelancersTestsRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // details_url
-    , // title
-    , // score
-    , // time_complete
-    )
-
-
-  protected def buildFreelancersCertificationRowType(d:, fId:Long):FreelancersCertificationRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // details_url
-    , // rid
-    , // name
-    , // custom_data
-    , // score
-    , // logo_url
-    , // cert_url
-    , // is_cert_verified
-    , // is_verified
-    , // description
-    , // provider
-    , // skills
-    , // date_earned
-    )
-
-
-  protected def buildFreelancersEmploymentRowType(d:, fId:Long):FreelancersEmploymentRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // details_url
-    , // record_id
-    , // title
-    , // company
-    , // date_from
-    , // date_to
-    , // role
-    , // company_country
-    , // company_city
-    , // description
-    )
-
-
-  protected def buildFreelancersEducationRowType(d:, fId:Long):FreelancersEducationRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // details_url
-    , // school
-    , // area_of_study
-    , // degree
-    , // date_from
-    , // date_to
-    , // comments
-    )
-
-
-  protected def buildFreelancersOtherExperienceRowType(d:, fId:Long):FreelancersOtherExperienceRowType = (
-    , // id
-    , // freelancer_id
-    , // create_date
-    , // subject
-    , // description
-    )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    None,               // id
+    d.oUrl,             // o_url
+    d.date.toTimestamp, // create_date
+    d.priority)         // priority
+  protected def buildFreelancersRow(d:FreelancerRow):FreelancersRowType = (
+    None,                     // id
+    d.createDate.toTimestamp, // create_date
+    d.oUrl)                   // o_url
+  protected def buildFreelancersRawHtmlRow(d:FreelancerRawHtmlRow, fId:Long):FreelancersRawHtmlRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.html)                          // html
+  protected def buildFreelancersRawJobJsonRow(d:FreelancerRawJobJsonRow, fId:Long):FreelancersRawJobJsonRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.json)                          // json
+  protected def buildFreelancersRawPortfolioRow(d:FreelancerRawPortfolioJsonRow, fId:Long):FreelancersRawPortfolioRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.json)                          // json
+  protected def buildFreelancersMainChangeRow(d:FreelancerMainChangeRow, fId:Long):FreelancersMainChangeRowType = (
+    None,                                // id
+    fId,                                 // freelancer_id
+    d.header.createDate.toTimestamp,     // create_date
+    d.name,                              // name
+    d.profileAccess,                     // profile_access
+    d.link,                              // link
+    d.exposeFullName,                    // expose_full_name
+    d.role,                              // role
+    d.videoUrl,                          // video_url
+    d.isInviteInterviewAllowed.toString, // is_invite_interview_allowed
+    d.location,                          // location
+    d.timeZone,                          // time_zone
+    d.emailVerified.toString,            // email_verified
+    d.photo.toArray,                     // photo
+    d.companyUrl,                        // company_url
+    d.companyLogo.toArray)               // company_logo
+  protected def buildFreelancersAdditionalChangeRow(d:FreelancerAdditionalChangeRow, fId:Long):FreelancersAdditionalChangeRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.title,                         // title
+    d.availability.toString,         // availability
+    d.availableAgain,                // available_again
+    d.responsivenessScore,           // responsiveness_score
+    d.overview,                      // overview
+    d.languages.map{case FreelancerLanguage(n,l,iv) ⇒ {
+      n + "," + (l match{case Some(i) ⇒ i.toString; case None ⇒ ""}) + "," + iv.toString}}.mkString("|"), // languages
+    d.rate,                          // rate
+    d.rentPercent,                   // rent_percent
+    d.rating,                        // rating
+    d.allTimeJobs,                   // all_time_jobs
+    d.allTimeHours,                  // all_time_hours
+    d.skills.mkString(","))          // skills
+  protected def buildFreelancersWorkRow(d:FreelancerWorkRow, fId:Long):FreelancersWorkRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.paymentType.toString,          // payment_type
+    d.status.toString,               // status
+    d.startDate.toTimestamp,         // start_date
+    d.endDate.toTimestamp,           // end_date =
+    d.fromFull.toTimestamp,          // from_full
+    d.toFull.toTimestamp,            // to_full
+    d.openingTitle,                  // opening_title
+    d.engagementTitle,               // engagement_title
+    d.skills.mkString(","),          // skills
+    d.openAccess         ,           // open_access
+    d.cnyStatus,                     // cny_status
+    d.financialPrivacy,              // financial_privacy
+    d.isHidden.toString,             // is_hidden
+    d.agencyName,                    // agency_name
+    d.segmentationData)              // segmentation_data
+  protected def buildFreelancersWorkAdditionalDataRow(d:FreelancerWorkAdditionalDataRow, fId:Long, wId:Long):FreelancersWorkAdditionalDataRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    wId,                             // work_id
+    d.header.createDate.toTimestamp, // create_date
+    d.asType,                        // as_type
+    d.totalHours,                    // total_hours
+    d.rate,                          // rate
+    d.totalCost ,                    // total_cost
+    d.chargeRate,                    // charge_rate
+    d.amount,                        // amount
+    d.totalHoursPrecise,             // total_hours_precise
+    d.costRate,                      // cost_rate
+    d.totalCharge,                   // total_charge
+    d.jobContractorTier,             // job_contractor_tier
+    d.jobUrl,                        // job_url
+    d.jobDescription,                // job_description
+    d.jobCategory,                   // job_category
+    d.jobEngagement,                 // job_engagement
+    d.jobDuration,                   // job_duration
+    d.jobAmount)                     // job_amount
+  protected def buildFreelancersWorkFeedbackRow(d:FreelancerWorkFeedbackRow, fId:Long, wId:Long):FreelancersWorkFeedbackRowType = (
+    None,                                                             // id
+    fId,                                                              // freelancer_id
+    wId,                                                              // work_id
+    d.header.createDate.toTimestamp,                                  // create_date
+    d.ffScores.map{case (k,v) => {k + "$" + v}}.mkString("|"),        // ff_scores
+    d.ffIsPublic,                                                     // ff_is_public
+    d.ffComment,                                                      // ff_comment
+    d.ffPrivatePoint,                                                 // ff_private_point
+    d.ffReasons.map{case Some(s) ⇒ s; case None ⇒ ""}.mkString(","), // ff_reasons
+    d.ffResponse,                                                     // ff_response
+    d.ffScore,                                                        // ff_score
+    d.cfScores.map{case (k,v) => {k + "$" + v}}.mkString("|"),        // cf_scores
+    d.cfIsPublic,                                                     // cf_is_public
+    d.cfComment,                                                      // cf_comment
+    d.cfResponse,                                                     // cf_response
+    d.cfScore)                                                        // cf_score
+  protected def buildFreelancersWorkLinkedProjectDataRow(d:FreelancerLinkedProjectDataRow, fId:Long, wId:Long):FreelancersWorkLinkedProjectDataRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    wId,                             // work_id
+    d.header.createDate.toTimestamp, // create_date
+    d.lpTitle,                       // lp_title
+    d.lpThumbnail,                   // lp_thumbnail
+    d.lpIsPublic.toString,           // lp_is_public
+    d.lpDescription,                 // lp_description
+    d.lpRecno,                       // lp_recno
+    d.lpCatLevel1,                   // lp_cat_level_1
+    d.lpCatRecno,                    // lp_cat_recno
+    d.lpCatLevel2,                   // lp_cat_level_2
+    d.lpCompleted,                   // lp_completed
+    d.lpLargeThumbnail,              // lp_large_thumbnail
+    d.lpUrl,                         // lp_url
+    d.lpProjectContractLinkState)    // lp_project_contract_link_state
+  protected def buildFreelancersWorkClientsRow(d:FreelancerWorkClientRow, fId:Long, wId:Long):FreelancersWorkClientsRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    wId,                             // work_id
+    d.header.createDate.toTimestamp, // create_date
+    d.clientTotalFeedback,           // client_total_feedback
+    d.clientScore,                   // client_score
+    d.clientTotalCharge,             // client_total_charge
+    d.clientTotalHires,              // client_total_hires
+    d.clientActiveContract,          // client_active_contract
+    d.clientCountry,                 // client_country
+    d.clientCity,                    // client_city
+    d.clientTime,                    // client_time
+    d.clientMemberSince.toTimestamp, // client_member_since
+    d.clientProfileLogo.toArray,     // client_profile_logo
+    d.clientProfileName,             // client_profile_name
+    d.clientProfileUrl,              // client_profile_url
+    d.clientProfileSummary)          // client_profile_summary
+  protected def buildFreelancersPortfolioRow(d:FreelancerPortfolioRow, fId:Long):FreelancersPortfolioRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.projectDate.toTimestamp,       // project_date
+    d.title,                         // title
+    d.description,                   // description
+    d.isPublic.toString,             // is_public
+    d.attachments.mkString(","),     // attachments
+    d.creationTs.toTimestamp,        // creation_ts
+    d.category,                      // category
+    d.subCategory,                   // sub_category
+    d.skills.mkString(","),          // skills
+    d.isClient.toString,             // is_client
+    d.flagComment,                   // flag_comment
+    d.projectUrl,                    // project_url
+    d.img.toArray)                   // img
+  protected def buildFreelancersTestsRow(d:FreelancerTestRow, fId:Long):FreelancersTestsRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.data.detailsUrl,               // details_url
+    d.data.title,                    // title
+    d.data.score,                    // score
+    d.data.timeComplete)             // time_complete
+  protected def buildFreelancersCertificationRow(d:FreelancerCertificationRow, fId:Long):FreelancersCertificationRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.data.rid,                      // rid
+    d.data.name,                     // name
+    d.data.customData,               // custom_data
+    d.data.score,                    // score
+    d.data.logoUrl,                  // logo_url
+    d.data.certUrl,                  // cert_url
+    d.data.isCertVerified,           // is_cert_verified
+    d.data.isVerified,               // is_verified
+    d.data.description,              // description
+    d.data.provider,                 // provider
+    d.data.skills.mkString(","),     // skills
+    d.data.dateEarned)               // date_earned
+  protected def buildFreelancersEmploymentRow(d:FreelancerEmploymentRow, fId:Long):FreelancersEmploymentRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.data.recordId,                 // record_id
+    d.data.title,                    // title
+    d.data.company,                  // company
+    d.data.dateTo.toTimestamp,       // date_from
+    d.data.dateTo.toTimestamp,       // date_to
+    d.data.role,                     // role
+    d.data.companyCountry,           // company_country
+    d.data.companyCity,              // company_city
+    d.data.description)              // description
+  protected def buildFreelancersEducationRow(d:FreelancerEducationRow, fId:Long):FreelancersEducationRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.data.school,                   // school
+    d.data.areaOfStudy,              // area_of_study
+    d.data.degree,                   // degree
+    d.data.dateFrom.toTimestamp,     // date_from
+    d.data.dateTo.toTimestamp,       // date_to
+    d.data.comments)                 // comments
+  protected def buildFreelancersOtherExperienceRow(d:FreelancerOtherExperienceRow, fId:Long):FreelancersOtherExperienceRowType = (
+    None,                            // id
+    fId,                             // freelancer_id
+    d.header.createDate.toTimestamp, // create_date
+    d.data.subject,                  // subject
+    d.data.description)              // description
   protected def countRows(tableName:String):Int = {
     if(db.isEmpty){throw new Exception("[DBProvider.countRows] No created DB.")}
     if(! tablesByName.contains(tableName)){throw new Exception("[DBProvider.countRows] Unknown table name: " + tableName)}
@@ -1007,7 +935,7 @@ trait DBProvider extends LoggerDBProvider {
       val ejs = (jobTable.filter(_.o_url inSetBind us).map(_.o_url) ++ foundJobsTable.filter(_.o_url inSetBind us).map(_.o_url)).list.toSet
       val fds = ds.filter(u => {! ejs.contains(u.oUrl)})
       //Prepare
-      val rs = fds.map(d => buildFoundJobsRow(d,d.priority))               //n_freelancers
+      val rs = fds.map(d => buildFoundJobsRow(d,d.priority))
       //Insert
       foundJobsTable ++= rs
       //Return  number of insert
