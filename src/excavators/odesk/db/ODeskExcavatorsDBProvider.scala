@@ -28,12 +28,12 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       List()}}
   private def serializeExcavatorsParams(p:List[(Int, (Boolean, Double))]):String = {
     p.map{case (n,(w,d)) ⇒ {n + "," + (if(w) "W" else "S") + "," + d}}.mkString(";")}
-  private def editExcavatorsParams(f:(List[(Int, (Boolean, Double))])⇒(List[(Int, (Boolean, Double))],Int)):Int = { //Return excavator number
+  private def editExcavatorsParams(pn:String, f:(List[(Int, (Boolean, Double))])⇒(List[(Int, (Boolean, Double))],Int)):Int = { //Return excavator number
     var (en,c) = (-1,0)
     while(en < 0 && c < maxAccessTry){
       db.get.withTransaction(implicit session ⇒ {
         //Read parameter
-        val p = excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).first
+        val p = excavatorsParamTable.filter(_.p_key === pn).first
         if(p._4){ //If params not locked
         //Deserialize and execute
         val ps = deserializeExcavatorsParams(p._3)
@@ -41,28 +41,34 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
           en = n
           //Update params
           val snp = serializeExcavatorsParams(np)
-          excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.p_value).update(snp)
+          excavatorsParamTable.filter(_.p_key === pn).map(_.p_value).update(snp)
           //Return
           en = n}})
       //Time out if not successful
       if(en < 0){Thread.sleep(accessTryTimeout)}
       c += 1}
-    if(en < 0){throw new Exception("[ODeskExcavatorsDBProvider.registrateExcavator] Failed on update param.")}
+    if(en < 0){throw new Exception("[ODeskExcavatorsDBProvider.registrateJobsExcavator] Failed on update param.")}
     en}
-  private def getExcavatorsParams(implicit session:Session):List[(Int, (Boolean, Double))] = {
-    var ps:Option[List[(Int, (Boolean, Double))]] = None
-    var c = 0
-    while(ps.isEmpty && c < maxAccessTry){
-      //Read parameter
-      val p = excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).first
-      if(p._4){ps = Some(deserializeExcavatorsParams(p._3))} //If params not locked deserialize
-      c += 1}
-    if(ps.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getExcavatorsParams] Failed on get param.")}
-    ps.get}
-  private def calcJobsDistribution(aes:List[(Int,Double)], nj:Int):List[(Int,Int)] = {
+//  private def getExcavatorsParams(implicit session:Session):List[(Int, (Boolean, Double))] = {
+//    var ps:Option[List[(Int, (Boolean, Double))]] = None
+//    var c = 0
+//    while(ps.isEmpty && c < maxAccessTry){
+//      //Read parameter
+//      val p = excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).first
+//      if(p._4){ps = Some(deserializeExcavatorsParams(p._3))} //If params not locked deserialize
+//      c += 1}
+//    if(ps.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getExcavatorsParams] Failed on get param.")}
+//    ps.get}
+  private def calcDistribution(aes:List[(Int,Double)], nj:Int):List[(Int,Int)] = {
     val t = aes.map{case(e,d) ⇒ (e,(nj * d).toInt)}
     val l = t.last match{case(e,d) ⇒ (e,(d + nj - t.map(_._2).sum))}
     t.dropRight(1) :+ l}
+  private def addExcavator(ps:List[(Int, (Boolean, Double))]):(List[(Int, (Boolean, Double))],Int) = {
+    val ex = ps.map(_._1)
+    val n = (1 to 100).find(i ⇒ {! ex.contains(i)}).get
+    (ps :+ (n,(true,0.0)),n)}
+  private def delExcavator(en:Int, ps:List[(Int, (Boolean, Double))]):(List[(Int, (Boolean, Double))],Int) = {
+    (ps.map{case(e,(w,d)) ⇒ if(e == en){(e,(false,0.0))}else{(e,(w,d))}},0)}
   //Data methods
   def addParsingErrorRow(d:ParsingErrorRow) = {
    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.saveLogMessage] No created DB.")}
@@ -139,8 +145,8 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
           buildFoundJobsRows(id, url, fb, d, p, sks, nf)}}
       //Return result
       (rs,nr)})}
-  def getNOfFoundByExcavatorNumber(n:Int, en:Int):(List[FoundJobsRow], Int) = {  //Return list of N rows for given excavator and tonal number of rows
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getNOfFoundByExcavatorNumber] No created DB.")}
+  def getNOfFoundJobsByExcavatorNumber(n:Int, en:Int):(List[FoundJobsRow], Int) = {  //Return list of N rows for given excavator and tonal number of rows
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getNOfFoundJobsByExcavatorNumber] No created DB.")}
     db.get.withSession(implicit session ⇒ {
       //Gen table size
       val nr = foundJobsTable.length.run
@@ -232,34 +238,35 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       ps.map(p ⇒ {
         val q = "select count(*) from " + odesk_found_jobs + " where " + priorityColumn + " = " + p
         (p, StaticQuery.queryNA[Int](q).first)}).toMap})}
-  def getExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getExcavatorsStateParam] No created DB.")}
-    db.get.withTransaction(implicit session ⇒ {
-      //Read parameter
-      val p = excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).first
-      //Deserialize params
-      val pm = deserializeExcavatorsParams(p._3)
-      //Set locked if need
-      if(setLock){
-        excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.is_active).update(false)}
-      //Return data
-      (pm.toMap,(! p._4))})}
-  def updateExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean)= {
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.updateExcavatorsStateParam] No created DB.")}
-    db.get.withTransaction(implicit session ⇒ {
-      //Serialize params
-      val p = serializeExcavatorsParams(param.toList)
-      //Update
-      excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.p_value).update(p)
-      //Set locked/unlocked
-      excavatorsParamTable.filter(_.p_key === excavatorsStatesParamName).map(_.is_active).update(! setLock)})}
+//  def getExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
+//    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getExcavatorsStateParam] No created DB.")}
+//    db.get.withTransaction(implicit session ⇒ {
+//      //Read parameter
+//      val p = excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).first
+//      //Deserialize params
+//      val pm = deserializeExcavatorsParams(p._3)
+//      //Set locked if need
+//      if(setLock){
+//        excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.is_active).update(false)}
+//      //Return data
+//      (pm.toMap,(! p._4))})}
+//  def updateExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean)= {
+//    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.updateExcavatorsStateParam] No created DB.")}
+//    db.get.withTransaction(implicit session ⇒ {
+//      //Serialize params
+//      val p = serializeExcavatorsParams(param.toList)
+//      //Update
+//      excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.p_value).update(p)
+//      //Set locked/unlocked
+//      excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.is_active).update(! setLock)})}
+
   def redistributeFoundJobsFromToWithProb(from:List[Int], to:List[(Int,Double)])= {
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.redistributeFoundJobsFromToWithProb] No created DB.")}
     db.get.withTransaction(implicit session ⇒ {
       //Get IDs of row to redistribute
       val ojs = foundJobsTable.filter(_.priority inSetBind from).map(_.id).list.flatMap(e ⇒ e)
       //Calc distribution
-      val ds = calcJobsDistribution(to,ojs.size)
+      val ds = calcDistribution(to,ojs.size)
       //Redistribute
       def rds(ds:List[(Int,Int)], ids:List[Long]):Unit = ds match{
         case (e,d) :: l ⇒ {
@@ -268,17 +275,16 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
           rds(l, ids.drop(d))}
         case Nil ⇒}
       rds(ds,ojs)})}
-  def registrateExcavator:Int = { //Return number of excavator
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.registrateExcavator] No created DB.")}
-    editExcavatorsParams(ps ⇒ {
-      val ex = ps.map(_._1)
-      val n = (1 to 100).find(i ⇒ {! ex.contains(i)}).get
-      (ps :+ (n,(true,0.0)),n)})}
-  def unregistrateExcavator(en:Int) = {
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.unregistrateExcavator] No created DB.")}
-    editExcavatorsParams(ps ⇒ {
-      (ps.map{case(e,(w,d)) ⇒ if(e == en){(e,(false,0.0))}else{(e,(w,d))}},0)})}
-  def addAllFreelancerDataAndDelFromFound(d:AllFreelancerData):Int = {  //Return number of found jobs
+  def registrateJobsExcavator:Int = { //Return number of excavator
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.registrateJobsExcavator] No created DB.")}
+    editExcavatorsParams(jobsExcavatorsStatesParamName, ps ⇒ addExcavator(ps))}
+  def unregistrateJobsExcavator(en:Int) = {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.unregistrateJobsExcavator] No created DB.")}
+    editExcavatorsParams(jobsExcavatorsStatesParamName, ps ⇒ delExcavator(en,ps))}
+  def delFoundFreelancerRow(id:Long) = {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.delFoundFreelancerRow] No created DB.")}
+    db.get.withSession(implicit session ⇒ foundFreelancersTable.filter(_.id === id).delete)}
+  def addAllFreelancerDataAndDelFromFound(d:AllFreelancerData):(Long,Int) = {  //Return (id, number of found jobs)
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.addAllFreelancerDataAndDelFromFound] No created DB.")}
     db.get.withTransaction(implicit session ⇒ {
       //Insert freelancer
@@ -325,9 +331,39 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       //Delete freelancer from found
       foundFreelancersTable.filter(_.o_url === d.freelancerRow.oUrl).delete
       //Calc and return result
-      ajs.size})}
-
-
+      (fId, ajs.size)})}
+  def redistributeFoundFreelancersFromToWithProb(from:List[Int], to:List[(Int,Double)])= {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.redistributeFoundFreelancersFromToWithProb] No created DB.")}
+    db.get.withTransaction(implicit session ⇒ {
+      //Get IDs of row to redistribute
+      val ojs = foundFreelancersTable.filter(_.priority inSetBind from).map(_.id).list.flatMap(e ⇒ e)
+      //Calc distribution
+      val ds = calcDistribution(to,ojs.size)
+      //Redistribute
+      def rds(ds:List[(Int,Int)], ids:List[Long]):Unit = ds match{
+        case (e,d) :: l ⇒ {
+          val uis = ids.take(d)
+          foundFreelancersTable.filter(_.id inSetBind uis).map(_.priority).update(e)
+          rds(l, ids.drop(d))}
+        case Nil ⇒}
+      rds(ds,ojs)})}
+  def registrateFreelancersExcavator:Int = { //Return number of excavator
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.registrateFreelancersExcavator] No created DB.")}
+    editExcavatorsParams(freelancersExcavatorsStatesParamName, ps ⇒ addExcavator(ps))}
+  def unregistrateFreelancersExcavator(en:Int) = {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.unregistrateFreelancersExcavator] No created DB.")}
+    editExcavatorsParams(freelancersExcavatorsStatesParamName, ps ⇒ delExcavator(en,ps))}
+  def getNOfFoundFreelancersByExcavatorNumber(n:Int, en:Int):(List[FoundFreelancerRow], Int) = {  //Return list of N rows for given excavator and tonal number of rows
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getNOfFoundFreelancersByExcavatorNumber] No created DB.")}
+    db.get.withSession(implicit session ⇒ {
+      //Gen table size
+      val nr = foundFreelancersTable.length.run
+      //Gen older rows
+      val rs = foundFreelancersTable.filter(_.priority === en).sortBy(_.create_date).take(n).list.map{
+        case(id:Some[Long], url:String, d:Timestamp, p:Int) ⇒ {
+          FoundFreelancerRow(id.get,url,d,p)}}
+      //Return result
+      (rs,nr)})}
 
 
 

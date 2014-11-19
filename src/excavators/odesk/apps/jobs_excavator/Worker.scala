@@ -19,15 +19,14 @@ import util.tasks.{TimedTask, TimedTaskExecutor}
 
 class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBProvider) extends ManagedWorker with TimedTaskExecutor {
   //Parameters
-  private var runAfterStart = false
   private val mainPageURL = "https://www.odesk.com"
   private val saveFolder = System.getProperty("user.home") + "\\Desktop"
   private val jobsFoundByAnaliseScrapTaskPriority = 1
   private val buildJobsScrapingTaskPriority = 2
   private val buildJobsScrapingTaskTimeout = 1000 * 60 * 30
   private val numberOfJobToScripInIteration = 200
-  private var scrapTryMaxNumber = 10
-  private var scrapTryTimeout = 5000
+  private var scrapJobTryMaxNumber = 10
+  private var scrapJobTryTimeout = 5000
   private var buildJobsScrapingTimeout = 1000 * 20
   private val maxSaverQueueSize = 100
   //Variables
@@ -38,7 +37,6 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
   //Helpers
   private val htmlParser = new HTMLJobParsers
   //Construction
-  super.setPaused(! runAfterStart)
   addTask(new BuildJobsScrapingTask(0))
   //Functions
   private def getImageByUrl(oUrl:Option[String], cut:List[Int]):Option[BufferedImage] = {
@@ -58,7 +56,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
         (None,None)}}}
   private def getFoundJobs(n:Int, en:Int):(List[FoundJobsRow],  Int) = {
     try{
-      db.getNOfFoundByExcavatorNumber(n, en)}
+      db.getNOfFoundJobsByExcavatorNumber(n, en)}
     catch{case e:Exception => {
       logger.error("[Worker.getFoundJobs] Exception on getNOfOldFoundJobs: " + e)
       (List[FoundJobsRow](),0)}}}
@@ -98,7 +96,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
   case class BuildJobsScrapingTask(t:Long) extends TimedTask(t, buildJobsScrapingTaskPriority){def execute() = {
     //If sever not end work, then wait
     val na = if(saver.queueSize > maxSaverQueueSize){
-      logger.worn("[Worker.BuildJobsScrapingTask] Saver is to slow.")
+      logger.worn("[Worker.BuildScrapingTask] Saver is to slow.")
       0}
     else{
       //Get jobs
@@ -107,13 +105,13 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
       js.foreach(j => {addTask(new JobsScraping(0,j,1))})
       js.size}
     //Logging
-    logger.info("[Worker.BuildJobsScrapingTask] " + na + " new jobs added to scraping.")
+    logger.info("[Worker.BuildScrapingTask] " + na + " new jobs added to scraping.")
     //If added no jobs, then wait
     if(na == 0){
       addTask(new BuildJobsScrapingTask(System.currentTimeMillis() + buildJobsScrapingTimeout))}}}
   case class JobsScraping(t:Long, j:FoundJobsRow, nScrapTry:Int) extends TimedTask(t, jobsFoundByAnaliseScrapTaskPriority){def execute() = {
     //Start
-    logger.info("[Worker.BuildJobsScrapingTask] Start scrap,\n  url: " + j.oUrl)
+    logger.info("[Worker.BuildScrapingTask] Start scrap,\n  url: " + j.oUrl)
     numberOfProcJob += 1
     //Add build jobs if no more in queue
     if(queueSize <= 1){addTask(new BuildJobsScrapingTask(0))}
@@ -131,30 +129,26 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
       saver.addSaveJobDataAndDelFoundTask(j, pj.get, pq, cd, l)}
     else{
       //If parse wrong, add to next time (if no max try number)
-      if(nScrapTry <= scrapTryMaxNumber){
+      if(nScrapTry <= scrapJobTryMaxNumber){
         //Move pars task to future
-        addTask(new JobsScraping((System.currentTimeMillis() + scrapTryTimeout), j, (nScrapTry + 1)))}
+        addTask(new JobsScraping((System.currentTimeMillis() + scrapJobTryTimeout), j, (nScrapTry + 1)))}
       else{
         //If max try worn and remove found job
-        logger.worn("[Worker.JobsScraping] Failure with max scrape try (" + scrapTryMaxNumber + ").")
+        logger.worn("[Worker.Scraping] Failure with max scrape try (" + scrapJobTryMaxNumber + ").")
         saver.addDelFoundJobTask(j)}}}}
   //Methods
   def setParameters(p:ParametersMap) = {
-    runAfterStart = p.getOrElse("runAfterStart", {
-      logger.worn("[Worker.setParameters] Parameter 'runAfterStart' not found.")
-      runAfterStart})
-    scrapTryMaxNumber = p.getOrElse("scrapTryMaxNumber", {
-      logger.worn("[Worker.setParameters] Parameter 'scrapTryMaxNumber' not found.")
-      scrapTryMaxNumber})
-    scrapTryTimeout = p.getOrElse("scrapTryTimeout", {
-      logger.worn("[Worker.setParameters] Parameter 'scrapTryTimeout' not found.")
-      scrapTryTimeout})
+    scrapJobTryMaxNumber = p.getOrElse("scrapJobTryMaxNumber", {
+      logger.worn("[Worker.setParameters] Parameter 'scrapJobTryMaxNumber' not found.")
+      scrapJobTryMaxNumber})
+    scrapJobTryTimeout = p.getOrElse("scrapJobTryTimeout", {
+      logger.worn("[Worker.setParameters] Parameter 'scrapJobTryTimeout' not found.")
+      scrapJobTryTimeout})
     buildJobsScrapingTimeout = p.getOrElse("buildJobsScrapingTimeout", {
       logger.worn("[Worker.setParameters] Parameter 'buildJobsScrapingTimeout' not found.")
       buildJobsScrapingTimeout})}
   def init(en:Int) = {
     excavatorNumber = en
-    if(runAfterStart){logger.info("[Worker.init] Run on init.")}
     start()}
   def halt() = {
     stop()

@@ -1,24 +1,24 @@
-package excavators.odesk.apps.jobs_excavator
+package excavators.odesk.apps.freelancers_excavator
 
 import excavators.odesk.db.ODeskExcavatorsDBProvider
 import excavators.odesk.ui.{ExcavatorUI, Browser}
 import util.logging.{ToDBAndConsoleLogger, SimpleLogger}
 
 /**
-* oDesk job excavator
-* Created by CAB on 21.09.14.
+* oDesk freelancer excavator
+* Created by CAB on 19.11.2014.
 */
 
 object Main {
   //Variables
   private var en = -1
   //Create components
-  val l = new ToDBAndConsoleLogger("jobs_excavator")
+  val l = new ToDBAndConsoleLogger("freelancers_excavator")
   val db = new ODeskExcavatorsDBProvider
   val b = new Browser(l)
   val s = new Saver(l,db)
   val w = new Worker(b,l,s,db)
-  val ui = new ExcavatorUI("Jobs excavator ", b, w, l, loadAndSetParam, closing)
+  val ui = new ExcavatorUI("Freelancers excavator ", b, w, l, loadAndSetParam, closing)
   val wc = new Watcher(b,w,s,ui)
   l.setConsole(ui)
   l.setDB(db)
@@ -38,13 +38,13 @@ object Main {
     //Load and set parameters
     loadAndSetParam()
     //Registration of self
-    en = db.registrateJobsExcavator
+    en = db.registrateFreelancersExcavator
     //Run
     s.start()
     ui.init()
     w.init(en)
     wc.init()
-    ui.title = "Jobs excavator №" + en}
+    ui.title = "Freelancers excavator №" + en}
   def loadAndSetParam():Unit = {
     //Reload and set parameters
     val ps = db.loadParameters()
@@ -55,7 +55,7 @@ object Main {
     l.info("[Main.loadAndSetParam] Parameters loaded and set.")}
   def closing():Unit = {
     //Unregistration of self
-    db.unregistrateJobsExcavator(en)
+    db.unregistrateFreelancersExcavator(en)
     //Stop
     wc.halt()
     w.halt()

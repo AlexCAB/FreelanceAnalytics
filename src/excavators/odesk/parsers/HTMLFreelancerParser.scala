@@ -11,6 +11,16 @@ import util.structures._
  */
 
 class HTMLFreelancerParser extends ParserHelpers {
+  //Parameters
+  //Fields
+  val photoImageCoordinates = List(7,7,108,108) //x,y,w,h
+  val companyLogoImageCoordinates = List(7,7,108,108) //x,y,w,h
+  val clientProfileLogoImageCoordinates = List(7,7,108,108) //x,y,w,h
+  val portfolioRecordImageCoordinates = List(7,7,108,108) //x,y,w,h
+  val portfolioDataImageCoordinates = List(7,7,108,108) //x,y,w,h
+  val wornParsingQualityLevel = 0.8
+  val errorParsingQualityLevel = 0.5
+  val notSaveParsingQualityLevel = 0.2
   //Methods
   def parseFreelancerProfile(html:String):FreelancerParsedData = {
     //Current date9
@@ -238,7 +248,7 @@ class HTMLFreelancerParser extends ParserHelpers {
         description = jo.getTopString("description"))})
     //Return result
     FreelancerParsedData(html,fcd,fws,ps,ts,cs,ems,eds,exs)}
-  def parseJobJson(json:String):FreelancerWorkData = {
+  def parseWorkJson(json:String):FreelancerWorkData = {
     //Current date
     val cd = new Date
     //Parse
@@ -302,4 +312,27 @@ class HTMLFreelancerParser extends ParserHelpers {
         case Some(true) ⇒ Client.Yes
         case _ ⇒ Client.Unknown},
       flagComment = pj.getTopString("flagComment"),
-      projectUrl = pj.getTopString("projectUrl"))}}
+      projectUrl = pj.getTopString("projectUrl"))}
+  def estimateParsingQuality(f:FoundFreelancerRow, opd:Option[FreelancerParsedData]):Double = opd match {
+    case Some(pd) ⇒ {
+      var r = 1.0
+      if(pd.changes.name == None){r -= 1.0}
+      if(pd.changes.title == None){r -= 1.0}
+      if(pd.changes.overview == None){r -= 1.0}
+      if(pd.changes.location == None){r -= 1.0}
+      if(pd.changes.availability == FreelancerAvailable.Unknown){r -= 0.2}
+      if(pd.changes.languages.isEmpty){r -= 0.2}
+      if(pd.changes.rate == None){r -= 0.2}
+      if(pd.changes.rating == None){r -= 0.2}
+      if(pd.changes.photoUrl == None){r -= 0.2}
+      if(pd.changes.skills.isEmpty){r -= 0.2}
+      if(pd.changes.timeZone == None){r -= 0.1}
+      if(pd.changes.photoUrl == None){r -= 0.1}
+      if(pd.changes.title.nonEmpty){
+        compareURLAndTitle(f.oUrl, pd.changes.title.get) match{
+          case None => {r -= 0.2}
+          case Some(false) => {r -= 1.0}
+          case _ => }}
+      if(r < 0.0){r = 0.0}
+      r}
+    case _ ⇒ 0.0}}

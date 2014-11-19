@@ -16,6 +16,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
   val freelancerRow = FreelancerRow(
     id = -1,
     createDate = cd,
+    foundDate = cd,
     oUrl = "http.test.freelancer")
   val freelancerRowHeader = FreelancerRowHeader(
     id = -1,

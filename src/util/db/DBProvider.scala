@@ -78,7 +78,8 @@ trait DBProvider extends LoggerDBProvider {
     "freelancer_url","freelancer_id","client_feedback")
   protected val worksHistoryUnknowableColumns = List("in_progress","payment_type")
   //Fealds names
-  val excavatorsStatesParamName = "excavatorsStates"
+  val jobsExcavatorsStatesParamName = "jobsExcavatorsStates"
+  val freelancersExcavatorsStatesParamName = "freelancersExcavatorsStates"
   //Helpers
   private val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
   private implicit class ExOpDate(od:Option[Date]) {
@@ -262,12 +263,13 @@ trait DBProvider extends LoggerDBProvider {
       def priority = column[Int](priorityColumn, O.NotNull)
       def * = (id,o_url,create_date,priority)}
   protected val foundFreelancersTable = TableQuery[FoundFreelancers]
-  protected type FreelancersRowType = (Option[Long],Timestamp,String)
+  protected type FreelancersRowType = (Option[Long],Timestamp,Timestamp,String)
   protected class Freelancers (tag: Tag) extends Table[FreelancersRowType](tag, odesk_freelancers){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
+    def found_date = column[Timestamp]("found_date", O.NotNull)
     def o_url = column[String]("o_url", O.NotNull)
-    def * = (id,create_date,o_url)}
+    def * = (id,create_date,found_date,o_url)}
   protected val freelancersTable = TableQuery[Freelancers]
   protected type FreelancersRawHtmlRowType = (Option[Long],Long,Timestamp,String)
   protected class FreelancersRawHtml (tag: Tag) extends Table[FreelancersRawHtmlRowType](tag, odesk_freelancers_raw_html){
@@ -363,7 +365,7 @@ trait DBProvider extends LoggerDBProvider {
       opening_title,engagement_title,skills,open_access,cny_status,financial_privacy,is_hidden,agency_name,segmentation_data)}
   protected val freelancersWorkTable = TableQuery[FreelancersWork]
   protected type FreelancersWorkAdditionalDataRowType = (Option[Long],Long,Long,Timestamp,
-    Option[String],Option[Int],Option[Double],Option[Double],Option[Double],Option[Double],Option[Double],
+    Option[String],Option[Double],Option[Double],Option[Double],Option[Double],Option[Double],Option[Double],
     Option[Double],Option[Double],Option[Int],Option[String], Option[String],Option[String],Option[String],
     Option[String],Option[Double])
   protected class FreelancersWorkAdditionalData (tag: Tag) extends Table[FreelancersWorkAdditionalDataRowType](tag, odesk_freelancers_work_additional_data){
@@ -372,7 +374,7 @@ trait DBProvider extends LoggerDBProvider {
     def work_id = column[Long]("work_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def as_type = column[Option[String]]("as_type")
-    def total_hours = column[Option[Int]]("total_hours")
+    def total_hours = column[Option[Double]]("total_hours")
     def rate = column[Option[Double]]("rate")
     def total_cost = column[Option[Double]]("total_cost")
     def charge_rate = column[Option[Double]]("charge_rate")
@@ -413,7 +415,7 @@ trait DBProvider extends LoggerDBProvider {
       ff_response,ff_score,cf_scores,cf_is_public,cf_comment,cf_response,cf_score)}
   protected val freelancersWorkFeedbackTable = TableQuery[FreelancersWorkFeedback]
   protected type FreelancersWorkLinkedProjectDataRowType = (Option[Long],Long,Long,Timestamp,Option[String],Option[String],
-    String,Option[String],Option[String],Option[String],Option[Int],Option[String],Option[String],Option[String],Option[String],Option[String])
+    String,Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],Option[String],Option[String])
   protected class FreelancersWorkLinkedProjectData(tag: Tag) extends Table[FreelancersWorkLinkedProjectDataRowType](tag, odesk_freelancers_work_linked_project_data){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
@@ -425,7 +427,7 @@ trait DBProvider extends LoggerDBProvider {
     def lp_description = column[Option[String]]("lp_description")
     def lp_recno = column[Option[String]]("lp_recno")
     def lp_cat_level_1 = column[Option[String]]("lp_cat_level_1")
-    def lp_cat_recno = column[Option[Int]]("lp_cat_recno")
+    def lp_cat_recno = column[Option[String]]("lp_cat_recno")
     def lp_cat_level_2 = column[Option[String]]("lp_cat_level_2")
     def lp_completed = column[Option[String]]("lp_completed")
     def lp_large_thumbnail = column[Option[String]]("lp_large_thumbnail")
@@ -690,6 +692,7 @@ trait DBProvider extends LoggerDBProvider {
   protected def buildFreelancersRow(d:FreelancerRow):FreelancersRowType = (
     None,                     // id
     d.createDate.toTimestamp, // create_date
+    d.foundDate.toTimestamp,   //found_date
     d.oUrl)                   // o_url
   protected def buildFreelancersRawHtmlRow(d:FreelancerRawHtmlRow, fId:Long):FreelancersRawHtmlRowType = (
     None,                            // id

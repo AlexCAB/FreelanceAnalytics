@@ -34,6 +34,8 @@ trait ParserHelpers {
   protected val liTeg = "li"
   protected val dataContentTeg = "data-content"
   protected val pTag = "p"
+  //Chars
+  protected val notInUrlChars = List('\'','-','\"','&','_','~','%','/',',',':','!', '(',')','.','\\','+','$','[',']','*','?','`',';')
   //Helpers HTML
   protected val oDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
   protected val oShortDateFormat = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH)
@@ -212,8 +214,18 @@ trait ParserHelpers {
         catch{
           case _:Exception => List()}}
       case None => List()}}
-
   implicit class JSONArrEx(oja:Option[JSONArray]) {
     def toListOfObj:List[JSONObject] = oja match {
       case Some(ja) => try{(0 until ja.length()).toList.map(i => ja.getJSONObject(i))}catch{case _:Exception => List()}
-      case None => List()}}}
+      case None => List()}}
+  //Checkers
+  def compareURLAndTitle(url:String, title:String):Option[Boolean] = { //Return: Some(true) if match, Some(false) if no, None if unknown.
+  val tws = title.map(c => {if(notInUrlChars.contains(c)) ' ' else c}).split(" ").toSet
+    val pws = url.split("/").lastOption.flatMap(_ match{
+      case s if s.contains('_') => s.split("_").headOption
+      case _ => None})
+    pws.map(_.split("-").toSet).flatMap{
+      case uws if(uws.nonEmpty && tws.nonEmpty) => Some((uws -- tws).isEmpty)
+      case _ => None}}
+
+}

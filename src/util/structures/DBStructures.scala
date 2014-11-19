@@ -103,6 +103,7 @@ case class FoundFreelancerRow(
 case class FreelancerRow(
   id:Long,
   createDate:Date,
+  foundDate:Date,
   oUrl:String)
 
 case class FreelancerRawHtmlRow(
@@ -169,7 +170,7 @@ case class FreelancerWorkRow(
 case class FreelancerWorkAdditionalDataRow(
   header:FreelancerWorkRowHeader,
   asType:Option[String],
-  totalHours:Option[Int],
+  totalHours:Option[Double],
   rate:Option[Double],
   totalCost:Option[Double],
   chargeRate:Option[Double],
@@ -208,7 +209,7 @@ case class FreelancerLinkedProjectDataRow(
   lpDescription:Option[String],
   lpRecno:Option[String],
   lpCatLevel1:Option[String],
-  lpCatRecno:Option[Int],
+  lpCatRecno:Option[String],
   lpCatLevel2:Option[String],
   lpCompleted:Option[String],
   lpLargeThumbnail:Option[String],

@@ -159,7 +159,7 @@ class HTMLFreelancerParserTest extends WordSpecLike with Matchers {
   "Ivan_N_~015d8df4348d317d56.html/Job1.json" in {
     val json = getHtml("html\\Job1.json")
     //
-    val otr = htmlParser.parseJobJson(json)
+    val otr = htmlParser.parseWorkJson(json)
     val tr = otr
     //
     val ct = new Date().getTime

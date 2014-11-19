@@ -76,8 +76,8 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active,comment) values
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('wornParsingQualityLevel',             '0.8',                            true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('errorParsingQualityLevel',            '0.5',                            true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('notSaveParsingQualityLevel',          '0.2',                            true);
-insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapTryMaxNumber',                   '10',                             true);
-insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapTryTimeout',                     '5000',                           true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapJobTryMaxNumber',                '3',                              true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapJobTryTimeout',                  '5000',                           true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('loadPageMaxTime',                     '60000',                          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('loadPageTimeOut',                     '4000',                           true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('loadTryMaxTime',                      '10000',                          true);
@@ -86,6 +86,9 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('retry
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('jobsFoundBySearchExcavatorNumber',    '1',                              true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsManagementTimeout',         '20000',                          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildJobsScrapingTimeout',            '20000',                          true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapFreelancerTryMaxNumber',         '3',                              true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapFreelancerTimeout',              '5000',                           true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildFreelancersScrapingTimeout',     '20000',                          true);
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
@@ -218,6 +221,7 @@ create table odesk_found_freelancers(
 create table odesk_freelancers(
   id bigint primary key auto_increment,
   create_date datetime not null,
+  found_date datetime not null,
   o_url varchar(255) not null unique);
 
 create table odesk_freelancers_raw_html(
@@ -299,7 +303,7 @@ create table odesk_freelancers_work_additional_data(
   work_id bigint not null,
   create_date datetime not null,
   as_type varchar(100) default null,
-  total_hours int default null,
+  total_hours float(53) default null,
   rate float(53) default null,
   total_cost float(53) default null,
   charge_rate float(53) default null,

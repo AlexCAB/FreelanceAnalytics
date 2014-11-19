@@ -81,7 +81,6 @@ class HTMLJobParsers extends ParserHelpers{
   private val newDeadLineP = List("col col2of6","oJobHeaderContent","oNull")
   private val newRequiredLevelP = List("col col3of6","oJobHeaderContent","oH4")
   private val newBudgetP = List("col col1of6","oJobHeaderContent","oH4")
-  private val notInUrlChars = List('\'','-','\"','&','_','~','%','/',',',':','!', '(',')','.','\\','+','$','[',']','*','?','`',';')
   //Fields
   val logoImageCoordinates = List(7,7,108,108) //x,y,w,h
   val wornParsingQualityLevel = 0.8
@@ -357,14 +356,6 @@ class HTMLJobParsers extends ParserHelpers{
         applicants = al,
         hires = hl,
         clientWorks = wl)})}
-  def compareJobURLAndTitle(url:String, title:String):Option[Boolean] = { //Return: Some(true) if match, Some(false) if no, None if unknown.
-    val tws = title.map(c => {if(notInUrlChars.contains(c)) ' ' else c}).split(" ").toSet
-    val pws = url.split("/").lastOption.flatMap(_ match{
-      case s if s.contains('_') => s.split("_").headOption
-      case _ => None})
-    pws.map(_.split("-").toSet).flatMap{
-      case uws if(uws.nonEmpty && tws.nonEmpty) => Some((uws -- tws).isEmpty)
-      case _ => None}}
   def estimateParsingQuality(fj:FoundJobsRow, opj:Option[ParsedJob]):Double = opj match {
     case Some(pj) => {
       var r = 1.0
@@ -382,8 +373,8 @@ class HTMLJobParsers extends ParserHelpers{
       if(pj.clientChanges.paymentMethod == PaymentMethod.Unknown){r -= 0.1}
       if(pj.clientChanges.location == None){r -= 0.05}
       if(pj.job.jobTitle.nonEmpty){
-        compareJobURLAndTitle(fj.oUrl, pj.job.jobTitle.get) match{
-          case None => {r -= 0.3}
+        compareURLAndTitle(fj.oUrl, pj.job.jobTitle.get) match{
+          case None => {r -= 0.2}
           case Some(false) => {r -= 1.0}
           case _ => }}
       if(r < 0.0){r = 0.0}

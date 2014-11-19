@@ -19,7 +19,7 @@ object RescrapeJobsWithDiscordantURLAndTitle extends SimpleSifter("RescrapeJobsW
   println("  Total " + urlsAntTitles.size + " jobs to check.")
   //Search discordant
   val urls = urlsAntTitles.filter{
-    case ((u, Some(t:String))) => html.compareJobURLAndTitle(u,t) match{case Some(r) => {! r}; case None => false}
+    case ((u, Some(t:String))) => html.compareURLAndTitle(u,t) match{case Some(r) => {! r}; case None => false}
     case _ => false}.map(_._1)
   println("  Found " + urls.size + " wrong jobs.")
   //Del wrong

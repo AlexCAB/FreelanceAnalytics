@@ -126,12 +126,12 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       val r = try{
         Some(db.addAllJobDataAndDelFromFound(d))} //Some(applicants,hired,clients works,found freelancer,found jobs)
       catch{case e:Exception =>{
-        logger.error("[Saver.SaveJobDataTask] Exception on save job data, url: " + j.oUrl + ", exception: " + e)
+        logger.error("[Saver.SaveFreelancerDataTask] Exception on save job data, url: " + j.oUrl + ", exception: " + e)
         None}}
       //Logging
       r match{
         case Some((na,nh,ncw,nff,nfj, id)) => {
-          logger.info("[Saver.SaveJobDataTask] Job added to DB, title:'"
+          logger.info("[Saver.SaveFreelancerDataTask] Job added to DB, title:'"
             + (pj.job.jobTitle match{case Some(t) => t; case None => "---"})
             + "',\n  id: " + id + ", url: " + j.oUrl
             + ",\n   with: "
@@ -140,7 +140,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
             + ncw + "(of " + d.clientsWorksHistoryRows.size + ") clients works, "
             + nff + "(of " + d.foundFreelancerRows.size + ") found freelancer, "
             + nfj + "(of " + d.foundJobsRows.size + ") found jobs.")}
-        case None => logger.worn("[Saver.SaveJobDataTask] Job not added to DB, url: " + j.oUrl)}
+        case None => logger.worn("[Saver.SaveFreelancerDataTask] Job not added to DB, url: " + j.oUrl)}
       //End
       saveTime = System.currentTimeMillis() - st}}
   case class DelFoundJobTas(j:FoundJobsRow) extends Task(2) {
@@ -151,7 +151,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       try{
         db.delFoundJobRow(j.id)}
       catch{case e:Exception => {
-        logger.error("[Saver.DelFoundJobTas] Exception on dell found job: " + e + ", url=" + j.oUrl)}}
+        logger.error("[Saver.DelFoundFreelancerTas] Exception on dell found job: " + e + ", url=" + j.oUrl)}}
       //End
       saveTime = System.currentTimeMillis() - st}}
   //Methods
