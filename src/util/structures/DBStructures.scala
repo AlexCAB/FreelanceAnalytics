@@ -128,7 +128,7 @@ case class FreelancerMainChangeRow(
   videoUrl:Option[String],
   isInviteInterviewAllowed:Allowed,
   location:Option[String],
-  timeZone:Option[Int],  //Shift from +2
+  timeZone:Option[Double],  //Shift from +2
   emailVerified:Verified,
   photo:Option[BufferedImage],
   companyUrl:Option[String],
@@ -246,7 +246,7 @@ case class FreelancerPortfolioRow(
   isClient:Client,
   flagComment:Option[String],
   projectUrl:Option[String],
-  img:Option[BufferedImage])
+  imgUrl:Option[String])
 
 case class FreelancerTestRow(
   header:FreelancerRowHeader,
@@ -278,8 +278,8 @@ case class FreelancerWorkDataRow(
 case class AllFreelancerData(
   freelancerRow:FreelancerRow,
   rawHtmlRow:FreelancerRawHtmlRow,
-  rawJobJsonRow:FreelancerRawJobJsonRow,
-  rawPortfolioJsonRow:FreelancerRawPortfolioJsonRow,
+  rawJobJsonRow:List[FreelancerRawJobJsonRow],
+  rawPortfolioJsonRow:List[FreelancerRawPortfolioJsonRow],
   mainChangeRow:FreelancerMainChangeRow,
   additionalChangeRow:FreelancerAdditionalChangeRow,
   works:List[FreelancerWorkDataRow],

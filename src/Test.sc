@@ -1,3 +1,4 @@
 //
-val s = " \"label\":\"Experienced\",\"rname\":\"CLIENT_SOPHISTICATION_EXPERIENCED\"},{\"segmentation_type_ref\":\"LEVEL_OF_SPECIFICATION\",\"label\":\"Design\",\"rname\":\"LOS_DESIGN\"},{\"segmentation_type_ref\":\"EMPLOYMENT\",\"label\":\"One-time project\",\"rname\":\"EMPLOYMENT_PROJECT\"},{\"segmentation_type_ref\":\"OTHER\",\"label\":\"Other project\",\"rname\":\"PROJECT_TYPE_OTHER\"}],\"as_blended_charge_rate\":\"25\",\"as_description\":\"Working for an employer from Argentina in a Web Development\\/Web Programming\",\"as_total_hours_precise\":\"0\",\"as_blended_cost_rate\":\"4.5\",\"as_total_charge\":\"25\",\"as_type\":\"40\",\"as_cny_status\":\"\",\"as_financial_privacy\":null,\"as_job_type\":\"Fixed\",\"as_skills\":\"\",\"as_status\":\"Active\",\"isHidden\":true,\"enc_job_key\":\"uJRe8dy6IUyXwUVk%2F%2FlQAYQelJO5noFTdWfe8Tzzx2s%3D\",\"can_vote_for_feedback\":false},"
-s.split(",").foreach(println(_))
+val o1 = Some(1)
+val o2 = Some(2)
+o1.map{case None ⇒ o2}

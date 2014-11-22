@@ -221,12 +221,12 @@ class ODeskExcavatorsDBProviderTestJobsPart extends WordSpecLike with Matchers {
     assert(Tuple5(na,nh,ncw,nff,nfj) == Tuple5(1,1,0,1,0))}
   "update and read work params" in {
     val p = Map(1 -> (true,0.1),2 -> (false,0.2),3 -> (true,0.3))
-    dbProvider.updateExcavatorsStateParam(p, true)
-    val (tp, ts) = dbProvider.getExcavatorsStateParam(false)
+    dbProvider.updateJobExcavatorsStateParam(p, true)
+    val (tp, ts) = dbProvider.getJobExcavatorsStateParam(false)
     assert(p == tp)
     assert(ts == true)
-    dbProvider.updateExcavatorsStateParam(p, false)
-    val (_, ts2) = dbProvider.getExcavatorsStateParam(false)
+    dbProvider.updateJobExcavatorsStateParam(p, false)
+    val (_, ts2) = dbProvider.getJobExcavatorsStateParam(false)
     assert(ts == true)}
   "stop" in {
     dbProvider.halt()}}

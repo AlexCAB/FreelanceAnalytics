@@ -69,6 +69,36 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
     (ps :+ (n,(true,0.0)),n)}
   private def delExcavator(en:Int, ps:List[(Int, (Boolean, Double))]):(List[(Int, (Boolean, Double))],Int) = {
     (ps.map{case(e,(w,d)) ⇒ if(e == en){(e,(false,0.0))}else{(e,(w,d))}},0)}
+  private def counFoundByToScrapPriority(tabel:String):Map[Int,Int] = { //Return: Map(priorityColumn -> count)
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFreelancersFoundByToScrapPriority] No created DB.")}
+    db.get.withSession(implicit session ⇒ {
+      //Get priorityColumn list
+      val ps = StaticQuery.queryNA[Int]("select distinct(" + priorityColumn + ") from " + tabel).list
+      //Count for each priorityColumn
+      ps.map(p ⇒ {
+        val q = "select count(*) from " + tabel + " where " + priorityColumn + " = " + p
+        (p, StaticQuery.queryNA[Int](q).first)}).toMap})}
+  private def getExcavatorsStateParam(name:String, setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getFreelancerExcavatorsStateParam] No created DB.")}
+    db.get.withTransaction(implicit session ⇒ {
+      //Read parameter
+      val p = excavatorsParamTable.filter(_.p_key === name).first
+      //Deserialize params
+      val pm = deserializeExcavatorsParams(p._3)
+      //Set locked if need
+      if(setLock){
+        excavatorsParamTable.filter(_.p_key === name).map(_.is_active).update(false)}
+      //Return data
+      (pm.toMap,(! p._4))})}
+  private def updateExcavatorsStateParam(name:String, param:Map[Int,(Boolean,Double)], setLock:Boolean) = {
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.updateFreelancerExcavatorsStateParam] No created DB.")}
+    db.get.withTransaction(implicit session ⇒ {
+      //Serialize params
+      val p = serializeExcavatorsParams(param.toList)
+      //Update
+      excavatorsParamTable.filter(_.p_key === name).map(_.p_value).update(p)
+      //Set locked/unlocked
+      excavatorsParamTable.filter(_.p_key === name).map(_.is_active).update(! setLock)})}
   //Data methods
   def addParsingErrorRow(d:ParsingErrorRow) = {
    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.saveLogMessage] No created DB.")}
@@ -229,37 +259,11 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       foundJobsTable.filter(_.o_url === d.jobsRow.foundData.oUrl).delete
       //Calc and return result
       (d.jobsApplicantsRows.size, d.jobsHiredRows.size, wrs.size, frs.size, ajs.size, id)})}
-  def countFoundByToScrapPriority:Map[Int,Int] = { //Return: Map(priorityColumn -> count)
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFoundByToScrapPriority] No created DB.")}
-    db.get.withSession(implicit session ⇒ {
-      //Get priorityColumn list
-      val ps = StaticQuery.queryNA[Int]("select distinct(" + priorityColumn + ") from " + odesk_found_jobs).list
-      //Count for each priorityColumn
-      ps.map(p ⇒ {
-        val q = "select count(*) from " + odesk_found_jobs + " where " + priorityColumn + " = " + p
-        (p, StaticQuery.queryNA[Int](q).first)}).toMap})}
-//  def getExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
-//    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.getExcavatorsStateParam] No created DB.")}
-//    db.get.withTransaction(implicit session ⇒ {
-//      //Read parameter
-//      val p = excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).first
-//      //Deserialize params
-//      val pm = deserializeExcavatorsParams(p._3)
-//      //Set locked if need
-//      if(setLock){
-//        excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.is_active).update(false)}
-//      //Return data
-//      (pm.toMap,(! p._4))})}
-//  def updateExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean)= {
-//    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.updateExcavatorsStateParam] No created DB.")}
-//    db.get.withTransaction(implicit session ⇒ {
-//      //Serialize params
-//      val p = serializeExcavatorsParams(param.toList)
-//      //Update
-//      excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.p_value).update(p)
-//      //Set locked/unlocked
-//      excavatorsParamTable.filter(_.p_key === jobsExcavatorsStatesParamName).map(_.is_active).update(! setLock)})}
-
+  def countJobsFoundByToScrapPriority:Map[Int,Int] = counFoundByToScrapPriority(odesk_found_jobs) //Return: Map(priorityColumn -> count)
+  def getJobExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
+    getExcavatorsStateParam(jobsExcavatorsStatesParamName, setLock)}
+  def updateJobExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean) = {
+    updateExcavatorsStateParam(jobsExcavatorsStatesParamName, param, setLock)}
   def redistributeFoundJobsFromToWithProb(from:List[Int], to:List[(Int,Double)])= {
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.redistributeFoundJobsFromToWithProb] No created DB.")}
     db.get.withTransaction(implicit session ⇒ {
@@ -292,8 +296,8 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       val fId = StaticQuery.queryNA[Long]("SELECT LAST_INSERT_ID();").first
       //Insert row data
       freelancersRawHtmlTable += buildFreelancersRawHtmlRow(d.rawHtmlRow, fId)
-      freelancersRawJobTable += buildFreelancersRawJobJsonRow(d.rawJobJsonRow, fId)
-      freelancersRawPortfolioTable += buildFreelancersRawPortfolioRow(d.rawPortfolioJsonRow, fId)
+      freelancersRawJobTable ++= d.rawJobJsonRow.map(e ⇒ buildFreelancersRawJobJsonRow(e, fId))
+      freelancersRawPortfolioTable ++= d.rawPortfolioJsonRow.map(e ⇒ buildFreelancersRawPortfolioRow(e, fId))
       //Insert changes
       freelancersMainChangeTable += buildFreelancersMainChangeRow(d.mainChangeRow, fId)
       freelancersAdditionalChangeTable += buildFreelancersAdditionalChangeRow(d.additionalChangeRow, fId)
@@ -302,7 +306,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
         //Insert main row
         freelancersWorkTable += buildFreelancersWorkRow(wr,fId)
         val wId = StaticQuery.queryNA[Long]("SELECT LAST_INSERT_ID();").first
-        //Prepate additional
+        //Prepare additional
         ((buildFreelancersWorkAdditionalDataRow(wad,fId,wId),
           buildFreelancersWorkFeedbackRow(wf,fId,wId)),
           (buildFreelancersWorkLinkedProjectDataRow(wlp,fId,wId),
@@ -364,6 +368,11 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
           FoundFreelancerRow(id.get,url,d,p)}}
       //Return result
       (rs,nr)})}
+  def countFreelancersFoundByToScrapPriority:Map[Int,Int] = counFoundByToScrapPriority(odesk_found_freelancers) //Return: Map(priorityColumn -> count)
+  def getFreelancerExcavatorsStateParam(setLock:Boolean):(Map[Int,(Boolean,Double)],Boolean) = { //Return: (Map(excavator number -> (is excavator work, distribution priority)), prev lock state)
+    getExcavatorsStateParam(freelancersExcavatorsStatesParamName, setLock)}
+  def updateFreelancerExcavatorsStateParam(param:Map[Int,(Boolean,Double)],setLock:Boolean) = {
+    updateExcavatorsStateParam(freelancersExcavatorsStatesParamName, param, setLock)}
 
 
 

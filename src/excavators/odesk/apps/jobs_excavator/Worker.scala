@@ -37,6 +37,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
   //Helpers
   private val htmlParser = new HTMLJobParsers
   //Construction
+  super.setPaused(true)
   addTask(new BuildJobsScrapingTask(0))
   //Functions
   private def getImageByUrl(oUrl:Option[String], cut:List[Int]):Option[BufferedImage] = {

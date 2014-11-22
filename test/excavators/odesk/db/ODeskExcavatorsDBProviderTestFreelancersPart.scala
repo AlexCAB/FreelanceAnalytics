@@ -130,7 +130,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     lpDescription = Some("lpDescription"),
     lpRecno = Some("lpRecno"),
     lpCatLevel1 = Some("lpCatLevel1"),
-    lpCatRecno = Some(11),
+    lpCatRecno = Some("11"),
     lpCatLevel2 = Some("lpCatLevel2"),
     lpCompleted = Some("lpCompleted"),
     lpLargeThumbnail = Some("lpLargeThumbnail"),
@@ -165,7 +165,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     isClient = Client.No,
     flagComment = Some("flagComment"),
     projectUrl = Some("projectUrl"),
-    img = Some(new BufferedImage(1,2,3)))
+    imgUrl = Some("imgUrl"))
   val freelancerTestRecord = FreelancerTestRecord(
     detailsUrl = Some("detailsUrl"),
     title = Some("title"),
@@ -236,8 +236,8 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
   val allFreelancerData = AllFreelancerData(
     freelancerRow = freelancerRow,
     rawHtmlRow = freelancerRawHtmlRow,
-    rawJobJsonRow = freelancerRawJobJsonRow,
-    rawPortfolioJsonRow = freelancerRawPortfolioJsonRow,
+    rawJobJsonRow = List(freelancerRawJobJsonRow),
+    rawPortfolioJsonRow = List(freelancerRawPortfolioJsonRow),
     mainChangeRow = freelancerMainChangeRow,
     additionalChangeRow = freelancerAdditionalChangeRow,
     works = List(freelancerWorkDataRow),
@@ -262,7 +262,7 @@ class ODeskExcavatorsDBProviderTestFreelancersPart extends WordSpecLike with Mat
     dbProvider.addFoundFreelancerRow(foundFreelancerRow)}
   "save all freelancer data and delete from found" in {
     val tr = dbProvider.addAllFreelancerDataAndDelFromFound(allFreelancerData)
-    assert(tr == 1)}
+    assert(tr == (1,1))}
   "stop" in {
     dbProvider.halt()}}
 

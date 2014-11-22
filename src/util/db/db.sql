@@ -4,9 +4,12 @@
 -- run: source db.sql;
 
 -- select * from odesk_job_excavators_param;
+-- update odesk_job_excavators_param set p_value = '' where p_key = 'freelancersExcavatorsStates';
 -- select * from odesk_excavators_log;
+-- select * from odesk_excavators_log where type = 'worn' or type = 'error';
 -- select * from odesk_excavators_error_pages;
 -- select o_url,msg from odesk_excavators_error_pages;
+
 -- select * from odesk_found_jobs;
 -- select count(*) from odesk_found_jobs;
 -- select * from odesk_jobs;
@@ -19,19 +22,24 @@
 -- select * from odesk_jobs_applicants;
 -- select * from odesk_jobs_hired;
 -- select * from odesk_clients_works_history;
+
 -- select * from odesk_found_freelancers;
---
 -- select * from odesk_freelancers;
 -- select * from odesk_freelancers_raw_html;
 -- select * from odesk_freelancers_raw_job_json;
 -- select * from odesk_freelancers_raw_portfolio_json;
 -- select * from odesk_freelancers_main_change;
+-- select id,freelancer_id,create_date,name,profile_access,link,expose_full_name,role,video_url,is_invite_interview_allowed,location,time_zone,email_verified,company_url from odesk_freelancers_main_change;
 -- select * from odesk_freelancers_additional_change;
+-- select id,freelancer_id,create_date,title,availability,available_again,responsiveness_score,languages,rate,rent_percent,rating,all_time_jobs,all_time_hours,skills from odesk_freelancers_additional_change;
 -- select * from odesk_freelancers_work;
 -- select * from odesk_freelancers_work_additional_data;
+-- select id,freelancer_id,work_id,create_date,as_type,total_hours,rate,total_cost,charge_rate,amount,total_hours_precise,cost_rate,total_charge,job_contractor_tier,
+-- job_url,job_category,job_engagement,job_duration,job_amount from odesk_freelancers_work_additional_data;
 -- select * from odesk_freelancers_work_feedback;
 -- select * from odesk_freelancers_work_linked_project_data;
 -- select * from odesk_freelancers_work_clients;
+-- select id,freelancer_id,work_id,create_date,client_total_feedback,client_score,client_total_charge,client_total_hires,client_active_contract,client_country,client_city,client_time,client_member_since,client_profile_name,client_profile_url,client_profile_summary from odesk_freelancers_work_clients;
 -- select * from odesk_freelancers_portfolio;
 -- select * from odesk_freelancers_tests;
 -- select * from odesk_freelancers_certification;
@@ -52,8 +60,11 @@ create table odesk_job_excavators_param(
   create_date timestamp not null,
   comment varchar(255) default null);
 
+
+
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('param_need_update',                   'NeedUpdate',                     true);
-insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('excavatorsStates',                    '',                               true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('jobsExcavatorsStates',                '',                               true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('freelancersExcavatorsStates',         '',                               true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('consoleLoggingLevel',                 'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('dbLoggingLevel',                      'info|debug|worn|error',          true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('runAfterStart',                       'false',                          true);
@@ -89,6 +100,8 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('build
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapFreelancerTryMaxNumber',         '3',                              true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('scrapFreelancerTimeout',              '5000',                           true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildFreelancersScrapingTimeout',     '20000',                          true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('jsonLoadTimeOut',                     '500',                            true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('jsonLoadMaxTry',                      '5',                              true);
 
 create table odesk_excavators_log(
   id bigint primary key auto_increment,
@@ -249,12 +262,12 @@ create table odesk_freelancers_main_change(
   name varchar(500) default null,
   profile_access varchar(100) default null,
   link varchar(500) default null,
-  expose_full_name varchar(20) not null,
+  expose_full_name varchar(100) default null,
   role varchar(100) default null,
   video_url varchar(500) default null,
   is_invite_interview_allowed varchar(20) not null,
   location varchar(100) default null,
-  time_zone int default null,
+  time_zone float(53) default null,
   email_verified varchar(20) not null,
   photo blob default null,
   company_url varchar(500) default null,
@@ -325,14 +338,14 @@ create table odesk_freelancers_work_feedback(
   work_id bigint not null,
   create_date datetime not null,
   ff_scores varchar(4000) not null,
-  ff_is_public varchar(20) not null,
+  ff_is_public varchar(100) default null,
   ff_comment varchar(1000) default null,
   ff_private_point int default null,
   ff_reasons varchar(4000) not null,
   ff_response varchar(100) default null,
   ff_score float(53) default null,
   cf_scores varchar(4000) not null,
-  cf_is_public varchar(20) not null,
+  cf_is_public varchar(100) default null,
   cf_comment varchar(1000) default null,
   cf_response varchar(1000) default null,
   cf_score float(53) default null);
@@ -378,7 +391,7 @@ create table odesk_freelancers_portfolio(
   id bigint primary key auto_increment,
   freelancer_id bigint not null,
   create_date datetime not null,
-  project_date datetime not null,
+  project_date datetime default null,
   title varchar(1000) default null,
   description varchar(5000) default null,
   is_public varchar(20) not null,
@@ -390,7 +403,7 @@ create table odesk_freelancers_portfolio(
   is_client varchar(20) not null,
   flag_comment varchar(1000) default null,
   project_url varchar(500) default null,
-  img blob default null);
+  img_url varchar(500) default null);
 
 create table odesk_freelancers_tests(
   id bigint primary key auto_increment,
@@ -411,8 +424,8 @@ create table odesk_freelancers_certification(
   score varchar(100) default null,
   logo_url varchar(500) default null,
   cert_url varchar(500) default null,
-  is_cert_verified varchar(20) not null,
-  is_verified varchar(20) not null,
+  is_cert_verified varchar(100) default null,
+  is_verified varchar(100) default null,
   description varchar(5000) default null,
   provider varchar(500) default null,
   skills varchar(4000) not null,

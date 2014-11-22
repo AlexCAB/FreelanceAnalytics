@@ -27,249 +27,212 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
     logger.worn("[Saver.checkOverload] Queue overload, queueSize = " + queueSize)
     while(isWork && (queueSize > maxTaskQueueSize)){Thread.sleep(overloadTimeout)}}
   private def prepareJobDataToSave(f:FoundFreelancerRow,d:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
-  ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],
-  cis:Map[String,BufferedImage],pis:Map[String,BufferedImage]):AllFreelancerData = {
+  ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],cis:Map[String,BufferedImage]):AllFreelancerData = {
     val cd = d.changes.createDate
-
     val fh = FreelancerRowHeader(
-                                    id = -1,
-                                    freelancerId = -1,
-                                    createDate = cd)
-//
-//    case class FreelancerWorkRowHeader(
-//                                        id = Long,
-//                                        freelancerId = Long,
-//                                        workId = Long,
-//                                        createDate = Date)
-//
-
+      id = -1,
+      freelancerId = -1,
+      createDate = cd)
     val fr = FreelancerRow(
-                              id = -1,
-                              createDate = cd,
-                              foundDate = f.date,
-                              oUrl = f.oUrl)
+      id = -1,
+      createDate = cd,
+      foundDate = f.date,
+      oUrl = f.oUrl)
     val rh = FreelancerRawHtmlRow(
-                                     header = fh,
-                                     html = h)
+      header = fh,
+      html = h)
     val rjj = ws.map(e ⇒ FreelancerRawJobJsonRow(
-                                        header = fh,
-                                        json = e._2.rawJson))
+      header = fh,
+      json = e._2.rawJson))
     val rpj = ps.map(e ⇒ FreelancerRawPortfolioJsonRow(
-                                              header = fh,
-                                              json = e._2.rawJson))
-
+      header = fh,
+      json = e._2.rawJson))
     val mc = FreelancerMainChangeRow(
-                                        header = fh,
-                                        name = d.changes.name,
-                                        profileAccess = d.changes.profileAccess,
-                                        link = d.changes.link,
-                                        exposeFullName = d.changes.exposeFullName,
-                                        role = d.changes.role,
-                                        videoUrl = d.changes.videoUrl,
-                                        isInviteInterviewAllowed = d.changes.isInviteInterviewAllowed,
-                                        location = d.changes.location,
-                                        timeZone = d.changes.timeZone,
-                                        emailVerified = d.changes.emailVerified,
-                                        photo = pi,
-                                        companyUrl = d.changes.companyLogoUrl,
-                                        companyLogo = li)
-
+      header = fh,
+      name = d.changes.name,
+      profileAccess = d.changes.profileAccess,
+      link = d.changes.link,
+      exposeFullName = d.changes.exposeFullName,
+      role = d.changes.role,
+      videoUrl = d.changes.videoUrl,
+      isInviteInterviewAllowed = d.changes.isInviteInterviewAllowed,
+      location = d.changes.location,
+      timeZone = d.changes.timeZone,
+      emailVerified = d.changes.emailVerified,
+      photo = pi,
+      companyUrl = d.changes.companyLogoUrl,
+      companyLogo = li)
     val ac = FreelancerAdditionalChangeRow(
-                                              header = fh,
-                                              title = d.changes.title,
-                                              availability = d.changes.availability,
-                                              availableAgain = d.changes.availableAgain,
-                                              responsivenessScore = d.changes.responsivenessScore,
-                                              overview = d.changes.overview,
-                                              languages = d.changes.languages,
-                                              rate = d.changes.rate,
-                                              rentPercent = d.changes.rentPercent,
-                                              rating = d.changes.rating,
-                                              allTimeJobs = d.changes.allTimeJobs,
-                                              allTimeHours = d.changes.allTimeHours,
-                                              skills = d.changes.skills)
+      header = fh,
+      title = d.changes.title,
+      availability = d.changes.availability,
+      availableAgain = d.changes.availableAgain,
+      responsivenessScore = d.changes.responsivenessScore,
+      overview = d.changes.overview,
+      languages = d.changes.languages,
+      rate = d.changes.rate,
+      rentPercent = d.changes.rentPercent,
+      rating = d.changes.rating,
+      allTimeJobs = d.changes.allTimeJobs,
+      allTimeHours = d.changes.allTimeHours,
+      skills = d.changes.skills)
     val fws = d.works.map(wd ⇒ {
       val ad = wd.jobKey.flatMap(jk ⇒ ws.find{case(k,_) ⇒ k == jk}).map(_._2)
       val cpi = ad.flatMap(u ⇒ u.clientProfileLogo).flatMap(u ⇒ cis.find{case(k,_) ⇒ k == u}).map(_._2)
       val w = FreelancerWorkRow(
-                                  header = fh,
-                                  paymentType = wd.paymentType,
-                                  status = wd.status,
-                                  startDate = wd.startDate,
-                                  endDate = wd.endDate,
-                                  fromFull = wd.fromFull,
-                                  toFull = wd.toFull,
-                                  openingTitle = wd.openingTitle,
-                                  engagementTitle = wd.engagementTitle,
-                                  skills = wd.skills,
-                                  openAccess = wd.openAccess,
-                                  cnyStatus = wd.cnyStatus,
-                                  financialPrivacy = wd.financialPrivacy,
-                                  isHidden = wd.isHidden,
-                                  agencyName = wd.agencyName,
-                                  segmentationData = wd.segmentationData) //JSON Array
+        header = fh,
+        paymentType = wd.paymentType,
+        status = wd.status,
+        startDate = wd.startDate,
+        endDate = wd.endDate,
+        fromFull = wd.fromFull,
+        toFull = wd.toFull,
+        openingTitle = wd.openingTitle,
+        engagementTitle = wd.engagementTitle,
+        skills = wd.skills,
+        openAccess = wd.openAccess,
+        cnyStatus = wd.cnyStatus,
+        financialPrivacy = wd.financialPrivacy,
+        isHidden = wd.isHidden,
+        agencyName = wd.agencyName,
+        segmentationData = wd.segmentationData) //JSON Array
       val wh = FreelancerWorkRowHeader(
         id = -1,
         freelancerId = -1,
         workId = -1,
-        createDate = Date)
-
-
-    val wad = FreelancerWorkAdditionalDataRow(
-                                                header = wh,
-                                                asType = wd.asType,
-                                                totalHours = wd.totalHours,
-                                                rate = wd.rate,
-                                                totalCost = wd.totalCost,
-                                                chargeRate = wd.chargeRate,
-                                                amount = wd.amount,
-                                                totalHoursPrecise = wd.totalHours,
-                                                costRate = wd.costRate,
-                                                totalCharge = wd.totalCharge,
-                                                jobContractorTier = ad.flatMap(_.jobContractorTier),
-                                                jobUrl = ad.flatMap(_.jobUrl),
-                                                jobDescription = ad.flatMap(_.jobDescription),
-                                                jobCategory = ad.flatMap(_.jobCategory),
-                                                jobEngagement = ad.flatMap(_.jobEngagement),
-                                                jobDuration = ad.flatMap(_.jobDuration),
-                                                jobAmount = ad.flatMap(_.jobAmount))
-
-    val wf = FreelancerWorkFeedbackRow(
-                                          header = wh,
-                                          ffScores = wd.ffScores,
-                                          ffIsPublic = wd.ffIsPublic,
-                                          ffComment = wd.ffComment,
-                                          ffPrivatePoint = wd.ffPrivatePoint,
-                                          ffReasons = wd.ffReasons,
-                                          ffResponse = wd.ffResponse,
-                                          ffScore = wd.ffScore,
-                                          cfScores = wd.cfScores,
-                                          cfIsPublic = wd.cfIsPublic,
-                                          cfComment = wd.cfComment,
-                                          cfResponse = wd.cfResponse,
-                                          cfScore = wd.cfScore)
-
-    val wlp = FreelancerLinkedProjectDataRow(
-                                               header = wh,
-                                               lpTitle = wd.lpTitle,
-                                               lpThumbnail = wd.lpThumbnail,
-                                               lpIsPublic = wd.lpIsPublic,
-                                               lpDescription = wd.lpDescription,
-                                               lpRecno = wd.lpRecno,
-                                               lpCatLevel1 = wd.lpCatLevel1,
-                                               lpCatRecno = wd.lpRecno,
-                                               lpCatLevel2 = wd.lpCatLevel2,
-                                               lpCompleted = wd.lpCompleted,
-                                               lpLargeThumbnail = wd.lpLargeThumbnail,
-                                               lpUrl = wd.lpUrl,
-                                               lpProjectContractLinkState = wd.lpProjectContractLinkState)
-
-    val wc = FreelancerWorkClientRow(
-                                        header = wh,
-                                        clientTotalFeedback = ad.flatMap(_.clientTotalFeedback),
-                                        clientScore = ad.flatMap(_.clientScore),
-                                        clientTotalCharge = ad.flatMap(_.clientTotalCharge),
-                                        clientTotalHires = ad.flatMap(_.clientTotalHires),
-                                        clientActiveContract = ad.flatMap(_.clientActiveContract),
-                                        clientCountry = ad.flatMap(_.clientCountry),
-                                        clientCity = ad.flatMap(_.clientCity),
-                                        clientTime = ad.flatMap(_.clientTime),
-                                        clientMemberSince = ad.flatMap(_.clientMemberSince),
-                                        clientProfileLogo = cpi,
-                                        clientProfileName = ad.flatMap(_.clientProfileName),
-                                        clientProfileUrl = ad.flatMap(_.clientProfileUrl),
-                                        clientProfileSummary = ad.flatMap(_.clientProfileSummary))
-
-
-      FreelancerWorkDataRow(
-        workRow = w,
-        workAdditionalDataRow = wad,
-        workFeedbackRow = wf,
-        linkedProjectDataRow = wlp,
-        workClientRow = wc)
-
-
-
-    })
-
-
-
-
-    val  = FreelancerPortfolioRow(
-                                       header = fh,
-                                       projectDate = Option[Date],
-                                       title = Option[String],
-                                       description = Option[String],
-                                       isPublic = Public,
-                                       attachments = List[String],
-                                       creationTs = Option[Date],
-                                       category = Option[String],
-                                       subCategory = Option[String],
-                                       skills = List[String],
-                                       isClient = Client,
-                                       flagComment = Option[String],
-                                       projectUrl = Option[String],
-                                       img = Option[BufferedImage])
-
-    val  = FreelancerTestRow(
-                                  header = fh,
-                                  data = FreelancerTestRecord)
-
-    val  = FreelancerCertificationRow(
-                                           header = fh,
-                                           data = FreelancerCertification)
-
-    val  = FreelancerEmploymentRow(
-                                        header = fh,
-                                        data = FreelancerEmployment)
-
-    val  = FreelancerEducationRow(
-                                       header = fh,
-                                       data = FreelancerEducation)
-
-    val  = FreelancerOtherExperienceRow(
-                                             header = fh,
-                                             data = FreelancerOtherExperience)
-
-
-
-    val  =
-
+        createDate = cd)
+      val wad = FreelancerWorkAdditionalDataRow(
+        header = wh,
+        asType = wd.asType,
+        totalHours = wd.totalHours,
+        rate = wd.rate,
+        totalCost = wd.totalCost,
+        chargeRate = wd.chargeRate,
+        amount = wd.amount,
+        totalHoursPrecise = wd.totalHours,
+        costRate = wd.costRate,
+        totalCharge = wd.totalCharge,
+        jobContractorTier = ad.flatMap(_.jobContractorTier),
+        jobUrl = ad.flatMap(_.jobUrl),
+        jobDescription = ad.flatMap(_.jobDescription),
+        jobCategory = ad.flatMap(_.jobCategory),
+        jobEngagement = ad.flatMap(_.jobEngagement),
+        jobDuration = ad.flatMap(_.jobDuration),
+        jobAmount = ad.flatMap(_.jobAmount))
+      val wf = FreelancerWorkFeedbackRow(
+        header = wh,
+        ffScores = wd.ffScores,
+        ffIsPublic = wd.ffIsPublic,
+        ffComment = wd.ffComment,
+        ffPrivatePoint = wd.ffPrivatePoint,
+        ffReasons = wd.ffReasons,
+        ffResponse = wd.ffResponse,
+        ffScore = wd.ffScore,
+        cfScores = wd.cfScores,
+        cfIsPublic = wd.cfIsPublic,
+        cfComment = wd.cfComment,
+        cfResponse = wd.cfResponse,
+        cfScore = wd.cfScore)
+      val wlp = FreelancerLinkedProjectDataRow(
+        header = wh,
+        lpTitle = wd.lpTitle,
+        lpThumbnail = wd.lpThumbnail,
+        lpIsPublic = wd.lpIsPublic,
+        lpDescription = wd.lpDescription,
+        lpRecno = wd.lpRecno,
+        lpCatLevel1 = wd.lpCatLevel1,
+        lpCatRecno = wd.lpRecno,
+        lpCatLevel2 = wd.lpCatLevel2,
+        lpCompleted = wd.lpCompleted,
+        lpLargeThumbnail = wd.lpLargeThumbnail,
+        lpUrl = wd.lpUrl,
+        lpProjectContractLinkState = wd.lpProjectContractLinkState)
+      val wc = FreelancerWorkClientRow(
+        header = wh,
+        clientTotalFeedback = ad.flatMap(_.clientTotalFeedback),
+        clientScore = ad.flatMap(_.clientScore),
+        clientTotalCharge = ad.flatMap(_.clientTotalCharge),
+        clientTotalHires = ad.flatMap(_.clientTotalHires),
+        clientActiveContract = ad.flatMap(_.clientActiveContract),
+        clientCountry = ad.flatMap(_.clientCountry),
+        clientCity = ad.flatMap(_.clientCity),
+        clientTime = ad.flatMap(_.clientTime),
+        clientMemberSince = ad.flatMap(_.clientMemberSince),
+        clientProfileLogo = cpi,
+        clientProfileName = ad.flatMap(_.clientProfileName),
+        clientProfileUrl = ad.flatMap(_.clientProfileUrl),
+        clientProfileSummary = ad.flatMap(_.clientProfileSummary))
+        FreelancerWorkDataRow(
+          workRow = w,
+          workAdditionalDataRow = wad,
+          workFeedbackRow = wf,
+          linkedProjectDataRow = wlp,
+          workClientRow = wc)})
+    val fps = d.portfolio.map(p ⇒ {
+      val pad = p.dataId.flatMap(pk ⇒ ps.find{case(k,_) ⇒ k == pk}).map(_._2)
+      val t = pad.flatMap(d ⇒ d.title) match{case None => p.title; case t:Some[String] ⇒ t}
+       FreelancerPortfolioRow(
+        header = fh,
+        projectDate = pad.flatMap(_.projectDate),
+        title = t,
+        description = pad.flatMap(_.description),
+        isPublic = pad match{case Some(d) ⇒ d.isPublic; case None ⇒ Public.Unknown},
+        attachments = pad match{case Some(d) ⇒ d.attachments; case None ⇒ List()},
+        creationTs = pad.flatMap(_.creationTs),
+        category = pad.flatMap(_.category),
+        subCategory = pad.flatMap(_.subCategory),
+        skills = pad match{case Some(d) ⇒ d.skills; case None ⇒ List()},
+        isClient = pad match{case Some(d) ⇒ d.isClient; case None ⇒ Client.Unknown},
+        flagComment = pad.flatMap(_.flagComment),
+        projectUrl = pad.flatMap(_.projectUrl),
+        imgUrl = pad.flatMap(u ⇒ u.imgUrl))})
+    val fts = d.tests.map(t ⇒ FreelancerTestRow(
+      header = fh,
+      data = t))
+    val fcs = d.certification.map(c ⇒ FreelancerCertificationRow(
+      header = fh,
+      data = c))
+    val fes = d.employment.map(e ⇒ FreelancerEmploymentRow(
+      header = fh,
+      data = e))
+    val eds = d.education.map(e ⇒ FreelancerEducationRow(
+      header = fh,
+      data = e))
+    val oes = d.experience.map(e ⇒ FreelancerOtherExperienceRow(
+      header = fh,
+      data = e))
+    val jf = ws.filter{case (_,e) ⇒ e.jobUrl.isDefined}.map{case (_,e) ⇒ {
+      FoundJobsRow(
+        id = -1,
+        oUrl = e.jobUrl.get,
+        foundBy = FoundBy.Analyse,
+        date = cd,
+        priority = 0,
+        skills = List(),
+        nFreelancers = None)}}
     AllFreelancerData(
-                                  freelancerRow = FreelancerRow,
-                                  rawHtmlRow = FreelancerRawHtmlRow,
-                                  rawJobJsonRow = FreelancerRawJobJsonRow,
-                                  rawPortfolioJsonRow = FreelancerRawPortfolioJsonRow,
-                                  mainChangeRow = FreelancerMainChangeRow,
-                                  additionalChangeRow = FreelancerAdditionalChangeRow,
-                                  works = List[FreelancerWorkDataRow],
-                                  portfolioRows = List[FreelancerPortfolioRow],
-                                  testRows = List[FreelancerTestRow],
-                                  certificationRows = List[FreelancerCertificationRow],
-                                  employmentRows = List[FreelancerEmploymentRow],
-                                  educationRows = List[FreelancerEducationRow],
-                                  otherExperienceRows = List[FreelancerOtherExperienceRow],
-                                  foundJobsRows = List[FoundJobsRow])
-
-
-
-
-
-
-  }
-  
-  
-  
-  
+      freelancerRow = fr,
+      rawHtmlRow = rh,
+      rawJobJsonRow = rjj.toList,
+      rawPortfolioJsonRow = rpj.toList,
+      mainChangeRow = mc,
+      additionalChangeRow = ac,
+      works = fws,
+      portfolioRows = fps,
+      testRows = fts,
+      certificationRows = fcs,
+      employmentRows = fes,
+      educationRows = eds,
+      otherExperienceRows = oes,
+      foundJobsRows = jf.toList)}
   //Tasks
   case class SaveFreelancerDataTask(f:FoundFreelancerRow,pd:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
-  ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],
-  cis:Map[String,BufferedImage],pis:Map[String,BufferedImage]) extends Task(1) {
+  ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage], cis:Map[String,BufferedImage]) extends Task(1) {
     def execute() = {
       //Start
       val st = System.currentTimeMillis()
       //Preparing data to save
-      val d = prepareJobDataToSave(f,pd,h,ws,ps,pi,li,cis,pis)
+      val d = prepareJobDataToSave(f,pd,h,ws,ps,pi,li,cis)
       //Save data
       val r = try{
         Some(db.addAllFreelancerDataAndDelFromFound(d))} //Some(number of found jobs)
@@ -310,9 +273,9 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       nextJobCheckTimeout})}
   def addSaveFreelancerDataAndDelFoundTask(f:FoundFreelancerRow,d:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
     ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],
-    cis:Map[String,BufferedImage],pis:Map[String,BufferedImage]) = {
+    cis:Map[String,BufferedImage]) = {
     checkOverload()
-    addTask(new SaveFreelancerDataTask(f,d,h,ws,ps,pi,li,cis,pis))}
+    addTask(new SaveFreelancerDataTask(f,d,h,ws,ps,pi,li,cis))}
   def addDelFoundFreelancerTask(f:FoundFreelancerRow) = {
     checkOverload()
     addTask(new DelFoundFreelancerTas(f))}

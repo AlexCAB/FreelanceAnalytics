@@ -16,8 +16,6 @@ class HTMLFreelancerParser extends ParserHelpers {
   val photoImageCoordinates = List(7,7,108,108) //x,y,w,h
   val companyLogoImageCoordinates = List(7,7,108,108) //x,y,w,h
   val clientProfileLogoImageCoordinates = List(7,7,108,108) //x,y,w,h
-  val portfolioRecordImageCoordinates = List(7,7,108,108) //x,y,w,h
-  val portfolioDataImageCoordinates = List(7,7,108,108) //x,y,w,h
   val wornParsingQualityLevel = 0.8
   val errorParsingQualityLevel = 0.5
   val notSaveParsingQualityLevel = 0.2
@@ -81,7 +79,7 @@ class HTMLFreelancerParser extends ParserHelpers {
         location = tl.getElemTextByClassPath(List("oBd","oRowTitle oTextBoxLiner oTxtMed")),
         timeZone = tl.getElemTextByClassPath(List("oBd","oMute")).pSplit.reverse match {
           case "behind" :: _ :: t :: _ ⇒ Some(t).parseInt.map(_ * -1)
-          case "ahead" :: _ :: t :: _ ⇒ Some(t).parseInt
+          case "ahead" :: _ :: t :: _ ⇒ Some(t).parseDouble
           case _ ⇒ None},
         languages = os.findElementByIdOpt("jsLanguages").getElemsByTeg("li").flatMap(e ⇒ e.getText.pSplit match{
           case n :: "-" :: l :: v :: _ if n != "" ⇒ {

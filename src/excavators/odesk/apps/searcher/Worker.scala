@@ -30,10 +30,9 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
   //Helpers
   private val htmlParser = new HTMLJobParsers
   //Variables
-  private var runAfterStart = false
   private var numberOfFoundJob = 0
   //Construction
-  super.setPaused(! runAfterStart)
+  super.setPaused(true)
   addTask(new SearchNewJobsTask(0))
   addTask(new ExcavatorsManagementTask(0))
   //Functions
@@ -94,20 +93,34 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
       case _ => {
         logger.worn("[Worker.searchAndSaveJobs] No job search result.")
         (0,0)}}}
-  private def getWorkStateDataAndLockParams:Option[(Map[Int,Int],Map[Int,(Boolean,Double)])] = {
+  private def getJobExWorkStateDataAndLockParams:Option[(Map[Int,Int],Map[Int,(Boolean,Double)])] = {
     val d = try{
-      Some((db.countFoundByToScrapPriority, db.getExcavatorsStateParam(setLock = true)))}
+      Some((db.countJobsFoundByToScrapPriority, db.getJobExcavatorsStateParam(setLock = true)))}
     catch{case e:Exception => {
-      logger.error("[Worker.getWorkStateDataAndLockParams] Exception on DB access: " + e)
+      logger.error("[Worker.getJobExWorkStateDataAndLockParams] Exception on DB access: " + e)
       None}}
     d.map{case (fqs,(es,pls)) => {
-      if(pls){logger.worn("[Worker.getWorkStateDataAndLockParams] Parameters been locked.")}
+      if(pls){logger.worn("[Worker.getJobExWorkStateDataAndLockParams] Parameters been locked.")}
       (fqs,es)}}}
-  private def updateAndUnlockWorkStateParameter(es:Map[Int,(Boolean,Double)]) = {
+  private def updateJobExAndUnlockWorkStateParameter(es:Map[Int,(Boolean,Double)]) = {
     try{
-      db.updateExcavatorsStateParam(es, setLock = false)}
+      db.updateJobExcavatorsStateParam(es, setLock = false)}
     catch{case e:Exception => {
-      logger.error("[Worker.updateAndUnlockWorkStateParameter] Exception on DB access: " + e)}}}
+      logger.error("[Worker.updateJobExAndUnlockWorkStateParameter] Exception on DB access: " + e)}}}
+  private def getFreelancerExWorkStateDataAndLockParams:Option[(Map[Int,Int],Map[Int,(Boolean,Double)])] = {
+    val d = try{
+      Some((db.countFreelancersFoundByToScrapPriority, db.getFreelancerExcavatorsStateParam(setLock = true)))}
+    catch{case e:Exception => {
+      logger.error("[Worker.getFreelancerExWorkStateDataAndLockParams] Exception on DB access: " + e)
+      None}}
+    d.map{case (fqs,(es,pls)) => {
+      if(pls){logger.worn("[Worker.getJobExWorkStateDataAndLockParams] Parameters been locked.")}
+      (fqs,es)}}}
+  private def updateFreelancerExAndUnlockWorkStateParameter(es:Map[Int,(Boolean,Double)]) = {
+    try{
+      db.updateFreelancerExcavatorsStateParam(es, setLock = false)}
+    catch{case e:Exception => {
+      logger.error("[Worker.updateFreelancerExAndUnlockWorkStateParameter] Exception on DB access: " + e)}}}
   private def calcDistribution(eqs:List[(Int,Int)]):List[(Int,Double)] = { //Take: L(Excavator, N jobs), Return: (Excavator, Distribution probability)
     val ps = if(eqs.size > 1){ //If several excavators
       val mqs = eqs.maxBy(_._2)._2  //Max queue size
@@ -131,6 +144,12 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
       logger.info("[Worker.distributeFoundJobsToWorkingExcavators] Fount jobs distribute form: " + ses + ", to: " + es)}
     catch{case e:Exception => {
       logger.error("[Worker.distributeFoundJobsToWorkingExcavators] Exception on DB access: " + e)}}}
+  private def distributeFoundFreelancersToWorkingExcavators(ses:List[Int], es:Map[Int,(Boolean,Double)]) = if(ses.nonEmpty){
+    try{
+      db.redistributeFoundFreelancersFromToWithProb(ses,es.map{case(e,(_,p)) => (e,p)}.toList)
+      logger.info("[Worker.distributeFoundFreelancersToWorkingExcavators] Fount freelancers distribute form: " + ses + ", to: " + es)}
+    catch{case e:Exception => {
+      logger.error("[Worker.distributeFoundFreelancersToWorkingExcavators] Exception on DB access: " + e)}}}
   //Tasks
   case class SearchNewJobsTask(t:Long) extends TimedTask(t, searchNewJobsTaskPriority){def execute() = {
     //Log
@@ -145,10 +164,10 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
       " sec., found " + nf + ", collected " + nc + " jobs.")
     addTask(new SearchNewJobsTask(nt + System.currentTimeMillis()))}}
   case class ExcavatorsManagementTask(t:Long) extends TimedTask(t, searchNewJobsTaskPriority){def execute() = {
-    //Get work state data
-    getWorkStateDataAndLockParams match{
+    //Get job excavators work state data
+    getJobExWorkStateDataAndLockParams match{
       case Some((fqs,es)) => {
-        logger.info("[Worker.ExcavatorsManagementTask] Excavators load: " + fqs)
+        logger.info("[Worker.ExcavatorsManagementTask] Jobs excavators load: " + fqs)
         //Calc priority
         val wes = es.filter{case(n,(true,_)) if(n != jobsFoundBySearchExcavatorNumber) => true; case _ => false}.toList //Working excavators
         val eqs = wes.map{case(e,(true,_)) => (e, if(fqs.contains(e)){fqs(e)}else{0})} //Active excavators to they queue size
@@ -159,24 +178,40 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
           val les = fqs.toList.map(_._1).filter(e => {(e != jobsFoundBySearchExcavatorNumber)&&(! nes.contains(e))}) //All not working excavators
           distributeFoundJobsToWorkingExcavators(les, nes)}
         else {
-          logger.worn("[Worker.ExcavatorsManagementTask] No working excavators.")}
+          logger.worn("[Worker.ExcavatorsManagementTask] No working jobs excavators.")}
         //Get and check first excavator
         val aes = es.find{case(n,_) => {n == jobsFoundBySearchExcavatorNumber}} match{
           case Some((e,(true,_))) => {nes + (e -> (true,0.0))}
           case _ => {
-            logger.worn("[Worker.ExcavatorsManagementTask] No found by search job (first) excavator.")}
+            logger.worn("[Worker.ExcavatorsManagementTask] No found by search job (first) jobs excavator.")}
             nes}
         //Update params
-        updateAndUnlockWorkStateParameter(aes)
-        logger.info("[Worker.ExcavatorsManagementTask] Excavator work state parameters updated: " + aes)}
+        updateJobExAndUnlockWorkStateParameter(aes)
+        logger.info("[Worker.ExcavatorsManagementTask] Job excavator work state parameters updated: " + aes)}
+      case None =>}
+    //Get freelancers excavators work state data
+    getFreelancerExWorkStateDataAndLockParams match{
+      case Some((fqs,es)) => {
+        logger.info("[Worker.ExcavatorsManagementTask] Freelancers excavators load: " + fqs)
+        //Calc priority
+        val wes = es.filter{case(_,(s,_)) => s}.toList //Working excavators
+        val eqs = wes.map{case(e,(true,_)) => (e, if(fqs.contains(e)){fqs(e)}else{0})} //Active excavators to they queue size
+        val ps = calcDistribution(eqs)
+        val nes = ps.map{case(e,p) => (e,(true,p))}.toMap
+        //Distribute
+        if(nes.nonEmpty) {
+          val les = fqs.toList.map(_._1).filter(e => ! nes.contains(e)) //All not working excavators
+          distributeFoundFreelancersToWorkingExcavators(les, nes)}
+        else {
+          logger.worn("[Worker.ExcavatorsManagementTask] No working freelancers excavators.")}
+        //Update params
+        updateFreelancerExAndUnlockWorkStateParameter(nes)
+        logger.info("[Worker.ExcavatorsManagementTask] Freelancers excavator work state parameters updated: " + nes)}
       case None =>}
     //Add next task
     addTask(new ExcavatorsManagementTask(excavatorsManagementTimeout + System.currentTimeMillis()))}}
   //Methods
   def setParameters(p:ParametersMap) = {
-    runAfterStart = p.getOrElse("runAfterStart", {
-      logger.worn("[Worker.setParameters] Parameter 'runAfterStart' not found.")
-      runAfterStart})
     jobSearchURL = p.getOrElse("jobSearchURL", {
       logger.worn("[Worker.setParameters] Parameter 'jobSearchURL' not found.")
       jobSearchURL})
@@ -193,7 +228,6 @@ class Worker(browser:Browser, logger:Logger, db:ODeskExcavatorsDBProvider) exten
       logger.worn("[Worker.setParameters] Parameter 'excavatorsManagementTimeout' not found.")
       excavatorsManagementTimeout})}
   def init() = {
-    if(runAfterStart){logger.info("[Worker.init] Run on init.")}
     start()}
   def halt() = {
     stop()

@@ -21,6 +21,8 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
   //Parameters
   private val mainPageURL = "https://www.odesk.com"
   private val workJsonURL = "/job-description/"
+  private val portfolioJsonURL1 = "/fwh-api/project/id/"
+  private val portfolioJsonURL2 = "/key/"
   private val saveFolder = System.getProperty("user.home") + "\\Desktop"
   private val ScrapTaskPriority = 1
   private val buildScrapingTaskPriority = 2
@@ -37,6 +39,7 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
   //Helpers
   private val htmlParser = new HTMLFreelancerParser
   //Construction
+  super.setPaused(true)
   addTask(new BuildScrapingTask(0))
   //Functions
   private def getFoundFreelancers(n:Int, en:Int):(List[FoundFreelancerRow], Int) = {
@@ -95,13 +98,14 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
         case None ⇒ {
           logger.worn("[Worker.getAdditionalWorkData] Failure on get, key: " + k)
           wds}}})}
-  private def getAdditionalPortfolioData(ks:List[String]):Map[String,FreelancerPortfolioData] = {
-    ks.foldLeft(Map[String,FreelancerPortfolioData]())((wds, url) ⇒ {
+  private def getAdditionalPortfolioData(ks:List[String], fId:String):Map[String,FreelancerPortfolioData] = {
+    ks.foldLeft(Map[String,FreelancerPortfolioData]())((wds, id) ⇒ {
+      val url = portfolioJsonURL1 + id + portfolioJsonURL2 + fId
       val wd = browser.getJSONByUrl(url) match{
         case Some(j) if j != "" ⇒  Some(htmlParser.parsePortfolioJson(j))
         case _ ⇒ None}
       wd match{
-        case Some(d) ⇒ wds + (url → d)
+        case Some(d) ⇒ wds + (id → d)
         case None ⇒ {
           logger.worn("[Worker.getAdditionalPortfolioData] Failure on get, url: " + url)
           wds}}})}
@@ -114,10 +118,6 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
           logger.worn("[Worker.getImageByUrl] Failure on get image: " + url)
           None}}})}
   //Tasks
-
-
-
-
   case class BuildScrapingTask(t:Long) extends TimedTask(t, buildScrapingTaskPriority){def execute() = {
     //If sever not end work, then wait
     val na = if(saver.queueSize > maxSaverQueueSize){
@@ -133,11 +133,6 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
     //If added no, then wait
     if(na == 0){
       addTask(new BuildScrapingTask(System.currentTimeMillis() + buildFreelancersScrapingTimeout))}}}
-
-
-
-
-
   case class Scraping(t:Long, f:FoundFreelancerRow, nScrapTry:Int) extends TimedTask(t, ScrapTaskPriority){def execute() = {
     //Start
     logger.info("[Worker.Scraping] Start scrap,\n  url: " + f.oUrl)
@@ -155,32 +150,21 @@ class Worker(browser:Browser, logger:Logger, saver:Saver, db:ODeskExcavatorsDBPr
       val (d,h) = (pd.get, html.get)
       //Get additional json data
       val ws = getAdditionalWorkData(d.works.flatMap(_.jobKey))
-      val ps = getAdditionalPortfolioData(d.portfolio.flatMap(_.dataId))
+      val fId = "~" + f.oUrl.split("%").last.drop(2)
+      val ps = getAdditionalPortfolioData(d.portfolio.flatMap(_.dataId), fId)
       //Get images
       val pi = getImageByUrl(d.changes.photoUrl, htmlParser.photoImageCoordinates)
       val li = getImageByUrl(d.changes.companyLogoUrl, htmlParser.companyLogoImageCoordinates)
       val cis = ws.flatMap(_._2.clientProfileLogo).flatMap(url ⇒ {
         getImageByUrl(Some(url), htmlParser.clientProfileLogoImageCoordinates).map(i ⇒ (url, i))}).toMap
-      val ius = d.portfolio.map(_.imgUrl).zip(ps.map{case(_,v) ⇒ v.imgUrl}).flatMap{
-        case(_,Some(b)) ⇒ Some(b, htmlParser.portfolioRecordImageCoordinates)
-        case(Some(a),None) ⇒ Some(a, htmlParser.portfolioDataImageCoordinates)
-        case _ ⇒ None}
-      val pis = ius.flatMap{case(url,ic) ⇒ {getImageByUrl(Some(url), ic).map(i ⇒ (url,i))}}.toMap
       //Add saver task
-      saver.addSaveFreelancerDataAndDelFoundTask(f,d,h,ws,ps,pi,li,cis,pis)}
+      saver.addSaveFreelancerDataAndDelFoundTask(f,d,h,ws,ps,pi,li,cis)}
     else{
       if(nScrapTry <= scrapFreelancerTryMaxNumber){  //If parse wrong, add to next time (if no max try number)
         addTask(new Scraping((System.currentTimeMillis() + scrapFreelancerTimeout), f, (nScrapTry + 1)))} //Move pars task to future
       else{
         logger.worn("[Worker.Scraping] Failure with max scrape try (" + scrapFreelancerTryMaxNumber + ").") //If max try worn and remove found
         saver.addDelFoundFreelancerTask(f)}}}}
-
-
-
-
-
-
-
   //Methods
   def setParameters(p:ParametersMap) = {
      scrapFreelancerTryMaxNumber = p.getOrElse("scrapFreelancerTryMaxNumber", {

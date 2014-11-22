@@ -147,7 +147,7 @@ case class FreelancerChanges(
   responsivenessScore:Option[String],
   overview:Option[String],
   location:Option[String],
-  timeZone:Option[Int],  //Shift from +2
+  timeZone:Option[Double],  //Shift from +2
   languages:List[FreelancerLanguage],
   photoUrl:Option[String],
   rate:Option[Double],

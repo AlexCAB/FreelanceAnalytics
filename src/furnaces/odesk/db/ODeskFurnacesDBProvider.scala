@@ -76,7 +76,7 @@ class ODeskFurnacesDBProvider extends DBProvider{
         val t = Q.queryNA[Int]("select count(*) from " + odesk_found_jobs + " where " + foundByColumn + " = '" + fb.toString + "'" + dp).first
         (fb,t)}).toMap})}
   def countFoundByToScrapPriority(from:Option[Date], to:Option[Date]):Map[Int,Int] = { //Return: Map(priorityColumn -> count)
-    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countFoundByToScrapPriority] No created DB.")}
+    if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.countJobsFoundByToScrapPriority] No created DB.")}
     db.get.withSession(implicit session => {
       //Prepare
       val ((wr,an),dp) = buildDateCondition(from,to) match{case Some(p) => ((" where ", " and "),p); case None => (("",""),"")}

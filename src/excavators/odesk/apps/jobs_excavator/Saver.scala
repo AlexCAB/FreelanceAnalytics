@@ -18,7 +18,6 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
   //Parameters
   val maxTaskQueueSize = 1000
   val overloadTimeout = 1000
-  private var foundFreelancersPriority = 1
   private var nextJobCheckTimeout = 1000 * 60 * 60
   //Variables
   private var saveTime = 0L
@@ -90,7 +89,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
           id = 0,
           oUrl = url,
           date = cd,
-          priority = foundFreelancersPriority)})}
+          priority = 0)})}
     //Prepare FoundJobsRow structures
     val fjr = {
       //Get work urls
@@ -156,9 +155,6 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       saveTime = System.currentTimeMillis() - st}}
   //Methods
   def setParameters(p:ParametersMap) = {
-    foundFreelancersPriority = p.getOrElse("foundFreelancersPriority", {
-      logger.worn("[Worker.setParameters] Parameter 'foundFreelancersPriority' not found.")
-      foundFreelancersPriority})
     nextJobCheckTimeout = p.getOrElse("nextJobCheckTimeout", {
       logger.worn("[Worker.setParameters] Parameter 'nextJobCheckTimeout' not found.")
       nextJobCheckTimeout})}

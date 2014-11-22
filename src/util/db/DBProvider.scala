@@ -296,7 +296,7 @@ trait DBProvider extends LoggerDBProvider {
     def * = (id,freelancer_id,create_date,json)}
   protected val freelancersRawPortfolioTable = TableQuery[FreelancersRawPortfolio]
   protected type FreelancersMainChangeRowType = (Option[Long],Long,Timestamp,Option[String],Option[String],
-    Option[String],Option[String],Option[String],Option[String],String,Option[String],Option[Int],String,
+    Option[String],Option[String],Option[String],Option[String],String,Option[String],Option[Double],String,
     Option[Array[Byte]],Option[String],Option[Array[Byte]])
   protected class FreelancersMainChange(tag: Tag) extends Table[FreelancersMainChangeRowType](tag, odesk_freelancers_main_change){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
@@ -310,7 +310,7 @@ trait DBProvider extends LoggerDBProvider {
     def video_url = column[Option[String]]("video_url")
     def is_invite_interview_allowed = column[String]("is_invite_interview_allowed", O.NotNull)
     def location = column[Option[String]]("location")
-    def time_zone = column[Option[Int]]("time_zone")
+    def time_zone = column[Option[Double]]("time_zone")
     def email_verified = column[String]("email_verified", O.NotNull)
     def photo = column[Option[Array[Byte]]]("photo")
     def company_url = column[Option[String]]("company_url")
@@ -400,14 +400,14 @@ trait DBProvider extends LoggerDBProvider {
     def work_id = column[Long]("work_id", O.NotNull)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def ff_scores = column[String]("ff_scores", O.NotNull)
-    def ff_is_public = column[Option[String]]("ff_is_public", O.NotNull)
+    def ff_is_public = column[Option[String]]("ff_is_public")
     def ff_comment = column[Option[String]]("ff_comment")
     def ff_private_point = column[Option[Int]]("ff_private_point")
     def ff_reasons = column[String]("ff_reasons", O.NotNull)
     def ff_response = column[Option[String]]("ff_response")
     def ff_score = column[Option[Double]]("ff_score")
     def cf_scores = column[String]("cf_scores", O.NotNull)
-    def cf_is_public = column[Option[String]]("cf_is_public", O.NotNull)
+    def cf_is_public = column[Option[String]]("cf_is_public")
     def cf_comment = column[Option[String]]("cf_comment")
     def cf_response = column[Option[String]]("cf_response")
     def cf_score = column[Option[Double]]("cf_score")
@@ -462,7 +462,7 @@ trait DBProvider extends LoggerDBProvider {
       client_profile_logo,client_profile_name,client_profile_url,client_profile_summary)}
   protected val freelancersWorkClientsTable = TableQuery[FreelancersWorkClients]
   protected type FreelancersPortfolioRowType = (Option[Long],Long,Timestamp,Option[Timestamp],Option[String],Option[String],
-    String,String,Option[Timestamp],Option[String],Option[String],String,String,Option[String],Option[String],Option[Array[Byte]])
+    String,String,Option[Timestamp],Option[String],Option[String],String,String,Option[String],Option[String],Option[String])
   protected class FreelancersPortfolio(tag: Tag) extends Table[FreelancersPortfolioRowType](tag, odesk_freelancers_portfolio){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def freelancer_id = column[Long]("freelancer_id", O.NotNull)
@@ -470,16 +470,16 @@ trait DBProvider extends LoggerDBProvider {
     def project_date = column[Option[Timestamp]]("project_date")
     def title = column[Option[String]]("title")
     def description = column[Option[String]]("description")
-    def is_public = column[String]("is_public")
+    def is_public = column[String]("is_public", O.NotNull)
     def attachments = column[String]("attachments")
     def creation_ts = column[Option[Timestamp]]("creation_ts")
     def category = column[Option[String]]("category")
     def sub_category = column[Option[String]]("sub_category")
     def skills = column[String]("skills")
-    def is_client = column[String]("is_client")
+    def is_client = column[String]("is_client", O.NotNull)
     def flag_comment = column[Option[String]]("flag_comment")
     def project_url = column[Option[String]]("project_url")
-    def img = column[Option[Array[Byte]]]("img")
+    def img = column[Option[String]]("img_url")
     def * = (id,freelancer_id,create_date,project_date,title,description,is_public,attachments,creation_ts,category,
       sub_category,skills,is_client,flag_comment,project_url,img)}
   protected val freelancersPortfolioTable = TableQuery[FreelancersPortfolio]
@@ -507,8 +507,8 @@ trait DBProvider extends LoggerDBProvider {
     def score = column[Option[String]]("score")
     def logo_url = column[Option[String]]("logo_url")
     def cert_url = column[Option[String]]("cert_url")
-    def is_cert_verified = column[Option[String]]("is_cert_verified", O.NotNull)
-    def is_verified = column[Option[String]]("is_verified", O.NotNull)
+    def is_cert_verified = column[Option[String]]("is_cert_verified")
+    def is_verified = column[Option[String]]("is_verified")
     def description = column[Option[String]]("description")
     def provider = column[Option[String]]("provider")
     def skills = column[String]("skills", O.NotNull)
@@ -851,7 +851,7 @@ trait DBProvider extends LoggerDBProvider {
     d.isClient.toString,             // is_client
     d.flagComment,                   // flag_comment
     d.projectUrl,                    // project_url
-    d.img.toArray)                   // img
+    d.imgUrl)                        // img
   protected def buildFreelancersTestsRow(d:FreelancerTestRow, fId:Long):FreelancersTestsRowType = (
     None,                            // id
     fId,                             // freelancer_id
