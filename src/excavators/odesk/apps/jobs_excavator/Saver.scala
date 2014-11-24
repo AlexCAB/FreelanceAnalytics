@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage
 import java.util.Date
 
 import excavators.odesk.db.ODeskExcavatorsDBProvider
+import excavators.odesk.parsers.TextHelpers
 import util.logging.Logger
 import util.parameters.ParametersMap
 import util.tasks.{Task, TaskExecutor}
@@ -26,10 +27,10 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
     logger.worn("[Saver.checkOverload] Queue overload, queueSize = " + queueSize)
     while(isWork && (queueSize > maxTaskQueueSize)){Thread.sleep(overloadTimeout)}}
   private def getFreelancerIdByUrl(oUrl:Option[String]):Option[Long] = {
-    oUrl.flatMap(url => {
+    oUrl.flatMap(url ⇒ {
       try{
         db.getFreelancerIdByURL(url)}
-      catch{case e:Exception => {
+      catch{case e:Exception ⇒ {
         logger.error("[Worker.getFreelancerIdByUrl] Exception: " + e)
         None}}})}
   private def prepareJobDataToSave(pj:ParsedJob, cd:Date, j:FoundJobsRow, logo:Option[BufferedImage]):AllJobData = {
@@ -57,21 +58,21 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       changeData = pj.clientChanges,
       logo = logo)
     //Prepare JobsApplicantsRow structures
-    val ars = pj.applicants.map(a => {
+    val ars = pj.applicants.map(a ⇒ {
       JobsApplicantsRow(
         id = 0,
         jobId = -1,
         applicantData = a,
         freelancerId = getFreelancerIdByUrl(a.url))})
     //Prepare JobHired structures
-    val jhr = pj.hires.map(h => {
+    val jhr = pj.hires.map(h ⇒ {
       JobsHiredRow(
         id = 0,
         jobId = -1,
         hiredData = h,
         freelancerId = getFreelancerIdByUrl(h.freelancerUrl))})
     //Prepare ClientsWorksHistoryRow structures
-    val whr = pj.clientWorks.map(w => {
+    val whr = pj.clientWorks.map(w ⇒ {
       ClientsWorksHistoryRow(
         id = 0,
         jobId = -1,
@@ -84,18 +85,21 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
         pj.hires.flatMap(_.freelancerUrl).toSet ++
         pj.clientWorks.flatMap(_.freelancerUrl).toSet
       //Build
-      fus.map(url => {
-        FoundFreelancerRow(
-          id = 0,
-          oUrl = url,
-          date = cd,
-          priority = 0)})}
+      fus.foldLeft(List[FoundFreelancerRow]())((lf, url) ⇒ {
+        TextHelpers.extractKeyFromURL(url) match {
+          case Some(k) ⇒ lf :+ FoundFreelancerRow(
+            id = 0,
+            oUrl = url,
+            key = k,
+            date = cd,
+            priority = 0)
+          case None ⇒ lf}})}
     //Prepare FoundJobsRow structures
     val fjr = {
       //Get work urls
       val fus = pj.clientWorks.flatMap(_.oUrl).toSet
       //Build
-      fus.map(url => {
+      fus.map(url ⇒ {
         FoundJobsRow(
           id = 0,
           oUrl = url,
@@ -124,14 +128,14 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       //Save data
       val r = try{
         Some(db.addAllJobDataAndDelFromFound(d))} //Some(applicants,hired,clients works,found freelancer,found jobs)
-      catch{case e:Exception =>{
+      catch{case e:Exception ⇒{
         logger.error("[Saver.SaveFreelancerDataTask] Exception on save job data, url: " + j.oUrl + ", exception: " + e)
         None}}
       //Logging
       r match{
-        case Some((na,nh,ncw,nff,nfj, id)) => {
+        case Some((na,nh,ncw,nff,nfj, id)) ⇒ {
           logger.info("[Saver.SaveFreelancerDataTask] Job added to DB, title:'"
-            + (pj.job.jobTitle match{case Some(t) => t; case None => "---"})
+            + (pj.job.jobTitle match{case Some(t) ⇒ t; case None ⇒ "---"})
             + "',\n  id: " + id + ", url: " + j.oUrl
             + ",\n   with: "
             + na + "(of " + d.jobsApplicantsRows.size + ") applicants, "
@@ -139,7 +143,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
             + ncw + "(of " + d.clientsWorksHistoryRows.size + ") clients works, "
             + nff + "(of " + d.foundFreelancerRows.size + ") found freelancer, "
             + nfj + "(of " + d.foundJobsRows.size + ") found jobs.")}
-        case None => logger.worn("[Saver.SaveFreelancerDataTask] Job not added to DB, url: " + j.oUrl)}
+        case None ⇒ logger.worn("[Saver.SaveFreelancerDataTask] Job not added to DB, url: " + j.oUrl)}
       //End
       saveTime = System.currentTimeMillis() - st}}
   case class DelFoundJobTas(j:FoundJobsRow) extends Task(2) {
@@ -149,7 +153,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       //Del
       try{
         db.delFoundJobRow(j.id)}
-      catch{case e:Exception => {
+      catch{case e:Exception ⇒ {
         logger.error("[Saver.DelFoundFreelancerTas] Exception on dell found job: " + e + ", url=" + j.oUrl)}}
       //End
       saveTime = System.currentTimeMillis() - st}}

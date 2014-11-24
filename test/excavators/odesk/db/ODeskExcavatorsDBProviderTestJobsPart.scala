@@ -142,6 +142,7 @@ class ODeskExcavatorsDBProviderTestJobsPart extends WordSpecLike with Matchers {
   val foundFreelancerRow = FoundFreelancerRow(
     id = 0,
     oUrl = "FoundFreelancerRow",
+    key = "123",
     date = new Date(System.currentTimeMillis()),
     priority = 10)
   def allData(j:FoundJobsRow) = AllJobData(

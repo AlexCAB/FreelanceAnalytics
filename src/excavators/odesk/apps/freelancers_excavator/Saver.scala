@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage
 import java.util.Date
 
 import excavators.odesk.db.ODeskExcavatorsDBProvider
+import excavators.odesk.parsers.TextHelpers
 import util.logging.Logger
 import util.parameters.ParametersMap
 import util.tasks.{Task, TaskExecutor}
@@ -19,14 +20,14 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
   val maxTaskQueueSize = 1000
   val overloadTimeout = 1000
   private var foundFreelancersPriority = 1
-  private var nextJobCheckTimeout = 1000 * 60 * 60
+  private var nextFreelancerCheckTimeout = 1000 * 60 * 60
   //Variables
   private var saveTime = 0L
   //Functions
   private def checkOverload() = if(queueSize > maxTaskQueueSize){
     logger.worn("[Saver.checkOverload] Queue overload, queueSize = " + queueSize)
     while(isWork && (queueSize > maxTaskQueueSize)){Thread.sleep(overloadTimeout)}}
-  private def prepareJobDataToSave(f:FoundFreelancerRow,d:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
+  private def prepareFreelancerDataToSave(f:FoundFreelancerRow,d:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
   ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],cis:Map[String,BufferedImage]):AllFreelancerData = {
     val cd = d.changes.createDate
     val fh = FreelancerRowHeader(
@@ -37,7 +38,8 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       id = -1,
       createDate = cd,
       foundDate = f.date,
-      oUrl = f.oUrl)
+      oUrl = f.oUrl,
+      key = TextHelpers.extractKeyFromURL(f.oUrl).getOrElse(""))
     val rh = FreelancerRawHtmlRow(
       header = fh,
       html = h)
@@ -232,7 +234,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       //Start
       val st = System.currentTimeMillis()
       //Preparing data to save
-      val d = prepareJobDataToSave(f,pd,h,ws,ps,pi,li,cis)
+      val d = prepareFreelancerDataToSave(f,pd,h,ws,ps,pi,li,cis)
       //Save data
       val r = try{
         Some(db.addAllFreelancerDataAndDelFromFound(d))} //Some(number of found jobs)
@@ -260,7 +262,7 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
       try{
         db.delFoundFreelancerRow(f.id)}
       catch{case e:Exception ⇒ {
-        logger.error("[Saver.DelFoundFreelancerTas] Exception on dell found job: " + e + ", url=" + f.oUrl)}}
+        logger.error("[Saver.DelFoundFreelancerTas] Exception on dell found freelancer: " + e + ", url=" + f.oUrl)}}
       //End
       saveTime = System.currentTimeMillis() - st}}
   //Methods
@@ -268,9 +270,9 @@ class Saver(logger:Logger, db:ODeskExcavatorsDBProvider) extends TaskExecutor{
     foundFreelancersPriority = p.getOrElse("foundFreelancersPriority", {
       logger.worn("[Worker.setParameters] Parameter 'foundFreelancersPriority' not found.")
       foundFreelancersPriority})
-    nextJobCheckTimeout = p.getOrElse("nextJobCheckTimeout", {
-      logger.worn("[Worker.setParameters] Parameter 'nextJobCheckTimeout' not found.")
-      nextJobCheckTimeout})}
+    nextFreelancerCheckTimeout = p.getOrElse("nextFreelancerCheckTimeout", {
+      logger.worn("[Worker.setParameters] Parameter 'nextFreelancerCheckTimeout' not found.")
+      nextFreelancerCheckTimeout})}
   def addSaveFreelancerDataAndDelFoundTask(f:FoundFreelancerRow,d:FreelancerParsedData,h:String,ws:Map[String, FreelancerWorkData],
     ps:Map[String,FreelancerPortfolioData],pi:Option[BufferedImage],li:Option[BufferedImage],
     cis:Map[String,BufferedImage]) = {

@@ -39,7 +39,8 @@
 -- select * from odesk_freelancers_work_feedback;
 -- select * from odesk_freelancers_work_linked_project_data;
 -- select * from odesk_freelancers_work_clients;
--- select id,freelancer_id,work_id,create_date,client_total_feedback,client_score,client_total_charge,client_total_hires,client_active_contract,client_country,client_city,client_time,client_member_since,client_profile_name,client_profile_url,client_profile_summary from odesk_freelancers_work_clients;
+-- select id,freelancer_id,work_id,create_date,client_total_feedback,client_score,client_total_charge,client_total_hires,client_active_contract,client_country,
+-- client_city,client_time,client_member_since,client_profile_name,client_profile_url,client_profile_summary from odesk_freelancers_work_clients;
 -- select * from odesk_freelancers_portfolio;
 -- select * from odesk_freelancers_tests;
 -- select * from odesk_freelancers_certification;
@@ -80,6 +81,7 @@ insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('toTra
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('searchNewJobTimeout',                 '3000000',                        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('buildJobsScrapingTaskTimeout',        '1800000',                        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('nextJobCheckTimeout',                 '3600000',                        true);
+insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('nextFreelancerCheckTimeout',          '3600000',                        true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('numberOfJobToScripInIteration',       '20',                             true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('maxNumberOfCheckedJob',               '30',                             true);
 insert into odesk_job_excavators_param(p_key, p_value, is_active) values ('overloadFoundJobTableRowNumber',      '100000',                         true);
@@ -228,6 +230,7 @@ create table odesk_clients_works_history(
 create table odesk_found_freelancers(
   id bigint primary key auto_increment,
   o_url varchar(255) not null,
+  f_key varchar(50) not null unique,
   create_date datetime not null,
   priority integer not null);
 
@@ -235,7 +238,8 @@ create table odesk_freelancers(
   id bigint primary key auto_increment,
   create_date datetime not null,
   found_date datetime not null,
-  o_url varchar(255) not null unique);
+  o_url varchar(255) not null,
+  f_key varchar(50) not null unique);
 
 create table odesk_freelancers_raw_html(
   id bigint primary key auto_increment,
@@ -342,7 +346,7 @@ create table odesk_freelancers_work_feedback(
   ff_comment varchar(1000) default null,
   ff_private_point int default null,
   ff_reasons varchar(4000) not null,
-  ff_response varchar(100) default null,
+  ff_response varchar(1000) default null,
   ff_score float(53) default null,
   cf_scores varchar(4000) not null,
   cf_is_public varchar(100) default null,

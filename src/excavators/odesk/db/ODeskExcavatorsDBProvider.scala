@@ -147,7 +147,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
     if(db.isEmpty){throw new Exception("[ODeskExcavatorsDBProvider.addFoundFreelancerRow] No created DB.")}
     db.get.withSession(implicit session ⇒ {
       //Check if job already exist
-      val ni = foundFreelancersTable.filter(_.o_url === d.oUrl).firstOption.isEmpty
+      val ni = foundFreelancersTable.filter(_.f_key === d.key).firstOption.isEmpty
       //If not then insert
       if(ni){foundFreelancersTable += buildFoundFreelancerRow(d)}
       ni})}
@@ -235,8 +235,9 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       val jus = (d.foundJobsRows.map(_.oUrl) ++ d.clientsWorksHistoryRows.flatMap(_.workData.oUrl)).toSet
       val ejs = (jobTable.filter(_.o_url inSetBind jus).map(_.o_url) ++ foundJobsTable.filter(_.o_url inSetBind jus).map(_.o_url)).list.toSet
       //Get existence freelancers(if non empty)
-      val fus = d.foundFreelancerRows.map(_.oUrl).toSet
-      val efs = foundFreelancersTable.filter(_.o_url inSetBind fus).map(_.o_url).list.toSet
+      val fus = d.foundFreelancerRows.map(_.key).toSet
+      val efs = foundFreelancersTable.filter(_.f_key inSetBind fus).map(_.f_key).list.toSet ++
+        freelancersTable.filter(_.f_key inSetBind fus).map(_.f_key).list.toSet
       //Insert job
       jobTable += buildJobsRow(d.jobsRow)
       val id = StaticQuery.queryNA[Long]("SELECT LAST_INSERT_ID();").first
@@ -253,7 +254,7 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       val ajs = d.foundJobsRows.filter(r ⇒ {! ejs.contains(r.oUrl)})
       foundJobsTable ++= ajs.map(r ⇒ buildFoundJobsRow(r,0))  //All new job to defoult excavator
       //Insert found freelancer
-      val frs = d.foundFreelancerRows.filter(r ⇒ {! efs.contains(r.oUrl)})
+      val frs = d.foundFreelancerRows.filter(r ⇒ {! efs.contains(r.key)})
       foundFreelancersTable ++= frs.map(r ⇒ buildFoundFreelancerRow(r))
       //Delete job from found
       foundJobsTable.filter(_.o_url === d.jobsRow.foundData.oUrl).delete
@@ -364,8 +365,8 @@ class ODeskExcavatorsDBProvider extends DBProvider with LoggerDBProvider {
       val nr = foundFreelancersTable.length.run
       //Gen older rows
       val rs = foundFreelancersTable.filter(_.priority === en).sortBy(_.create_date).take(n).list.map{
-        case(id:Some[Long], url:String, d:Timestamp, p:Int) ⇒ {
-          FoundFreelancerRow(id.get,url,d,p)}}
+        case(id:Some[Long], url:String, k:String, d:Timestamp, p:Int) ⇒ {
+          FoundFreelancerRow(id.get,url,k,d,p)}}
       //Return result
       (rs,nr)})}
   def countFreelancersFoundByToScrapPriority:Map[Int,Int] = counFoundByToScrapPriority(odesk_found_freelancers) //Return: Map(priorityColumn -> count)

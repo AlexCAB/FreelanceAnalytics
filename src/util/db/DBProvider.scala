@@ -255,21 +255,23 @@ trait DBProvider extends LoggerDBProvider {
     def * = (id,job_id,create_date,o_url,title,in_progress,start_date,end_date,payment_type,billed,hours,rate,
       freelancer_feedback_text,freelancer_feedback,freelancer_name,freelancer_url,freelancer_id,client_feedback)}
   protected val clientsWorksHistoryTable = TableQuery[ClientsWorksHistor]
-  protected type FoundFreelancersRowType = (Option[Long],String,Timestamp,Int)
+  protected type FoundFreelancersRowType = (Option[Long],String,String,Timestamp,Int)
   protected class FoundFreelancers(tag: Tag) extends Table[FoundFreelancersRowType](tag, odesk_found_freelancers){
       def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
       def o_url = column[String]("o_url", O.NotNull)
+      def f_key = column[String]("f_key", O.NotNull)
       def create_date = column[Timestamp]("create_date", O.NotNull)
       def priority = column[Int](priorityColumn, O.NotNull)
-      def * = (id,o_url,create_date,priority)}
+      def * = (id,o_url,f_key,create_date,priority)}
   protected val foundFreelancersTable = TableQuery[FoundFreelancers]
-  protected type FreelancersRowType = (Option[Long],Timestamp,Timestamp,String)
+  protected type FreelancersRowType = (Option[Long],Timestamp,Timestamp,String,String)
   protected class Freelancers (tag: Tag) extends Table[FreelancersRowType](tag, odesk_freelancers){
     def id = column[Option[Long]](idColumn,O.PrimaryKey, O.AutoInc)
     def create_date = column[Timestamp]("create_date", O.NotNull)
     def found_date = column[Timestamp]("found_date", O.NotNull)
     def o_url = column[String]("o_url", O.NotNull)
-    def * = (id,create_date,found_date,o_url)}
+    def f_key = column[String]("f_key", O.NotNull)
+    def * = (id,create_date,found_date,o_url,f_key)}
   protected val freelancersTable = TableQuery[Freelancers]
   protected type FreelancersRawHtmlRowType = (Option[Long],Long,Timestamp,String)
   protected class FreelancersRawHtml (tag: Tag) extends Table[FreelancersRawHtmlRowType](tag, odesk_freelancers_raw_html){
@@ -687,13 +689,15 @@ trait DBProvider extends LoggerDBProvider {
   protected def buildFoundFreelancerRow(d:FoundFreelancerRow):FoundFreelancersRowType = (
     None,               // id
     d.oUrl,             // o_url
+    d.key,              // f_key
     d.date.toTimestamp, // create_date
     d.priority)         // priority
   protected def buildFreelancersRow(d:FreelancerRow):FreelancersRowType = (
     None,                     // id
     d.createDate.toTimestamp, // create_date
-    d.foundDate.toTimestamp,   //found_date
-    d.oUrl)                   // o_url
+    d.foundDate.toTimestamp,  // found_date
+    d.oUrl,                   // o_url
+    d.key)                    // key
   protected def buildFreelancersRawHtmlRow(d:FreelancerRawHtmlRow, fId:Long):FreelancersRawHtmlRowType = (
     None,                            // id
     fId,                             // freelancer_id

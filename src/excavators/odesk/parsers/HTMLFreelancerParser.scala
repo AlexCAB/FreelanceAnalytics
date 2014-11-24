@@ -328,8 +328,8 @@ class HTMLFreelancerParser extends ParserHelpers {
       if(pd.changes.photoUrl == None){r -= 0.1}
       if(pd.changes.title.nonEmpty){
         compareURLAndTitle(f.oUrl, pd.changes.title.get) match{
-          case None => {r -= 0.2}
-          case Some(false) => {r -= 1.0}
+          case None => {r -= 0.1}
+          case Some(false) => {r -= 0.2}
           case _ => }}
       if(r < 0.0){r = 0.0}
       r}

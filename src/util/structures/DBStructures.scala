@@ -81,7 +81,7 @@ case class AllJobData(
   foundFreelancerRows:List[FoundFreelancerRow],
   foundJobsRows:List[FoundJobsRow])
 
-//Freelances
+//Freelances Согласен,
 
 case class FreelancerRowHeader(
   id:Long,
@@ -97,6 +97,7 @@ case class FreelancerWorkRowHeader(
 case class FoundFreelancerRow(
   id:Long,
   oUrl:String,
+  key:String,     //Last part of URL
   date:Date,
   priority:Int)
 
@@ -104,7 +105,8 @@ case class FreelancerRow(
   id:Long,
   createDate:Date,
   foundDate:Date,
-  oUrl:String)
+  oUrl:String,
+  key:String)
 
 case class FreelancerRawHtmlRow(
   header:FreelancerRowHeader,
